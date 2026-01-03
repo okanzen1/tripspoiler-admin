@@ -11,7 +11,7 @@
     <div class="col-md-3">
         <div class="card flex-fill">
             <div class="card-body">
-                <h5>Total Clicks okan</h5>
+                <h5>Total Clicks</h5>
                 <h2>0</h2>
             </div>
         </div>
