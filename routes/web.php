@@ -21,5 +21,5 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('admin.dashboard');
 
     Route::post('/logout', [AdminAuthController::class, 'logout'])
-        ->name('admin.logout');
+        ->name('logout');
 });

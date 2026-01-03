@@ -9,7 +9,7 @@ class AdminMiddleware
     public function handle($request, \Closure $next)
     {
         if (!Auth::check()) {
-            return redirect()->route('admin.login');
+            return redirect()->route('login');
         }
 
         if (!in_array(Auth::user()->role, ['admin', 'superadmin'])) {
