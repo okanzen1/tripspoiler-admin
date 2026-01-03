@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 // --- LOGIN SAYFASI (guest) ---
@@ -22,4 +23,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::post('/logout', [AdminAuthController::class, 'logout'])
         ->name('logout');
+
+    Route::resource('users', UserController::class);
 });

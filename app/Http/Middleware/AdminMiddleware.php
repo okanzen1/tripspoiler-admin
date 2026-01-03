@@ -12,10 +12,6 @@ class AdminMiddleware
             return redirect()->route('login');
         }
 
-        if (!in_array(Auth::user()->role, ['admin', 'superadmin'])) {
-            abort(403, 'Yetkin yok');
-        }
-
         return $next($request);
     }
 }

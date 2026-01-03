@@ -7,11 +7,21 @@
         <ul class="navbar-nav navbar-align">
 
             <li class="nav-item">
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ route('logout') }}"
+                      class="d-flex align-items-center m-0">
                     @csrf
-                    <button type="submit" class="nav-link btn btn-link text-danger">
+
+                    {{-- Kullanıcı adı --}}
+                    <span class="nav-link text-uppercase fw-semibold py-0 me-2 d-flex align-items-center">
+                        {{ auth()->user()->name ?? 'USER' }} - {{ auth()->user()->role ?? 'ROLE' }}
+                    </span>
+
+                    {{-- Çıkış --}}
+                    <button type="submit"
+                            class="nav-link btn btn-link text-danger py-0 d-flex align-items-center">
                         Çıkış
                     </button>
+
                 </form>
             </li>
 

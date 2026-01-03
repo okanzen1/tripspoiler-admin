@@ -23,12 +23,6 @@ class AdminAuthController extends Controller
             return back()->withErrors(['username' => 'Hatalı bilgiler']);
         }
 
-        if (!in_array(auth()->user()->role, ['admin', 'superadmin'])) {
-            Auth::logout();
-
-            return back()->withErrors(['username' => 'Yetkin yok']);
-        }
-
         return redirect()->route('admin.dashboard');
     }
 
