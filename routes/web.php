@@ -1,28 +1,23 @@
 <?php
 
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\AffiliatePartnerController;
+use App\Http\Controllers\CityController;
+use App\Http\Controllers\CountryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-// --- LOGIN SAYFASI (guest) ---
 Route::middleware('guest')->group(function () {
-    // login route ADI => login   (Laravel bunu bekliyor)
-    Route::get('/login', [AdminAuthController::class, 'showLoginForm'])
-        ->name('login');
-
-    Route::post('/login', [AdminAuthController::class, 'login'])
-        ->name('login.submit');
+    Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AdminAuthController::class, 'login'])->name('login.submit');
 });
 
-// --- ADMIN PANEL (auth + admin) ---
 Route::middleware(['auth', 'admin'])->group(function () {
-    // ROOT = ADMIN DASHBOARD
-    Route::get('/', [DashboardController::class, 'index'])
-        ->name('admin.dashboard');
-
-    Route::post('/logout', [AdminAuthController::class, 'logout'])
-        ->name('logout');
-
+    Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+    Route::resource('affiliate-partners', AffiliatePartnerController::class);
     Route::resource('users', UserController::class);
+    Route::resource('cities', CityController::class);
+    Route::resource('countries', CountryController::class);
 });

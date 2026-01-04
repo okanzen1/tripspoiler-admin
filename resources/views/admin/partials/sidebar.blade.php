@@ -23,6 +23,28 @@
                 </a>
             </li>
 
+            {{-- AFFILIATE PARTNERS --}}
+            <li class="sidebar-item {{ request()->routeIs('affiliate-partners.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('affiliate-partners.index') }}">
+                    <i class="align-middle" data-feather="link"></i>
+                    <span class="align-middle ms-2">Affiliate Partners</span>
+                </a>
+            </li>
+
+            {{-- COUNTRIES --}}
+            <li class="sidebar-item {{ request()->routeIs('countries.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('countries.index') }}">
+                    <i class="align-middle" data-feather="flag"></i>
+                    <span class="align-middle ms-2">Ülkeler</span>
+                </a>
+            </li>
+            {{-- CITIES --}}
+            <li class="sidebar-item {{ request()->routeIs('cities.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('cities.index') }}">
+                    <i class="align-middle" data-feather="map-pin"></i>
+                    <span class="align-middle ms-2">Şehirler</span>
+                </a>
+            </li>
         </ul>
     </div>
 </nav>
