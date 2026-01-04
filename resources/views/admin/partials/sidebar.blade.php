@@ -15,14 +15,6 @@
                 </a>
             </li>
 
-            {{-- USERS --}}
-            <li class="sidebar-item {{ request()->routeIs('users.*') ? 'active' : '' }}">
-                <a class="sidebar-link" href="{{ route('users.index') }}">
-                    <i class="align-middle" data-feather="users"></i>
-                    <span class="align-middle ms-2">Kullanıcılar</span>
-                </a>
-            </li>
-
             {{-- AFFILIATE PARTNERS --}}
             <li class="sidebar-item {{ request()->routeIs('affiliate-partners.*') ? 'active' : '' }}">
                 <a class="sidebar-link" href="{{ route('affiliate-partners.index') }}">
@@ -43,6 +35,14 @@
                 <a class="sidebar-link" href="{{ route('cities.index') }}">
                     <i class="align-middle" data-feather="map-pin"></i>
                     <span class="align-middle ms-2">Şehirler</span>
+                </a>
+            </li>
+
+            {{-- USERS --}}
+            <li class="sidebar-item {{ request()->routeIs('users.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('users.index') }}">
+                    <i class="align-middle" data-feather="users"></i>
+                    <span class="align-middle ms-2">Kullanıcılar</span>
                 </a>
             </li>
         </ul>
