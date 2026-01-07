@@ -5,8 +5,9 @@
     <meta charset="utf-8" />
     <title>@yield('title', 'Admin')</title>
 
-    <link rel="stylesheet" href="{{ asset('adminkit/css/custom.css') }}">
     <link href="{{ asset('adminkit/css/app.css') }}" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ asset('adminkit/css/custom.css') }}">
+
 </head>
 
 <body>
