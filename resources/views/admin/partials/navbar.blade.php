@@ -13,7 +13,14 @@
 
                     {{-- Kullanıcı adı --}}
                     <span class="nav-link text-uppercase fw-semibold py-0 me-2 d-flex align-items-center">
-                        {{ auth()->user()->name ?? 'USER' }} - {{ auth()->user()->role ?? 'ROLE' }}
+                        {{ auth()->user()->name ?? 'USER' }} -
+                        {{
+                            match(auth()->user()->role ?? null) {
+                                'admin' => 'Admin',
+                                'super_admin' => 'Super Admin',
+                                default => 'User',
+                            }
+                        }}
                     </span>
 
                     {{-- Çıkış --}}
