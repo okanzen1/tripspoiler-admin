@@ -7,7 +7,7 @@
     <div class="container py-3">
 
         <div class="d-flex justify-content-between mb-3">
-            <h3 class="m-0">Cities</h3>
+            <h3 class="m-0">Şehirler</h3>
 
             <a href="{{ route('cities.create') }}" class="btn btn-primary btn-sm">
                 Yeni Şehir

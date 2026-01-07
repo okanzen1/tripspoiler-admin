@@ -5,6 +5,7 @@ use App\Http\Controllers\AffiliatePartnerController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FaqController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +19,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
     Route::resource('affiliate-partners', AffiliatePartnerController::class);
     Route::resource('users', UserController::class);
+    Route::resource('faqs', FaqController::class);
     Route::resource('cities', CityController::class);
     Route::resource('countries', CountryController::class);
 });

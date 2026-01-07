@@ -7,7 +7,7 @@
     <div class="container py-3">
 
         <div class="d-flex justify-content-between mb-3">
-            <h3 class="m-0">Affiliate Partners</h3>
+            <h3 class="m-0">İş Ortakları</h3>
 
             <a href="{{ route('affiliate-partners.create') }}" class="btn btn-primary btn-sm">
                 Yeni Partner

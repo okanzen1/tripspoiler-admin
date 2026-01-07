@@ -23,6 +23,14 @@
                 </a>
             </li>
 
+            {{-- FAQS --}}
+            <li class="sidebar-item {{ request()->routeIs('faqs.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('faqs.index') }}">
+                    <i class="align-middle" data-feather="help-circle"></i>
+                    <span class="align-middle ms-2">Sık. Sor. Sor.</span>
+                </a>
+            </li>
+
             {{-- COUNTRIES --}}
             <li class="sidebar-item {{ request()->routeIs('countries.*') ? 'active' : '' }}">
                 <a class="sidebar-link" href="{{ route('countries.index') }}">

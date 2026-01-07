@@ -7,7 +7,7 @@
     <div class="container py-3">
 
         <div class="d-flex justify-content-between mb-3">
-            <h3 class="m-0">Countries</h3>
+            <h3 class="m-0">Ülkeler</h3>
 
             <a href="{{ route('countries.create') }}" class="btn btn-primary btn-sm">
                 Yeni Ülke
