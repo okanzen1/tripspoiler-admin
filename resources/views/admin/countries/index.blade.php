@@ -78,7 +78,7 @@
             </div>
 
             <div class="card-footer">
-                {{ $countries->links() }}
+                {{ $countries->links('pagination::bootstrap-5') }}
             </div>
         </div>
 

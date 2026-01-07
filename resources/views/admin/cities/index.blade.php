@@ -79,7 +79,7 @@
             </div>
 
             <div class="card-footer">
-                {{ $cities->links() }}
+                {{ $cities->links('pagination::bootstrap-5') }}
             </div>
         </div>
 
