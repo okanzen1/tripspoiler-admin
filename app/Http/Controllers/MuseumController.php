@@ -69,6 +69,8 @@ class MuseumController extends Controller
 
     public function edit(Museum $museum)
     {
+        $museum->load('images');
+
         $cities = City::whereHas('country')->orderBy('name')->get();
         $countries = Country::orderBy('name')->get();
 

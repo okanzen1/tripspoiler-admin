@@ -50,7 +50,83 @@
 
             </form>
 
+            <form action="{{ route('images.upload') }}" class="dropzone mt-4" id="city-dropzone">
+                @csrf
+                <input type="hidden" name="source" value="city">
+                <input type="hidden" name="source_id" value="{{ $city->id }}">
+            </form>
+
+            <div id="sortable-city-images" class="row mt-3">
+                @foreach ($city->images as $image)
+                    <div class="col-md-3 mb-2" data-id="{{ $image->id }}">
+                        <div class="border rounded p-1">
+                            <img src="{{ route('images.view', $image) }}" class="img-fluid rounded">
+
+                            <button type="button" class="btn btn-danger btn-sm w-100 mt-1 delete-image"
+                                data-delete-url="{{ route('images.destroy', $image) }}">
+                                Sil
+                            </button>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
         </div>
     </div>
 
+@endsection
+
+@section('scripts')
+    <script>
+        Dropzone.autoDiscover = false;
+
+        new Dropzone("#city-dropzone", {
+            maxFilesize: 2,
+            acceptedFiles: 'image/*',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            },
+            success() {
+                location.reload();
+            }
+        });
+
+        const grid = document.getElementById('sortable-city-images');
+
+        new Sortable(grid, {
+            animation: 150,
+            onEnd() {
+                const order = [];
+                grid.querySelectorAll('[data-id]')
+                    .forEach(el => order.push(el.dataset.id));
+
+                fetch("{{ route('images.sort') }}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        order
+                    })
+                });
+            }
+        });
+
+        document.querySelectorAll('.delete-image').forEach(btn => {
+            btn.onclick = () => {
+                if (!confirm('Silinsin mi?')) return;
+
+                fetch(btn.dataset.deleteUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                }).then(() => location.reload());
+            };
+        });
+    </script>
 @endsection

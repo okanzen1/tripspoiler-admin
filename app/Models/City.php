@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Sluggable\HasTranslatableSlug;
 use Spatie\Sluggable\SlugOptions;
 use Spatie\Translatable\HasTranslations;
+use App\Models\Image;
 
 class City extends Model
 {
@@ -47,5 +48,12 @@ class City extends Model
     public function museums()
     {
         return $this->hasMany(Museum::class, 'city_id', 'id');
+    }
+
+    public function images()
+    {
+        return $this->hasMany(Image::class, 'source_id')
+            ->where('source', 'city')
+            ->orderBy('sort_order');
     }
 }

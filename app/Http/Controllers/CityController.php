@@ -48,6 +48,8 @@ class CityController extends Controller
 
     public function edit(City $city)
     {
+        $city->load('images');
+
         $countries = Country::orderBy('id')->get();
 
         return view('admin.cities.edit', compact('city', 'countries'));

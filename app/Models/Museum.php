@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
+use App\Models\Image;
 
 class Museum extends Model
 {
@@ -33,5 +34,12 @@ class Museum extends Model
     public function country()
     {
         return $this->belongsTo(Country::class);
+    }
+
+    public function images()
+    {
+        return $this->hasMany(Image::class, 'source_id')
+            ->where('source', 'museum')
+            ->orderBy('sort_order');
     }
 }
