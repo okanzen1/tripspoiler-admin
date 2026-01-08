@@ -19,6 +19,8 @@ class Activity extends Model
         'country_id',
         'museum_id',
         'sort_order',
+        'affiliate_link',
+        'affiliate_id',
         'status',
     ];
 
