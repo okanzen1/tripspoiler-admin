@@ -31,9 +31,6 @@ class Activity extends Model
         'status' => 'boolean',
     ];
 
-    /**
-     * Slug ayarları.
-     */
     public function getSlugOptions(): SlugOptions
     {
         return SlugOptions::create()

@@ -43,4 +43,9 @@ class City extends Model
     {
         return $this->belongsTo(Country::class);
     }
+
+    public function museums()
+    {
+        return $this->hasMany(Museum::class, 'city_id', 'id');
+    }
 }

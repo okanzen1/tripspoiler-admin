@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AffiliatePartnerController;
 use App\Http\Controllers\CityController;
@@ -24,4 +25,5 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('cities', CityController::class);
     Route::resource('museums', MuseumController::class);
     Route::resource('countries', CountryController::class);
+    Route::resource('activities', ActivityController::class);
 });
