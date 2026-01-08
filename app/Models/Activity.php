@@ -50,4 +50,11 @@ class Activity extends Model
     {
         return $this->belongsTo(Country::class);
     }
+
+    public function images()
+    {
+        return $this->hasMany(Image::class, 'source_id')
+            ->where('source', 'activity')
+            ->orderBy('sort_order');
+    }
 }

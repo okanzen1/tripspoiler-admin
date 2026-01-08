@@ -7,7 +7,7 @@
 
     <link href="{{ asset('adminkit/css/app.css') }}" rel="stylesheet" />
     <link rel="stylesheet" href="{{ asset('adminkit/css/custom.css') }}">
-
+    <link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css">
 </head>
 
 <body>
@@ -31,6 +31,10 @@
     </div>
 
     <script src="{{ asset('adminkit/js/app.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+    @yield('scripts')
+
 </body>
 
 </html>
