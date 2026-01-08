@@ -15,19 +15,28 @@
                 </a>
             </li>
 
-            {{-- AFFILIATE PARTNERS --}}
-            <li class="sidebar-item {{ request()->routeIs('affiliate-partners.*') ? 'active' : '' }}">
-                <a class="sidebar-link" href="{{ route('affiliate-partners.index') }}">
-                    <i class="align-middle" data-feather="link"></i>
-                    <span class="align-middle ms-2">Affiliate Partners</span>
+            {{-- MUSEUMS --}}
+            <li class="sidebar-item {{ request()->routeIs('museums.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('museums.index') }}">
+                    <i class="align-middle" data-feather="archive"></i>
+                    <span class="align-middle ms-2">Müzeler</span>
                 </a>
             </li>
+
 
             {{-- FAQS --}}
             <li class="sidebar-item {{ request()->routeIs('faqs.*') ? 'active' : '' }}">
                 <a class="sidebar-link" href="{{ route('faqs.index') }}">
                     <i class="align-middle" data-feather="help-circle"></i>
                     <span class="align-middle ms-2">Sık. Sor. Sor.</span>
+                </a>
+            </li>
+
+            {{-- AFFILIATE PARTNERS --}}
+            <li class="sidebar-item {{ request()->routeIs('affiliate-partners.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('affiliate-partners.index') }}">
+                    <i class="align-middle" data-feather="link"></i>
+                    <span class="align-middle ms-2">Affiliate Partners</span>
                 </a>
             </li>
 

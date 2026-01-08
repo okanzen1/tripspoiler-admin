@@ -6,6 +6,7 @@ use App\Http\Controllers\CityController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FaqController;
+use App\Http\Controllers\MuseumController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,5 +22,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('faqs', FaqController::class);
     Route::resource('cities', CityController::class);
+    Route::resource('museums', MuseumController::class);
     Route::resource('countries', CountryController::class);
 });
