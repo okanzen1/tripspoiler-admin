@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Translatable\HasTranslations;
 
 class Museum extends Model
 {
+    use HasTranslations;
+
     protected $fillable = [
         'name',
         'city_id',
@@ -14,8 +17,11 @@ class Museum extends Model
         'status',
     ];
 
+    public $translatable = [
+        'name',
+    ];
+
     protected $casts = [
-        'name' => 'array',
         'status' => 'boolean',
     ];
 

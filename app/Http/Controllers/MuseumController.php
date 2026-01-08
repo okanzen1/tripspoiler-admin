@@ -20,7 +20,7 @@ class MuseumController extends Controller
 
     public function create()
     {
-        $cities = City::orderBy('name')->get();
+        $cities = City::whereHas('country')->orderBy('name')->get();
         $countries = Country::orderBy('name')->get();
 
         return view('admin.museums.create', compact('cities', 'countries'));
@@ -29,25 +29,34 @@ class MuseumController extends Controller
     public function store(Request $request)
     {
         if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar güncelleyemez.');
+            return back()->withErrors('Super admin dışındaki kullanıcılar ekleyemez.');
         }
 
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'city_id' => 'nullable|integer|exists:cities,id',
+            'city_id' => 'nullable|exists:cities,id',
             'sort_order' => 'nullable|integer',
             'status' => 'boolean',
         ]);
 
-        $countryId = City::where('id', $data['city_id'])->value('country_id') ?? null;
+        $city = null;
+        $countryId = null;
 
-        if (!$countryId) {
-            return back()->withErrors('City has no country assigned.');
+        if (!empty($data['city_id'])) {
+            $city = City::where('id', $data['city_id'])
+                ->whereHas('country')
+                ->first();
+
+            if (!$city) {
+                return back()->withErrors('Seçilen şehir geçerli bir ülkeye bağlı değil.');
+            }
+
+            $countryId = $city->country_id;
         }
 
         Museum::create([
-            'name' => ['en' => $data['name']],  // FAQ’deki gibi JSON
-            'city_id' => $data['city_id'] ?? null,
+            'name' => $data['name'],
+            'city_id' => $city?->id,
             'country_id' => $countryId,
             'sort_order' => $data['sort_order'] ?? 0,
             'status' => $data['status'] ?? true,
@@ -60,7 +69,7 @@ class MuseumController extends Controller
 
     public function edit(Museum $museum)
     {
-        $cities = City::orderBy('name')->get();
+        $cities = City::whereHas('country')->orderBy('name')->get();
         $countries = Country::orderBy('name')->get();
 
         return view('admin.museums.edit', compact('museum', 'cities', 'countries'));
@@ -74,20 +83,29 @@ class MuseumController extends Controller
 
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'city_id' => 'nullable|integer|exists:cities,id',
+            'city_id' => 'nullable|exists:cities,id',
             'sort_order' => 'nullable|integer',
             'status' => 'boolean',
         ]);
 
-        $countryId = City::where('id', $data['city_id'])->value('country_id') ?? null;
+        $city = null;
+        $countryId = null;
 
-        if (!$countryId) {
-            return back()->withErrors('City has no country assigned.');
+        if (!empty($data['city_id'])) {
+            $city = City::where('id', $data['city_id'])
+                ->whereHas('country')
+                ->first();
+
+            if (!$city) {
+                return back()->withErrors('Seçilen şehir geçerli bir ülkeye bağlı değil.');
+            }
+
+            $countryId = $city->country_id;
         }
 
         $museum->update([
-            'name' => ['en' => $data['name']], // JSON
-            'city_id' => $data['city_id'] ?? null,
+            'name' => $data['name'],
+            'city_id' => $city?->id,
             'country_id' => $countryId,
             'sort_order' => $data['sort_order'] ?? 0,
             'status' => $data['status'] ?? true,
@@ -99,7 +117,7 @@ class MuseumController extends Controller
     public function destroy(Museum $museum)
     {
         if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar güncelleyemez.');
+            return back()->withErrors('Super admin dışındaki kullanıcılar silemez.');
         }
 
         $museum->delete();

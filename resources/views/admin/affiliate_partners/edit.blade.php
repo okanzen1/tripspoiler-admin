@@ -19,7 +19,7 @@
 
                 <div class="mb-3">
                     <label>Partner Adı</label>
-                    <input name="name" value="{{ $affiliate_partner->name['en'] ?? '' }}" class="form-control" required>
+                    <input name="name" value="{{ $affiliate_partner->name ?? '' }}" class="form-control" required>
                 </div>
 
                 <div class="form-check mb-3">

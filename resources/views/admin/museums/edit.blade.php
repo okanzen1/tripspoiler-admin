@@ -27,7 +27,7 @@
 
                 <div class="mb-3">
                     <label>İsim</label>
-                    <input name="name" value="{{ $museum->name['en'] ?? '' }}" class="form-control" required>
+                    <input name="name" value="{{ $museum->name ?? '' }}" class="form-control" required>
                 </div>
 
                 <div class="mb-3">
@@ -36,7 +36,7 @@
                         <option value="">- yok -</option>
                         @foreach ($cities as $city)
                             <option value="{{ $city->id }}" @selected($museum->city_id == $city->id)>
-                                {{ $city->name['en'] ?? '' }}
+                                {{ $city->name ?? '' }}
                             </option>
                         @endforeach
                     </select>
@@ -44,7 +44,7 @@
 
                 <div class="mb-3">
                     <label>Ülke</label>
-                    <input class="form-control" value="{{ $museum->country->name['en'] ?? '' }}" disabled>
+                    <input class="form-control" value="{{ $museum->country->name ?? '' }}" disabled>
                 </div>
 
                 <div class="mb-3">

@@ -15,6 +15,14 @@
                 </a>
             </li>
 
+            {{-- ACTIVITIES --}}
+            <li class="sidebar-item {{ request()->routeIs('activities.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('activities.index') }}">
+                    <i class="align-middle" data-feather="activity"></i>
+                    <span class="align-middle ms-2">Aktiviteler</span>
+                </a>
+            </li>
+
             {{-- MUSEUMS --}}
             <li class="sidebar-item {{ request()->routeIs('museums.*') ? 'active' : '' }}">
                 <a class="sidebar-link" href="{{ route('museums.index') }}">
@@ -22,7 +30,6 @@
                     <span class="align-middle ms-2">Müzeler</span>
                 </a>
             </li>
-
 
             {{-- FAQS --}}
             <li class="sidebar-item {{ request()->routeIs('faqs.*') ? 'active' : '' }}">

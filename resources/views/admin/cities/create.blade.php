@@ -15,7 +15,7 @@
                     <select name="country_id" class="form-select" required>
                         @foreach ($countries as $country)
                             <option value="{{ $country->id }}">
-                                {{ $country->name['en'] ?? '' }}
+                                {{ $country->name ?? '' }}
                             </option>
                         @endforeach
                     </select>

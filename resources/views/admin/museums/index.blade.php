@@ -46,11 +46,11 @@
                             <tr>
                                 <td>{{ $museum->id }}</td>
 
-                                <td>{{ $museum->name['en'] ?? '' }}</td>
+                                <td>{{ $museum->name ?? '' }}</td>
 
-                                <td>{{ $museum->city->name['en'] ?? '-' }}</td>
+                                <td>{{ $museum->city->name ?? '-' }}</td>
 
-                                <td>{{ $museum->country->name['en'] ?? '-' }}</td>
+                                <td>{{ $museum->country->name ?? '-' }}</td>
 
                                 <td>{{ $museum->sort_order }}</td>
 

@@ -30,12 +30,12 @@
 
                 <div class="mb-3">
                     <label>Soru</label>
-                    <input name="question" value="{{ $faq->question['en'] }}" class="form-control">
+                    <input name="question" value="{{ $faq->question }}" class="form-control">
                 </div>
 
                 <div class="mb-3">
                     <label>Cevap</label>
-                    <textarea name="answer" class="form-control" rows="5">{{ $faq->answer['en'] }}</textarea>
+                    <textarea name="answer" class="form-control" rows="5">{{ $faq->answer }}</textarea>
                 </div>
 
                 <div class="mb-3">

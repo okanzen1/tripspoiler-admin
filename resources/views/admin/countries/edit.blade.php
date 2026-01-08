@@ -19,12 +19,12 @@
 
                 <div class="mb-3">
                     <label>Ülke Adı</label>
-                    <input name="name" value="{{ $country->name['en'] ?? '' }}" class="form-control" required>
+                    <input name="name" value="{{ $country->name ?? '' }}" class="form-control" required>
                 </div>
 
                 <div class="mb-3">
                     <label>Slug</label>
-                    <input name="slug" value="{{ $country->slug['en'] ?? '' }}" class="form-control" required>
+                    <input name="slug" value="{{ $country->slug ?? '' }}" class="form-control" required>
                 </div>
 
                 <div class="form-check my-3">

@@ -39,9 +39,9 @@
                             <tr>
                                 <td>{{ $c->id }}</td>
 
-                                <td>{{ $c->name['en'] ?? '' }}</td>
+                                <td>{{ $c->name ?? '' }}</td>
 
-                                <td>{{ $c->slug['en'] ?? '' }}</td>
+                                <td>{{ $c->slug ?? '' }}</td>
 
                                 <td>
                                     <span class="badge {{ $c->active ? 'bg-success' : 'bg-secondary' }}">

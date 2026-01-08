@@ -22,7 +22,7 @@
                     <select name="country_id" class="form-select">
                         @foreach ($countries as $country)
                             <option value="{{ $country->id }}" @selected($city->country_id == $country->id)>
-                                {{ $country->name['en'] ?? '' }}
+                                {{ $country->name ?? '' }}
                             </option>
                         @endforeach
                     </select>
@@ -30,12 +30,12 @@
 
                 <div class="mb-3">
                     <label>Şehir Adı</label>
-                    <input name="name" value="{{ $city->name['en'] ?? '' }}" class="form-control" required>
+                    <input name="name" value="{{ $city->name ?? '' }}" class="form-control" required>
                 </div>
 
                 <div class="mb-3">
                     <label>Slug</label>
-                    <input name="slug" value="{{ $city->slug['en'] ?? '' }}" class="form-control" required>
+                    <input name="slug" value="{{ $city->slug ?? '' }}" class="form-control" required>
                 </div>
 
                 <div class="form-check my-3">

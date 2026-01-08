@@ -22,17 +22,15 @@ class CountryController extends Controller
     public function store(Request $request)
     {
         if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar güncelleyemez.');
+            return back()->withErrors('Super admin dışındaki kullanıcılar ekleyemez.');
         }
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255'],
         ]);
 
         Country::create([
-            'name' => ['en' => $data['name']],
-            'slug' => ['en' => $data['slug']],
+            'name' => $data['name'],
             'active' => $request->has('active'),
         ]);
 
@@ -54,12 +52,10 @@ class CountryController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255'],
         ]);
 
         $country->update([
-            'name' => ['en' => $data['name']],
-            'slug' => ['en' => $data['slug']],
+            'name' => $data['name'],
             'active' => $request->has('active'),
         ]);
 
@@ -71,8 +67,9 @@ class CountryController extends Controller
     public function destroy(Country $country)
     {
         if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar güncelleyemez.');
+            return back()->withErrors('Super admin dışındaki kullanıcılar silemez.');
         }
+
         $country->delete();
 
         return redirect()

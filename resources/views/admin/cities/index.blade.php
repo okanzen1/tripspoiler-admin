@@ -38,8 +38,8 @@
                         @forelse($cities as $c)
                             <tr>
                                 <td>{{ $c->id }}</td>
-                                <td>{{ $c->name['en'] ?? '' }}</td>
-                                <td>{{ $c->country?->name['en'] ?? '' }}</td>
+                                <td>{{ $c->name ?? '' }}</td>
+                                <td>{{ $c->country?->name ?? '' }}</td>
 
                                 <td>
                                     <span class="badge {{ $c->active ? 'bg-success' : 'bg-secondary' }}">

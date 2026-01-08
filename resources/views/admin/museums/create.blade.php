@@ -37,7 +37,7 @@
                         <option value="">- yok -</option>
                         @foreach ($cities as $city)
                             <option value="{{ $city->id }}">
-                                {{ $city->name['en'] ?? '' }}
+                                {{ $city->name ?? '' }}
                             </option>
                         @endforeach
                     </select>

@@ -38,7 +38,7 @@
                             <tr>
                                 <td>{{ $p->id }}</td>
 
-                                <td>{{ $p->name['en'] ?? '' }}</td>
+                                <td>{{ $p->name ?? '' }}</td>
 
                                 <td>
                                     @if ($p->active)

@@ -30,8 +30,8 @@ class AffiliatePartnerController extends Controller
         ]);
 
         AffiliatePartner::create([
-            'name' => ['en' => $data['name']],
-            'active' => $request->has('active'), // 👈 EN DOĞRUSU
+            'name' => $data['name'],
+            'active' => $request->has('active'),
         ]);
 
         return redirect()
@@ -55,7 +55,7 @@ class AffiliatePartnerController extends Controller
         ]);
 
         $affiliate_partner->update([
-            'name' => ['en' => $data['name']],
+            'name' => $data['name'],
             'active' => $request->has('active'),
         ]);
 

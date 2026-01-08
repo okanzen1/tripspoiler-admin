@@ -7,7 +7,7 @@ use Spatie\Sluggable\HasTranslatableSlug;
 use Spatie\Sluggable\SlugOptions;
 use Spatie\Translatable\HasTranslations;
 
-class Country extends Model
+class Activity extends Model
 {
     use HasTranslations;
     use HasTranslatableSlug;
@@ -15,7 +15,11 @@ class Country extends Model
     protected $fillable = [
         'name',
         'slug',
-        'active',
+        'city_id',
+        'country_id',
+        'museum_id',
+        'sort_order',
+        'status',
     ];
 
     public $translatable = [
@@ -24,11 +28,11 @@ class Country extends Model
     ];
 
     protected $casts = [
-        'active' => 'boolean',
+        'status' => 'boolean',
     ];
 
     /**
-     * Slug ayarları (Country için).
+     * Slug ayarları.
      */
     public function getSlugOptions(): SlugOptions
     {
@@ -36,5 +40,15 @@ class Country extends Model
             ->generateSlugsFrom('name')
             ->saveSlugsTo('slug')
             ->doNotGenerateSlugsOnUpdate();
+    }
+
+    public function city()
+    {
+        return $this->belongsTo(City::class);
+    }
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
     }
 }

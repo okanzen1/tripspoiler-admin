@@ -22,7 +22,7 @@ class FaqController extends Controller
     public function store(Request $request)
     {
         if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar güncelleyemez.');
+            return back()->withErrors('Super admin dışındaki kullanıcılar ekleyemez.');
         }
 
         $data = $request->validate([
@@ -35,15 +35,16 @@ class FaqController extends Controller
         ]);
 
         Faq::create([
-            'question' => ['en' => $data['question']],
-            'answer' => ['en' => $data['answer']],
+            'question' => $data['question'],
+            'answer' => $data['answer'],
             'source' => $data['source'] ?? null,
             'source_id' => $data['source_id'] ?? null,
             'sort_order' => $data['sort_order'] ?? 0,
             'status' => $data['status'] ?? true,
         ]);
 
-        return redirect()->route('faqs.index')
+        return redirect()
+            ->route('faqs.index')
             ->with('success', 'FAQ oluşturuldu');
     }
 
@@ -68,8 +69,8 @@ class FaqController extends Controller
         ]);
 
         $faq->update([
-            'question' => ['en' => $data['question']], // 👈 JSON
-            'answer' => ['en' => $data['answer']],   // 👈 JSON
+            'question' => $data['question'],
+            'answer' => $data['answer'],
             'source' => $data['source'] ?? null,
             'source_id' => $data['source_id'] ?? null,
             'sort_order' => $data['sort_order'] ?? 0,
@@ -84,9 +85,11 @@ class FaqController extends Controller
         if (auth()->user()?->role !== 'super_admin') {
             return back()->withErrors('Super admin dışındaki kullanıcılar silemez.');
         }
+
         $faq->delete();
 
-        return redirect()->route('faqs.index')
+        return redirect()
+            ->route('faqs.index')
             ->with('success', 'FAQ silindi');
     }
 }
