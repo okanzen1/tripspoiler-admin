@@ -3,8 +3,8 @@
 @section('content')
     <div class="container py-3">
 
-        <div class="d-flex justify-content-between mb-3">
-            <h3>Müzeler</h3>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="m-0">Müzeler</h3>
 
             <a href="{{ route('museums.create') }}" class="btn btn-primary btn-sm">
                 Yeni Müze
