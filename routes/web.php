@@ -31,6 +31,5 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/images/upload', [ImageController::class, 'store'])->name('images.upload');
     Route::post('/images/sort', [ImageController::class, 'sort'])->name('images.sort');
     Route::delete('/images/{image}', [ImageController::class, 'destroy'])->name('images.destroy');
-    Route::get('/media/{image}', [ImageController::class, 'show'])
-     ->name('images.view');
+    Route::get('/media/{image}', [ImageController::class, 'show'])->name('images.view');
 });

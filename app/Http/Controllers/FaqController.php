@@ -27,24 +27,19 @@ class FaqController extends Controller
 
         $data = $request->validate([
             'question' => 'required|string|max:255',
-            'answer' => 'required|string',
-            'source' => 'nullable|string',
-            'source_id' => 'nullable|integer',
-            'sort_order' => 'nullable|integer',
-            'status' => 'boolean',
         ]);
 
-        Faq::create([
+        $faq = Faq::create([
             'question' => $data['question'],
-            'answer' => $data['answer'],
+            'answer' => $data['answer'] ?? null,
             'source' => $data['source'] ?? null,
             'source_id' => $data['source_id'] ?? null,
             'sort_order' => $data['sort_order'] ?? 0,
-            'status' => $data['status'] ?? true,
+            'status' => $data['status'] ?? false,
         ]);
 
         return redirect()
-            ->route('faqs.index')
+            ->route('faqs.edit', $faq)
             ->with('success', 'FAQ oluşturuldu');
     }
 
