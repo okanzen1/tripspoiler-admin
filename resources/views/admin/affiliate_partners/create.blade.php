@@ -25,11 +25,12 @@
                     <input name="name" class="form-control" required>
                 </div>
 
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" name="active" checked>
-                    <label class="form-check-label">
-                        Aktif
-                    </label>
+                <div class="mb-3">
+                    <label>Durum</label>
+                    <select name="active" class="form-select">
+                        <option value="1">Aktif</option>
+                        <option value="0">Pasif</option>
+                    </select>
                 </div>
 
                 <button class="btn btn-primary">

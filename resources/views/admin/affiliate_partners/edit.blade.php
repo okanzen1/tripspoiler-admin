@@ -22,12 +22,16 @@
                     <input name="name" value="{{ $affiliate_partner->name ?? '' }}" class="form-control" required>
                 </div>
 
-                <div class="form-check mb-3">
-                    <input type="checkbox" class="form-check-input" name="active" @checked($affiliate_partner->active)>
-
-                    <label class="form-check-label">
-                        Aktif
-                    </label>
+                <div class="mb-3">
+                    <label>Durum</label>
+                    <select name="active" class="form-select">
+                        <option value="1" {{ old('active', $affiliate_partner->active) == 1 ? 'selected' : '' }}>
+                            Aktif
+                        </option>
+                        <option value="0" {{ old('active', $affiliate_partner->active) == 0 ? 'selected' : '' }}>
+                            Pasif
+                        </option>
+                    </select>
                 </div>
 
                 <button class="btn btn-primary">

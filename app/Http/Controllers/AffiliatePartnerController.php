@@ -26,13 +26,11 @@ class AffiliatePartnerController extends Controller
         }
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name'   => ['required', 'string', 'max:255'],
+            'active' => ['required', 'boolean'],
         ]);
 
-        AffiliatePartner::create([
-            'name' => $data['name'],
-            'active' => $request->has('active'),
-        ]);
+        AffiliatePartner::create($data);
 
         return redirect()
             ->route('affiliate-partners.index')
@@ -44,20 +42,18 @@ class AffiliatePartnerController extends Controller
         return view('admin.affiliate_partners.edit', compact('affiliate_partner'));
     }
 
-    public function update(Request $request, AffiliatePartner $affiliate_partner)
+   public function update(Request $request, AffiliatePartner $affiliate_partner)
     {
         if (auth()->user()?->role !== 'super_admin') {
             return back()->withErrors('Super admin dışındaki kullanıcılar güncelleyemez.');
         }
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name'   => ['required', 'string', 'max:255'],
+            'active' => ['required', 'boolean'],
         ]);
 
-        $affiliate_partner->update([
-            'name' => $data['name'],
-            'active' => $request->has('active'),
-        ]);
+        $affiliate_partner->update($data);
 
         return redirect()
             ->route('affiliate-partners.edit', $affiliate_partner)
