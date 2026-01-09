@@ -59,14 +59,13 @@
                         </option>
                     </select>
                 </div>
-
-                <button type="submit" class="btn btn-primary"
-                    style="position: fixed; bottom: 60px; right: 20px; z-index: 1050;">
-                    Güncelle
-                </button>
+                
+                <div class="text-end">
+                    <button class="btn btn-primary">Güncelle</button>
+                </div>
 
             </form>
-            
+
         </div>
     </div>
 

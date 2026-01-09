@@ -38,8 +38,10 @@
                         </option>
                     </select>
                 </div>
-
-                <button class="btn btn-primary">Güncelle</button>
+                
+                <div class="text-end">
+                    <button class="btn btn-primary">Güncelle</button>
+                </div>
 
             </form>
 

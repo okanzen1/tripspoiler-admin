@@ -33,9 +33,9 @@
                     </select>
                 </div>
 
-                <button class="btn btn-primary">
-                    Kaydet
-                </button>
+                <div class="text-end">
+                    <button class="btn btn-primary">Kaydet</button>
+                </div>
 
             </form>
 

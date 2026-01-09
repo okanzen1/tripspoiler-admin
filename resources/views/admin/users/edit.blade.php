@@ -19,7 +19,7 @@
             </ul>
         </div>
     @endif
-    
+
     <div class="card">
 
         <div class="card-body">
@@ -57,7 +57,9 @@
                     <input name="password" type="password" class="form-control">
                 </div>
 
-                <button class="btn btn-primary">Güncelle</button>
+                <div class="text-end">
+                    <button class="btn btn-primary">Güncelle</button>
+                </div>
 
             </form>
 
