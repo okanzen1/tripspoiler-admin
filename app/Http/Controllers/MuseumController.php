@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\City;
-use App\Models\Country;
 use App\Models\Museum;
 use Illuminate\Http\Request;
 
@@ -11,7 +10,7 @@ class MuseumController extends Controller
 {
     public function index()
     {
-        $museums = Museum::with(['city', 'country'])
+        $museums = Museum::with(['city'])
             ->orderBy('sort_order')
             ->paginate(10);
 
@@ -20,10 +19,9 @@ class MuseumController extends Controller
 
     public function create()
     {
-        $cities = City::whereHas('country')->orderBy('name')->get();
-        $countries = Country::orderBy('name')->get();
+        $cities = City::orderBy('name')->get();
 
-        return view('admin.museums.create', compact('cities', 'countries'));
+        return view('admin.museums.create', compact('cities'));
     }
 
     public function store(Request $request)
@@ -34,36 +32,20 @@ class MuseumController extends Controller
 
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'city_id' => 'nullable|exists:cities,id',
+            'city_id' => 'required|exists:cities,id',
             'sort_order' => 'nullable|integer',
             'status' => 'boolean',
         ]);
 
-        $city = null;
-        $countryId = null;
-
-        if (!empty($data['city_id'])) {
-            $city = City::where('id', $data['city_id'])
-                ->whereHas('country')
-                ->first();
-
-            if (!$city) {
-                return back()->withErrors('Seçilen şehir geçerli bir ülkeye bağlı değil.');
-            }
-
-            $countryId = $city->country_id;
-        }
-
-        Museum::create([
+        $museum = Museum::create([
             'name' => $data['name'],
-            'city_id' => $city?->id,
-            'country_id' => $countryId,
+            'city_id' => $data['city_id'] ?? null,
             'sort_order' => $data['sort_order'] ?? 0,
-            'status' => $data['status'] ?? true,
+            'status' => $data['status'] ?? false,
         ]);
 
         return redirect()
-            ->route('museums.index')
+            ->route('museums.edit', $museum)
             ->with('success', 'Museum created');
     }
 
@@ -71,10 +53,9 @@ class MuseumController extends Controller
     {
         $museum->load('images');
 
-        $cities = City::whereHas('country')->orderBy('name')->get();
-        $countries = Country::orderBy('name')->get();
+        $cities = City::orderBy('name')->get();
 
-        return view('admin.museums.edit', compact('museum', 'cities', 'countries'));
+        return view('admin.museums.edit', compact('museum', 'cities'));
     }
 
     public function update(Request $request, Museum $museum)
@@ -90,25 +71,9 @@ class MuseumController extends Controller
             'status' => 'boolean',
         ]);
 
-        $city = null;
-        $countryId = null;
-
-        if (!empty($data['city_id'])) {
-            $city = City::where('id', $data['city_id'])
-                ->whereHas('country')
-                ->first();
-
-            if (!$city) {
-                return back()->withErrors('Seçilen şehir geçerli bir ülkeye bağlı değil.');
-            }
-
-            $countryId = $city->country_id;
-        }
-
         $museum->update([
             'name' => $data['name'],
-            'city_id' => $city?->id,
-            'country_id' => $countryId,
+            'city_id' => $data['city_id'] ?? null,
             'sort_order' => $data['sort_order'] ?? 0,
             'status' => $data['status'] ?? true,
         ]);

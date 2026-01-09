@@ -43,11 +43,6 @@
                 </div>
 
                 <div class="mb-3">
-                    <label>Ülke</label>
-                    <input class="form-control" value="{{ $museum->country->name ?? '' }}" disabled>
-                </div>
-
-                <div class="mb-3">
                     <label>Sıra</label>
                     <input name="sort_order" value="{{ $museum->sort_order }}" class="form-control">
                 </div>

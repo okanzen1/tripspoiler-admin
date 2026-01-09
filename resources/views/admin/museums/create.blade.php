@@ -43,19 +43,6 @@
                     </select>
                 </div>
 
-                <div class="mb-3">
-                    <label>Sıra</label>
-                    <input name="sort_order" value="0" class="form-control">
-                </div>
-
-                <div class="mb-3">
-                    <label>Durum</label>
-                    <select name="status" class="form-select">
-                        <option value="1">Aktif</option>
-                        <option value="0">Pasif</option>
-                    </select>
-                </div>
-
                 <button class="btn btn-primary">Kaydet</button>
 
             </form>

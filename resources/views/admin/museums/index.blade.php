@@ -34,7 +34,6 @@
                             <th>#</th>
                             <th>Name</th>
                             <th>City</th>
-                            <th>Country</th>
                             <th>Order</th>
                             <th>Status</th>
                             <th class="text-end">Action</th>
@@ -49,8 +48,6 @@
                                 <td>{{ $museum->name ?? '' }}</td>
 
                                 <td>{{ $museum->city->name ?? '-' }}</td>
-
-                                <td>{{ $museum->country->name ?? '-' }}</td>
 
                                 <td>{{ $museum->sort_order }}</td>
 
