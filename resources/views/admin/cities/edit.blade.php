@@ -4,14 +4,24 @@
 
 @section('content')
 
+    @if (session('success'))
+        <div class="alert alert-success small">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="alert alert-danger small">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-body">
-
-            @if (session('success'))
-                <div class="alert alert-success small">
-                    {{ session('success') }}
-                </div>
-            @endif
 
             <form method="POST" action="{{ route('cities.update', $city) }}">
                 @csrf
@@ -50,11 +60,21 @@
                     </select>
                 </div>
 
-                <button class="btn btn-primary">
+                <button type="submit" class="btn btn-primary"
+                    style="position: fixed; bottom: 60px; right: 20px; z-index: 1050;">
                     Güncelle
                 </button>
 
             </form>
+            
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5>Şehir Resimleri</h5>
+        </div>
+        <div class="card-body">
 
             <form action="{{ route('images.upload') }}" class="dropzone mt-4" id="city-dropzone">
                 @csrf

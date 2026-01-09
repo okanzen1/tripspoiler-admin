@@ -4,24 +4,24 @@
 
 @section('content')
 
+    @if (session('success'))
+        <div class="alert alert-success small">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="alert alert-danger small">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-body">
-
-            @if (session('success'))
-                <div class="alert alert-success small">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            @if ($errors->any())
-                <div class="alert alert-danger small">
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
 
             <form method="POST" action="{{ route('activities.update', $activity) }}">
                 @csrf
@@ -77,8 +77,8 @@
 
                 <div class="mb-3">
                     <label>İş Ortağı Linki</label>
-                    <input type="url" name="affiliate_link" value="{{ old('affiliate_link', $activity->affiliate_link) }}"
-                        class="form-control">
+                    <input type="url" name="affiliate_link"
+                        value="{{ old('affiliate_link', $activity->affiliate_link) }}" class="form-control">
                 </div>
 
                 <div class="mb-3">
@@ -95,9 +95,21 @@
                         class="form-control">
                 </div>
 
-                <button class="btn btn-primary">Güncelle</button>
+                <button type="submit" class="btn btn-primary"
+                    style="position: fixed; bottom: 60px; right: 20px; z-index: 1050;">
+                    Güncelle
+                </button>
 
             </form>
+
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Aktivite Görselleri</h5>
+        </div>
+        <div class="card-body">
 
             <form action="{{ route('images.upload') }}" class="dropzone mt-4" id="activity-dropzone">
                 @csrf
@@ -118,8 +130,6 @@
                     </div>
                 @endforeach
             </div>
-
-
 
         </div>
     </div>
