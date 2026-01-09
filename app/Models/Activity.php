@@ -16,7 +16,6 @@ class Activity extends Model
         'name',
         'slug',
         'city_id',
-        'country_id',
         'museum_id',
         'sort_order',
         'affiliate_link',
@@ -56,5 +55,10 @@ class Activity extends Model
         return $this->hasMany(Image::class, 'source_id')
             ->where('source', 'activity')
             ->orderBy('sort_order');
+    }
+
+    public function affiliatePartner()
+    {
+        return $this->belongsTo(AffiliatePartner::class, 'affiliate_id');
     }
 }

@@ -38,7 +38,6 @@
                                 <th>#</th>
                                 <th>Aktivite Adı</th>
                                 <th>Şehir</th>
-                                <th>Ülke</th>
                                 <th>Durum</th>
                                 <th class="text-end">İşlem</th>
                             </tr>
@@ -50,7 +49,6 @@
                                     <td>{{ $activity->id }}</td>
                                     <td>{{ $activity->name }}</td>
                                     <td>{{ $activity->city?->name ?? '-' }}</td>
-                                    <td>{{ $activity->country?->name ?? '-' }}</td>
                                     <td>
                                         @if ($activity->status)
                                             <span class="badge bg-success">Aktif</span>

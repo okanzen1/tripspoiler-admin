@@ -13,7 +13,6 @@ class Museum extends Model
     protected $fillable = [
         'name',
         'city_id',
-        'country_id',
         'sort_order',
         'status',
     ];

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Activity;
 use App\Models\City;
+use App\Models\AffiliatePartner;
+use App\Models\Museum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -18,7 +20,7 @@ class ActivityController extends Controller
 
     public function create()
     {
-        $cities = City::with('country')->orderBy('id')->where('active', true)->get();
+        $cities = City::orderBy('id')->where('active', true)->get();
 
         return view('admin.activities.create', compact('cities'));
     }
@@ -32,20 +34,12 @@ class ActivityController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'city_id' => 'required|exists:cities,id',
-            'status' => 'nullable|boolean',
         ]);
-
-        $city = City::where('id', $data['city_id'])->whereHas('country')->first();
-
-        if (!$city) {
-            return back()->withErrors('Seçilen şehir geçerli bir ülkeye bağlı değil.');
-        }
 
         $activity = Activity::create([
             'name' => $data['name'],
-            'city_id' => $city->id,
-            'country_id' => $city->country_id,
-            'status' => $data['status'] ?? 0,
+            'city_id' => $data['city_id'],
+            'status' => $data['status'] ?? false,
         ]);
 
         return redirect()
@@ -56,10 +50,12 @@ class ActivityController extends Controller
     public function edit(string $id)
     {
         $activity = Activity::findOrFail($id);
-        $cities = City::with('museums')->where('id', $activity->city_id)->where('active', true)->orderBy('id')->first();
-        $museums = $cities->museums->where('status', true) ?? collect();
+        $affiliatePartners = AffiliatePartner::where('active', true)->orderBy('name')->get();
+        $cities = City::with('museums')->where('active', true)->orderBy('id')->get();
+        $museums = $cities->pluck('museums')->flatten()->where('status', true)
+        ->where('city_id', $activity->city_id);
 
-        return view('admin.activities.edit', compact('activity', 'museums'));
+        return view('admin.activities.edit', compact('activity', 'museums', 'cities', 'affiliatePartners'));
     }
 
     public function update(Request $request, string $id)
@@ -74,14 +70,27 @@ class ActivityController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255',
             'museum_id' => 'nullable|exists:museums,id',
+            'affiliate_id' => 'nullable|exists:affiliate_partners,id',
+            'affiliate_link' => 'nullable|url|max:255',
             'status' => 'required|boolean',
             'sort_order' => 'nullable|integer',
         ]);
+
+        if (!empty($data['museum_id'])) {
+            $museumID = Museum::where('id', $data['museum_id'])->value('city_id');
+            if ($museumID !== $activity->city_id) {
+                return back()
+                    ->withErrors('Seçilen müze, aktivitenin şehri ile uyuşmuyor.')
+                    ->withInput();
+            }
+        }
 
         $activity->update([
             'name' => $data['name'],
             'slug' => Str::slug($data['slug']),
             'museum_id' => $data['museum_id'] ?? null,
+            'affiliate_id' => $data['affiliate_id'] ?? null,
+            'affiliate_link' => $data['affiliate_link'] ?? null,
             'status' => $data['status'],
             'sort_order' => $data['sort_order'] ?? 0,
         ]);

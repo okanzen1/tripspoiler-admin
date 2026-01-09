@@ -41,13 +41,14 @@
                 </div>
 
                 <div class="mb-3">
-                    <label>Ülke</label>
-                    <input class="form-control" value="{{ $activity->country?->name }}" disabled>
-                </div>
-
-                <div class="mb-3">
                     <label>Şehir</label>
-                    <input class="form-control" value="{{ $activity->city?->name }}" disabled>
+                    <select name="city_id" class="form-select" required>
+                        @foreach ($cities as $city)
+                            <option value="{{ $city->id }}" @selected(old('city_id', $activity->city_id) == $city->id)>
+                                {{ $city->name ?? '' }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="mb-3">
@@ -60,6 +61,24 @@
                             </option>
                         @endforeach
                     </select>
+                </div>
+
+                <div class="mb-3">
+                    <label>İş Ortakları</label>
+                    <select name="affiliate_id" class="form-select">
+                        <option value="">- yok -</option>
+                        @foreach ($affiliatePartners as $partner)
+                            <option value="{{ $partner->id }}" @selected(old('affiliate_id', $activity->affiliate_id) == $partner->id)>
+                                {{ $partner->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label>İş Ortağı Linki</label>
+                    <input type="url" name="affiliate_link" value="{{ old('affiliate_link', $activity->affiliate_link) }}"
+                        class="form-control">
                 </div>
 
                 <div class="mb-3">
