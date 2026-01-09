@@ -38,10 +38,16 @@
                     <input name="slug" value="{{ $city->slug ?? '' }}" class="form-control" required>
                 </div>
 
-                <div class="form-check my-3">
-                    <input type="checkbox" name="active" class="form-check-input" @checked($city->active)>
-
-                    <label class="form-check-label">Aktif</label>
+                <div class="mb-3">
+                    <label>Durum</label>
+                    <select name="active" class="form-select">
+                        <option value="1" {{ old('active', $city->active) == 1 ? 'selected' : '' }}>
+                            Aktif
+                        </option>
+                        <option value="0" {{ old('active', $city->active) == 0 ? 'selected' : '' }}>
+                            Pasif
+                        </option>
+                    </select>
                 </div>
 
                 <button class="btn btn-primary">

@@ -26,18 +26,22 @@ class CountryController extends Controller
         }
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name'   => ['required', 'string', 'max:255'],
+            'slug'   => ['required', 'string', 'max:255'],
+            'active' => ['required', 'in:0,1'],
         ]);
 
         Country::create([
-            'name' => $data['name'],
-            'active' => $request->has('active'),
+            'name'   => $data['name'],
+            'slug'   => $data['slug'],
+            'active' => (bool) $data['active'],
         ]);
 
         return redirect()
             ->route('countries.index')
             ->with('success', 'Ülke eklendi');
     }
+
 
     public function edit(Country $country)
     {
@@ -51,18 +55,22 @@ class CountryController extends Controller
         }
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name'   => ['required', 'string', 'max:255'],
+            'slug'   => ['required', 'string', 'max:255'],
+            'active' => ['required', 'in:0,1'],
         ]);
 
         $country->update([
-            'name' => $data['name'],
-            'active' => $request->has('active'),
+            'name'   => $data['name'],
+            'slug'   => $data['slug'],
+            'active' => (bool) $data['active'],
         ]);
 
         return redirect()
             ->route('countries.edit', $country)
             ->with('success', 'Ülke güncellendi');
     }
+
 
     public function destroy(Country $country)
     {

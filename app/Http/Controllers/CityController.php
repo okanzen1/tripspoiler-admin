@@ -32,13 +32,16 @@ class CityController extends Controller
 
         $data = $request->validate([
             'country_id' => ['required', 'exists:countries,id'],
-            'name' => ['required', 'string', 'max:255'],
+            'name'       => ['required', 'string', 'max:255'],
+            'slug'       => ['required', 'string', 'max:255'],
+            'active'     => ['required', 'in:0,1'],
         ]);
 
         City::create([
             'country_id' => $data['country_id'],
-            'name' => $data['name'],
-            'active' => $request->has('active'),
+            'name'       => $data['name'],
+            'slug'       => $data['slug'],
+            'active'     => (bool) $data['active'],
         ]);
 
         return redirect()
@@ -63,13 +66,16 @@ class CityController extends Controller
 
         $data = $request->validate([
             'country_id' => ['required', 'exists:countries,id'],
-            'name' => ['required', 'string', 'max:255'],
+            'name'       => ['required', 'string', 'max:255'],
+            'slug'       => ['required', 'string', 'max:255'],
+            'active'     => ['required', 'in:0,1'],
         ]);
 
         $city->update([
             'country_id' => $data['country_id'],
-            'name' => $data['name'],          // STRING
-            'active' => $request->has('active'),
+            'name'       => $data['name'],
+            'slug'       => $data['slug'],
+            'active'     => (bool) $data['active'],
         ]);
 
         return redirect()
