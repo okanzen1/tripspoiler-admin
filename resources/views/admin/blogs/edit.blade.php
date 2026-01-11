@@ -34,6 +34,11 @@
                 </div>
 
                 <div class="mb-3">
+                    <label>Özet</label>
+                    <textarea name="excerpt" class="form-control" rows="3">{{ old('excerpt', $blog->excerpt) }}</textarea>
+                </div>
+
+                <div class="mb-3">
                     <label>Slug</label>
                     <input type="text" name="slug" class="form-control"
                         value="{{ old('slug', $blog->getTranslation('slug', 'tr')) }}" required>

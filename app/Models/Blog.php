@@ -14,6 +14,7 @@ class Blog extends Model
 
     protected $fillable = [
         'title',
+        'excerpt',
         'slug',
         'meta_title',
         'meta_description',
@@ -27,6 +28,7 @@ class Blog extends Model
 
     public $translatable = [
         'title',
+        'excerpt',
         'slug',
         'meta_title',
         'meta_description',

@@ -37,6 +37,7 @@ class BlogController extends Controller
 
         $data = $request->validate([
             'title' => 'required|string|max:255',
+            'excerpt' => 'nullable|string',
             'city_id' => 'nullable|exists:cities,id',
             'status' => 'nullable|boolean',
             'sort_order' => 'nullable|integer',
@@ -46,6 +47,7 @@ class BlogController extends Controller
 
         $blog = Blog::create([
             'title' => $data['title'],
+            'excerpt' => $data['excerpt'] ?? null,
             'slug' => Str::slug($data['title']),
             'city_id' => $data['city_id'] ?? null,
             'sort_order' => $data['sort_order'] ?? 0,
@@ -80,6 +82,7 @@ class BlogController extends Controller
 
         $data = $request->validate([
             'title' => 'required|string|max:255',
+            'excerpt' => 'nullable|string',
             'slug' => 'required|string|max:255',
             'meta_title' => 'required|string|max:255',
             'meta_description' => 'required|string',
@@ -92,6 +95,7 @@ class BlogController extends Controller
 
         $blog->update([
             'title' => $data['title'],
+            'excerpt' => $data['excerpt'] ?? null,
             'slug' => Str::slug($data['title']),
             'meta_title' => $data['meta_title'] ?? null,
             'meta_description' => $data['meta_description'] ?? null,
