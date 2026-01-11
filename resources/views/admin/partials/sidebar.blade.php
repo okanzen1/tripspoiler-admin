@@ -39,6 +39,14 @@
                 </a>
             </li>
 
+            {{-- BLOG SUBSCRIBERS --}}
+            <li class="sidebar-item {{ request()->routeIs('blog-subscribers.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('blog-subscribers.index') }}">
+                    <i class="align-middle" data-feather="mail"></i>
+                    <span class="align-middle ms-2">Blog Aboneleri</span>
+                </a>
+            </li>
+
             {{-- FAQS --}}
             <li class="sidebar-item {{ request()->routeIs('faqs.*') ? 'active' : '' }}">
                 <a class="sidebar-link" href="{{ route('faqs.index') }}">
@@ -55,18 +63,19 @@
                 </a>
             </li>
 
-            {{-- COUNTRIES --}}
-            <li class="sidebar-item {{ request()->routeIs('countries.*') ? 'active' : '' }}">
-                <a class="sidebar-link" href="{{ route('countries.index') }}">
-                    <i class="align-middle" data-feather="flag"></i>
-                    <span class="align-middle ms-2">Ülkeler</span>
-                </a>
-            </li>
             {{-- CITIES --}}
             <li class="sidebar-item {{ request()->routeIs('cities.*') ? 'active' : '' }}">
                 <a class="sidebar-link" href="{{ route('cities.index') }}">
                     <i class="align-middle" data-feather="map-pin"></i>
                     <span class="align-middle ms-2">Şehirler</span>
+                </a>
+            </li>
+
+            {{-- COUNTRIES --}}
+            <li class="sidebar-item {{ request()->routeIs('countries.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('countries.index') }}">
+                    <i class="align-middle" data-feather="flag"></i>
+                    <span class="align-middle ms-2">Ülkeler</span>
                 </a>
             </li>
 
