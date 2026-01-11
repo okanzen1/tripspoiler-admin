@@ -89,6 +89,10 @@ class MuseumController extends Controller
 
         $museum->delete();
 
+        $museum->images()->each(function ($image) {
+            $image->delete();
+        });
+
         return redirect()
             ->route('museums.index')
             ->with('success', 'Museum deleted');

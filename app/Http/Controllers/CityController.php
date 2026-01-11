@@ -91,6 +91,10 @@ class CityController extends Controller
 
         $city->delete();
 
+        $city->images()->each(function ($image) {
+            $image->delete();
+        });
+
         return redirect()
             ->route('cities.index')
             ->with('success', 'Şehir silindi');

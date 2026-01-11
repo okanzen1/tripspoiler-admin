@@ -31,6 +31,14 @@
                 </a>
             </li>
 
+            {{-- BLOGS --}}
+            <li class="sidebar-item {{ request()->routeIs('blogs.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('blogs.index') }}">
+                    <i class="align-middle" data-feather="book-open"></i>
+                    <span class="align-middle ms-2">Bloglar</span>
+                </a>
+            </li>
+
             {{-- FAQS --}}
             <li class="sidebar-item {{ request()->routeIs('faqs.*') ? 'active' : '' }}">
                 <a class="sidebar-link" href="{{ route('faqs.index') }}">
