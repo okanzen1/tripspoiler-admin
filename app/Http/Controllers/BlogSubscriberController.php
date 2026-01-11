@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\BlogSubscriber;
 use Illuminate\Http\Request;
 
@@ -14,6 +13,7 @@ class BlogSubscriberController extends Controller
     public function index()
     {
         $subscribers = BlogSubscriber::latest()->paginate(20);
+
         return view('admin.blog-subscribers.index', compact('subscribers'));
     }
 
@@ -22,22 +22,24 @@ class BlogSubscriberController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email',
+        $validated = $request->validate([
+            'email' => 'required|email|max:255',
         ]);
 
-        // Aynı email var mı? (decrypt ederek kontrol)
-        $exists = BlogSubscriber::all()
-            ->contains(fn ($sub) => $sub->email === $request->email);
+        // 2️⃣ Normalize + hash
+        $normalizedEmail = mb_strtolower(trim($validated['email']));
+        $emailHash = hash('sha256', $normalizedEmail);
 
-        if ($exists) {
-            return back()->withErrors([
-                'email' => 'This email is already subscribed.'
-            ]);
+        if (BlogSubscriber::where('email_hash', $emailHash)->exists()) {
+            return back()
+                ->withErrors([
+                    'email' => 'This email is already subscribed.',
+                ])
+                ->withInput();
         }
 
         BlogSubscriber::create([
-            'email' => $request->email,
+            'email' => $validated['email'],
         ]);
 
         return back()->with('success', 'Subscriber added successfully.');
@@ -48,12 +50,12 @@ class BlogSubscriberController extends Controller
      */
     public function update(Request $request, BlogSubscriber $blogSubscriber)
     {
-        $request->validate([
+        $validated = $request->validate([
             'status' => 'required|boolean',
         ]);
 
         $blogSubscriber->update([
-            'status' => $request->status,
+            'status' => $validated['status'],
         ]);
 
         return back()->with('success', 'Subscriber status updated.');

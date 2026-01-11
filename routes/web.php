@@ -11,7 +11,7 @@ use App\Http\Controllers\ImageController;
 use App\Http\Controllers\MuseumController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BlogContentController;
-use App\Http\Controllers\Admin\BlogSubscriberController;
+use App\Http\Controllers\BlogSubscriberController;
 
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
