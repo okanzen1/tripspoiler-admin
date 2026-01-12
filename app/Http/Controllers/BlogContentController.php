@@ -91,13 +91,6 @@ class BlogContentController extends Controller
         $this->authorizeSuperAdmin();
         abort_if($content->blog_id !== $blog->id, 404);
 
-        Image::where('source', 'blog_content')
-            ->where('source_id', $content->id)
-            ->get()
-            ->each(function ($image) {
-                $image->delete();
-            });
-
         $content->delete();
 
         return back()->with('success', 'İçerik ve görselleri silindi.');

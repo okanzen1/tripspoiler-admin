@@ -5,12 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Sluggable\HasTranslatableSlug;
 use Spatie\Sluggable\SlugOptions;
+use App\Models\Traits\HasImages;
 use Spatie\Translatable\HasTranslations;
+
 
 class Activity extends Model
 {
     use HasTranslations;
     use HasTranslatableSlug;
+    use HasImages;
 
     protected $fillable = [
         'name',
@@ -60,5 +63,10 @@ class Activity extends Model
     public function affiliatePartner()
     {
         return $this->belongsTo(AffiliatePartner::class, 'affiliate_id');
+    }
+
+    public function getImageSource(): string
+    {
+        return 'activity';
     }
 }

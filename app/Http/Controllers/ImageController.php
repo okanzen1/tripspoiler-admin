@@ -20,7 +20,7 @@ class ImageController extends Controller
             'activity' => 'activities',
             'museum' => 'museums',
             'city' => 'cities',
-            default => Str::plural($source),
+            default => $source,
         };
     }
 
@@ -53,7 +53,7 @@ class ImageController extends Controller
         $path = $request->file('file')->storeAs(
             "tripspoiler/{$folder}/{$data['source_id']}",
             $filename,
-            'local'
+            'private'
         );
 
         $maxOrder = Image::where('source', $data['source'])
@@ -69,7 +69,7 @@ class ImageController extends Controller
 
         return response()->json([
             'id' => $image->id,
-            'url' => route('images.view', $image),
+            'url' => '/media/' . $image->id,
         ]);
     }
 
@@ -87,13 +87,14 @@ class ImageController extends Controller
         return response()->json(['success' => true]);
     }
    
-    public function destroy(Image $image)
+   public function destroy(Image $image)
     {
         $this->ensureSuperAdmin();
 
-        Storage::disk('local')->delete($image->path);
+        Storage::disk('private')->delete($image->path);
         $image->delete();
 
         return response()->json(['success' => true]);
     }
+
 }

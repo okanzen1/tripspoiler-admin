@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\HasImages;
 use Spatie\Sluggable\HasTranslatableSlug;
 use Spatie\Sluggable\SlugOptions;
 use Spatie\Translatable\HasTranslations;
@@ -11,6 +12,7 @@ class Blog extends Model
 {
     use HasTranslations;
     use HasTranslatableSlug;
+    use HasImages;
 
     protected $fillable = [
         'title',
@@ -57,6 +59,11 @@ class Blog extends Model
     public function content()
     {
         return $this->hasOne(BlogContent::class);
+    }
+    
+    public function getImageSource(): string
+    {
+        return 'blog';
     }
 
     public function images()

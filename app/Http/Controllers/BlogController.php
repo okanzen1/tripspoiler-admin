@@ -149,10 +149,6 @@ class BlogController extends Controller
             return back()->withErrors('Super admin dışındaki kullanıcılar güncelleyemez.');
         }
 
-        $blog->images()->each(function ($image) {
-            $image->delete();
-        });
-
         $blog->delete();
 
         return redirect()

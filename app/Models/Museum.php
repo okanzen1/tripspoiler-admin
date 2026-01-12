@@ -4,11 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
+use App\Models\Traits\HasImages;
 use App\Models\Image;
 
 class Museum extends Model
 {
     use HasTranslations;
+    use HasImages;
 
     protected $fillable = [
         'name',
@@ -33,6 +35,11 @@ class Museum extends Model
     public function country()
     {
         return $this->belongsTo(Country::class);
+    }
+
+    public function getImageSource(): string
+    {
+        return 'museum';
     }
 
     public function images()

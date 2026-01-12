@@ -6,12 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Sluggable\HasTranslatableSlug;
 use Spatie\Sluggable\SlugOptions;
 use Spatie\Translatable\HasTranslations;
+use App\Models\Traits\HasImages;
+
 use App\Models\Image;
 
 class City extends Model
 {
     use HasTranslations;
     use HasTranslatableSlug;
+    use HasImages;
 
     protected $fillable = [
         'country_id',
@@ -55,5 +58,10 @@ class City extends Model
         return $this->hasMany(Image::class, 'source_id')
             ->where('source', 'city')
             ->orderBy('sort_order');
+    }
+
+    public function getImageSource(): string
+    {
+        return 'city';
     }
 }
