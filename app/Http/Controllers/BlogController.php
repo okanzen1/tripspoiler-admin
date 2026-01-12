@@ -7,7 +7,6 @@ use App\Models\Blog;
 use App\Models\BlogContent;
 use App\Models\City;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class BlogController extends Controller
 {
@@ -32,7 +31,7 @@ class BlogController extends Controller
     public function store(Request $request)
     {
         if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar güncelleyemez.');
+            return back()->withErrors('Super admin dışındaki kullanıcılar ekleyemez.');
         }
 
         $data = $request->validate([
@@ -44,6 +43,8 @@ class BlogController extends Controller
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string',
             'themes' => 'nullable|string',
+            'source_venue_id' => 'nullable|exists:venues,id',
+            'source_activity_id' => 'nullable|exists:activities,id',
         ]);
 
         $locale = app()->getLocale();
@@ -53,16 +54,17 @@ class BlogController extends Controller
         $blog->status = $data['status'] ?? false;
         $blog->sort_order = $data['sort_order'] ?? 0;
         $blog->click_count = 0;
+        $blog->source_venue_id = $data['source_venue_id'] ?? null;
+        $blog->source_activity_id = $data['source_activity_id'] ?? null;
 
         $blog->setTranslation('title', $locale, $data['title']);
         $blog->setTranslation('excerpt', $locale, $data['excerpt'] ?? '');
         $blog->setTranslation('meta_title', $locale, $data['meta_title'] ?? '');
         $blog->setTranslation('meta_description', $locale, $data['meta_description'] ?? '');
 
-        // 🔥 THEMES
         if (!empty($data['themes'])) {
             $themesArray = collect(explode(',', $data['themes']))
-                ->map(fn($i) => trim($i))
+                ->map(fn ($item) => trim($item))
                 ->filter()
                 ->values()
                 ->toArray();
@@ -77,12 +79,13 @@ class BlogController extends Controller
             ->with('success', 'Blog oluşturuldu.');
     }
 
-
-
     public function edit(Blog $blog)
     {
         $blog->load('images');
-        $cities = City::where('active', true)->orderBy('name')->get();
+
+        $cities = City::where('active', true)
+            ->orderBy('name')
+            ->get();
 
         $contents = BlogContent::where('blog_id', $blog->id)
             ->orderBy('created_at', 'desc')
@@ -90,7 +93,6 @@ class BlogController extends Controller
 
         return view('admin.blogs.edit', compact('blog', 'cities', 'contents'));
     }
-
 
     public function update(Request $request, Blog $blog)
     {
@@ -106,9 +108,10 @@ class BlogController extends Controller
             'city_id' => 'required|exists:cities,id',
             'status' => 'required|boolean',
             'sort_order' => 'required|integer',
-            'source' => 'nullable|string|max:255',
-            'source_id' => 'nullable|string|max:255',
             'themes' => 'nullable|string',
+
+            'source_venue_id' => 'nullable|exists:venues,id',
+            'source_activity_id' => 'nullable|exists:activities,id',
         ]);
 
         $locale = app()->getLocale();
@@ -116,18 +119,18 @@ class BlogController extends Controller
         $blog->city_id = $data['city_id'];
         $blog->status = $data['status'];
         $blog->sort_order = $data['sort_order'];
-        $blog->source = $data['source'] ?? null;
-        $blog->source_id = $data['source_id'] ?? null;
+
+        $blog->source_venue_id = $data['source_venue_id'] ?? null;
+        $blog->source_activity_id = $data['source_activity_id'] ?? null;
 
         $blog->setTranslation('title', $locale, $data['title']);
         $blog->setTranslation('excerpt', $locale, $data['excerpt'] ?? '');
         $blog->setTranslation('meta_title', $locale, $data['meta_title']);
         $blog->setTranslation('meta_description', $locale, $data['meta_description']);
 
-        // 🔥 THEMES
         if (!empty($data['themes'])) {
             $themesArray = collect(explode(',', $data['themes']))
-                ->map(fn($i) => trim($i))
+                ->map(fn ($item) => trim($item))
                 ->filter()
                 ->values()
                 ->toArray();
@@ -142,11 +145,10 @@ class BlogController extends Controller
             ->with('success', 'Blog güncellendi.');
     }
 
-
     public function destroy(Blog $blog)
     {
         if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar güncelleyemez.');
+            return back()->withErrors('Super admin dışındaki kullanıcılar silemez.');
         }
 
         $blog->delete();
@@ -155,4 +157,4 @@ class BlogController extends Controller
             ->route('blogs.index')
             ->with('success', 'Blog silindi.');
     }
-};
+}

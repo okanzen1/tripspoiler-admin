@@ -92,6 +92,18 @@
                 </div>
 
                 <div class="mb-3">
+                    <label>Source Venue ID (Opsiyonel)</label>
+                    <input name="source_venue_id" value="{{ old('source_venue_id', $blog->source_venue_id) }}"
+                        class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label>Source Activity ID (Opsiyonel)</label>
+                    <input name="source_activity_id" value="{{ old('source_activity_id', $blog->source_activity_id) }}"
+                        class="form-control">
+                </div>
+
+                <div class="mb-3">
                     <label>Durum</label>
                     <select name="status" class="form-select">
                         <option value="1" @selected($blog->status)>Aktif</option>

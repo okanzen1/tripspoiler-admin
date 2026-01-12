@@ -24,6 +24,8 @@ class Blog extends Model
         'city_id',
         'source',
         'source_id',
+        'source_venue_id',
+        'source_activity_id',
         'sort_order',
         'status',
         'click_count',
@@ -60,7 +62,7 @@ class Blog extends Model
     {
         return $this->hasOne(BlogContent::class);
     }
-    
+
     public function getImageSource(): string
     {
         return 'blog';
@@ -72,5 +74,4 @@ class Blog extends Model
             ->where('source', 'blog')
             ->orderBy('sort_order');
     }
-
 }
