@@ -68,6 +68,19 @@
                 </div>
 
                 <div class="mb-3">
+                    <label>Tema / Etiketler</label>
+                    <input type="text"
+                        name="themes"
+                        class="form-control"
+                        placeholder="Art, History, Culture"
+                        value="{{ old('themes', isset($blog) && $blog->themes ? implode(', ', $blog->themes) : '') }}">
+                    <small class="text-muted">
+                        Virgülle ayırarak girin (örn: Art, History, Culture)
+                    </small>
+                </div>
+
+
+                <div class="mb-3">
                     <label>Kaynak (Opsiyonel)</label>
                     <input name="source" value="{{ old('source', $blog->source) }}" class="form-control">
                 </div>
@@ -155,10 +168,6 @@
                         @forelse($blog->content ? [$blog->content] : [] as $content)
                             <tr>
                                 <td>{{ $content->id }}</td>
-
-                                <td>
-                                    {{ Str::limit(strip_tags($content->getTranslation('excerpt', app()->getLocale())), 80) }}
-                                </td>
 
                                 <td>
                                     {{ Str::limit(strip_tags($content->getTranslation('content', app()->getLocale())), 120) }}

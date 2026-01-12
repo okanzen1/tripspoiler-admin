@@ -18,6 +18,7 @@ class Blog extends Model
         'slug',
         'meta_title',
         'meta_description',
+        'themes',
         'city_id',
         'source',
         'source_id',
@@ -36,6 +37,7 @@ class Blog extends Model
 
     protected $casts = [
         'status' => 'boolean',
+        'themes' => 'array',
     ];
 
     public function getSlugOptions(): SlugOptions
