@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Venue;
 use App\Models\City;
-use App\Models\Museum;
 use App\Models\AffiliatePartner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -27,6 +26,8 @@ class VenueController extends Controller
     {
         abort_unless(auth()->user()?->role === 'super_admin', 403);
 
+        [$sources, $sourceIds] = $this->parseSources($request);
+
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'city_id' => 'required|exists:cities,id',
@@ -35,6 +36,8 @@ class VenueController extends Controller
         $venue = Venue::create([
             'name' => $data['name'],
             'city_id' => $data['city_id'],
+            'sources' => $sources,
+            'source_ids' => $sourceIds,
             'status' => false,
         ]);
 
@@ -45,9 +48,16 @@ class VenueController extends Controller
 
     public function edit(Venue $venue)
     {
-        $cities = City::with('museums')->where('active', true)->get();
-        $affiliatePartners = AffiliatePartner::where('active', true)->orderBy('name')->get();
+        $cities = City::with('museums')
+            ->where('active', true)
+            ->orderBy('id')
+            ->get();
 
+        $affiliatePartners = AffiliatePartner::where('active', true)
+            ->orderBy('name')
+            ->get();
+
+        // seçili şehre göre müzeleri filtrele
         $museums = $cities->pluck('museums')
             ->flatten()
             ->where('status', true)
@@ -61,16 +71,18 @@ class VenueController extends Controller
         ));
     }
 
+
     public function update(Request $request, Venue $venue)
     {
         abort_unless(auth()->user()?->role === 'super_admin', 403);
 
+        [$sources, $sourceIds] = $this->parseSources($request);
+
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255',
-            'museum_id' => 'nullable|exists:museums,id',
             'affiliate_id' => 'nullable|exists:affiliate_partners,id',
-            'affiliate_link' => 'nullable|url',
+            'affiliate_link' => 'nullable|url|max:255',
             'status' => 'required|boolean',
             'sort_order' => 'nullable|integer',
         ]);
@@ -78,7 +90,8 @@ class VenueController extends Controller
         $venue->update([
             'name' => $data['name'],
             'slug' => Str::slug($data['slug']),
-            'museum_id' => $data['museum_id'] ?? null,
+            'sources' => $sources,
+            'source_ids' => $sourceIds,
             'affiliate_id' => $data['affiliate_id'] ?? null,
             'affiliate_link' => $data['affiliate_link'] ?? null,
             'status' => $data['status'],
@@ -97,5 +110,29 @@ class VenueController extends Controller
         return redirect()
             ->route('venues.index')
             ->with('success', 'Venue deleted.');
+    }
+
+    /**
+     * sources + source_ids birlikte parse edilir
+     */
+    private function parseSources(Request $request): array
+    {
+        // sources: "city,museum"
+        $sourcesRaw = $request->input('sources', '');
+        $sources = collect(explode(',', $sourcesRaw))
+            ->map(fn($s) => trim($s))
+            ->filter()
+            ->values()
+            ->toArray();
+
+        // source_ids: "3,12"
+        $idsRaw = $request->input('source_ids', '');
+        $ids = collect(explode(',', $idsRaw))
+            ->map(fn($id) => (int) trim($id))
+            ->filter()
+            ->values()
+            ->toArray();
+
+        return [$sources, $ids];
     }
 }

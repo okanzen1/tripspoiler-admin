@@ -21,17 +21,21 @@ class Venue extends Model
         'museum_id',
         'affiliate_id',
         'affiliate_link',
+        'source',
+        'source_ids',
         'status',
         'sort_order',
     ];
 
     public $translatable = [
         'name',
+        'sources' => 'array',
         'slug',
     ];
 
     protected $casts = [
         'status' => 'boolean',
+        'source_ids' => 'array',
     ];
 
     public function getSlugOptions(): SlugOptions
