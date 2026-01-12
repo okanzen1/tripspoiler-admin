@@ -29,8 +29,8 @@
 
                 <div class="mb-3">
                     <label>Blog Adı</label>
-                    <input type="text" name="title" class="form-control"
-                        value="{{ old('title', $blog->title) }}" required>
+                    <input type="text" name="title" class="form-control" value="{{ old('title', $blog->title) }}"
+                        required>
                 </div>
 
                 <div class="mb-3">
@@ -67,18 +67,19 @@
                     </select>
                 </div>
 
+                @php($locale = app()->getLocale())
+
                 <div class="mb-3">
                     <label>Tema / Etiketler</label>
-                    <input type="text"
-                        name="themes"
-                        class="form-control"
-                        placeholder="Art, History, Culture"
-                        value="{{ old('themes', isset($blog) && $blog->themes ? implode(', ', $blog->themes) : '') }}">
+                    <input type="text" name="themes" class="form-control" placeholder="Art, History, Culture"
+                        value="{{ old(
+                            'themes',
+                            $blog->getTranslation('themes', $locale) ? implode(', ', $blog->getTranslation('themes', $locale)) : '',
+                        ) }}">
                     <small class="text-muted">
                         Virgülle ayırarak girin (örn: Art, History, Culture)
                     </small>
                 </div>
-
 
                 <div class="mb-3">
                     <label>Kaynak (Opsiyonel)</label>

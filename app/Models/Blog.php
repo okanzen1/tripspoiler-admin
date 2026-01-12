@@ -30,6 +30,7 @@ class Blog extends Model
     public $translatable = [
         'title',
         'excerpt',
+        'themes',
         'slug',
         'meta_title',
         'meta_description',

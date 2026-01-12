@@ -46,31 +46,37 @@ class BlogController extends Controller
             'themes' => 'nullable|string',
         ]);
 
-        $themes = null;
+        $locale = app()->getLocale();
+
+        $blog = new Blog();
+        $blog->city_id = $data['city_id'] ?? null;
+        $blog->status = $data['status'] ?? false;
+        $blog->sort_order = $data['sort_order'] ?? 0;
+        $blog->click_count = 0;
+
+        $blog->setTranslation('title', $locale, $data['title']);
+        $blog->setTranslation('excerpt', $locale, $data['excerpt'] ?? '');
+        $blog->setTranslation('meta_title', $locale, $data['meta_title'] ?? '');
+        $blog->setTranslation('meta_description', $locale, $data['meta_description'] ?? '');
+
+        // 🔥 THEMES
         if (!empty($data['themes'])) {
-            $themes = array_values(
-                array_filter(
-                    array_map('trim', explode(',', $data['themes']))
-                )
-            );
+            $themesArray = collect(explode(',', $data['themes']))
+                ->map(fn($i) => trim($i))
+                ->filter()
+                ->values()
+                ->toArray();
+
+            $blog->setTranslation('themes', $locale, $themesArray);
         }
 
-        $blog = Blog::create([
-            'title' => $data['title'],
-            'excerpt' => $data['excerpt'] ?? null,
-            'slug' => Str::slug($data['title']),
-            'city_id' => $data['city_id'] ?? null,
-            'sort_order' => $data['sort_order'] ?? 0,
-            'status' => $data['status'] ?? false,
-            'meta_title' => $data['meta_title'] ?? null,
-            'meta_description' => $data['meta_description'] ?? null,
-            'themes' => $themes,
-        ]);
+        $blog->save();
 
         return redirect()
             ->route('blogs.edit', $blog)
             ->with('success', 'Blog oluşturuldu.');
     }
+
 
 
     public function edit(Blog $blog)
@@ -95,7 +101,6 @@ class BlogController extends Controller
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'excerpt' => 'nullable|string',
-            'slug' => 'required|string|max:255',
             'meta_title' => 'required|string|max:255',
             'meta_description' => 'required|string',
             'city_id' => 'required|exists:cities,id',
@@ -106,28 +111,31 @@ class BlogController extends Controller
             'themes' => 'nullable|string',
         ]);
 
-        $themes = null;
+        $locale = app()->getLocale();
+
+        $blog->city_id = $data['city_id'];
+        $blog->status = $data['status'];
+        $blog->sort_order = $data['sort_order'];
+        $blog->source = $data['source'] ?? null;
+        $blog->source_id = $data['source_id'] ?? null;
+
+        $blog->setTranslation('title', $locale, $data['title']);
+        $blog->setTranslation('excerpt', $locale, $data['excerpt'] ?? '');
+        $blog->setTranslation('meta_title', $locale, $data['meta_title']);
+        $blog->setTranslation('meta_description', $locale, $data['meta_description']);
+
+        // 🔥 THEMES
         if (!empty($data['themes'])) {
-            $themes = array_values(
-                array_filter(
-                    array_map('trim', explode(',', $data['themes']))
-                )
-            );
+            $themesArray = collect(explode(',', $data['themes']))
+                ->map(fn($i) => trim($i))
+                ->filter()
+                ->values()
+                ->toArray();
+
+            $blog->setTranslation('themes', $locale, $themesArray);
         }
 
-        $blog->update([
-            'title' => $data['title'],
-            'excerpt' => $data['excerpt'] ?? null,
-            'slug' => Str::slug($data['title']),
-            'meta_title' => $data['meta_title'] ?? null,
-            'meta_description' => $data['meta_description'] ?? null,
-            'city_id' => $data['city_id'] ?? null,
-            'status' => $data['status'],
-            'sort_order' => $data['sort_order'] ?? 0,
-            'source' => $data['source'] ?? null,
-            'source_id' => $data['source_id'] ?? null,
-            'themes' => $themes,
-        ]);
+        $blog->save();
 
         return redirect()
             ->route('blogs.edit', $blog)
