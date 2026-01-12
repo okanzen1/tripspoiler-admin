@@ -72,7 +72,9 @@ class FaqController extends Controller
             'status' => $data['status'] ?? true,
         ]);
 
-        return back()->with('success', 'FAQ güncellendi');
+        return redirect()
+            ->route('faqs.index', $faq)
+            ->with('success', 'FAQ güncellendi');
     }
 
     public function destroy(Faq $faq)
