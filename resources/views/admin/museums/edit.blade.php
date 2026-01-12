@@ -81,8 +81,7 @@
                 @foreach ($museum->images as $image)
                     <div class="col-md-3 mb-2" data-id="{{ $image->id }}">
                         <div class="border rounded p-1">
-                            <img src="{{ route('images.view', $image) }}" class="img-fluid rounded">
-
+                            <img src="{{ $image->url }}" class="img-fluid">
                             <button type="button" class="btn btn-danger btn-sm w-100 mt-1 delete-image"
                                 data-delete-url="{{ route('images.destroy', $image) }}">
                                 Sil

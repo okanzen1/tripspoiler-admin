@@ -12,4 +12,9 @@ class Image extends Model
         'source_id',
         'sort_order',
     ];
+
+    public function getUrlAttribute(): string
+    {
+        return rtrim(config('media.front_url'), '/') . '/media/' . $this->id;
+    }
 }

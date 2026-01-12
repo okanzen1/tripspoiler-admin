@@ -32,13 +32,13 @@ return [
 
         'local' => [
             'driver' => 'local',
-            'root' => storage_path('app'), // 🔥 GERİ ALDIK
+            'root' => storage_path('app'),
             'throw' => false,
         ],
 
         'private' => [
             'driver' => 'local',
-            'root' => storage_path('app/private'),
+            'root' => base_path('../tripspoiler/storage/app/private'),
             'throw' => false,
         ],
 

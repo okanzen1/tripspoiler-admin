@@ -51,7 +51,7 @@ class ImageController extends Controller
         $filename = 'tripspoiler_'.Str::random(24).'.webp';
 
         $path = $request->file('file')->storeAs(
-            "tripspoiler/{$folder}/{$data['source_id']}",
+            "{$folder}/{$data['source_id']}",
             $filename,
             'private'
         );
@@ -69,7 +69,7 @@ class ImageController extends Controller
 
         return response()->json([
             'id' => $image->id,
-            'url' => '/media/' . $image->id,
+            'url' => rtrim(config('media.front_url'), '/') . '/media/' . $image->id,
         ]);
     }
 
