@@ -11,7 +11,7 @@
             @csrf
 
              <div class="mb-3">
-                <label>Blog Adı</label>
+                <label>Blog İçerik Adı</label>
                 <input name="title" class="form-control" required>
             </div>
 

@@ -12,7 +12,6 @@ class BlogContent extends Model
     protected $fillable = [
         'blog_id',
         'title',
-        'excerpt',
         'content',
         'status',
         'sort_order',
@@ -20,7 +19,6 @@ class BlogContent extends Model
 
     public $translatable = [
         'title',
-        'excerpt',
         'content',
     ];
 

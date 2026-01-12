@@ -44,14 +44,6 @@
             </div>
         </div>
 
-        {{-- KISA ÖZET --}}
-        <div class="card mb-4">
-            <div class="card-header"><strong>Kısa Özet (Opsiyonel)</strong></div>
-            <div class="card-body">
-                <textarea name="excerpt" class="form-control" rows="4">{{ old('excerpt', $content->excerpt) }}</textarea>
-            </div>
-        </div>
-
         {{-- ANA İÇERİK --}}
         <div class="card mb-5">
             <div class="card-header"><strong>Ana İçerik</strong></div>

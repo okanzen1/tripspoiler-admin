@@ -40,7 +40,7 @@ class BlogContentController extends Controller
             'title' => [
                 $locale => $data['title'],
             ],
-            'excerpt' => [],
+
             'content' => [],
             'status' => false,
             'sort_order' => 0,
@@ -65,7 +65,6 @@ class BlogContentController extends Controller
 
         $data = $request->validate([
             'title' => 'required|string|max:255',
-            'excerpt' => 'nullable|string',
             'content' => 'required|string',
             'status' => 'required|boolean',
             'sort_order' => 'required|integer',
@@ -93,10 +92,6 @@ class BlogContentController extends Controller
                 ->each(function ($image) {
                     $image->delete();
                 });
-        }
-
-        if (!empty($data['excerpt'])) {
-            $content->setTranslation('excerpt', $locale, $data['excerpt']);
         }
 
         $content->setTranslation('content', $locale, $newHtml);
