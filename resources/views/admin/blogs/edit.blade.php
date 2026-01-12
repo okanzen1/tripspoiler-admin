@@ -159,7 +159,7 @@
                         <tr>
                             <th>#</th>
                             <th>Kısa Özet</th>
-                            <th>İçerik</th>
+                            <th>Status</th>
                             <th class="text-end">İşlem</th>
                         </tr>
                     </thead>
@@ -171,6 +171,14 @@
 
                                 <td>
                                     {{ Str::limit(strip_tags($content->getTranslation('content', app()->getLocale())), 120) }}
+                                </td>
+
+                                <td>
+                                    @if ($content->status)
+                                        <span class="badge bg-success">Aktif</span>
+                                    @else
+                                        <span class="badge bg-secondary">Pasif</span>
+                                    @endif
                                 </td>
 
                                 <td class="text-end">

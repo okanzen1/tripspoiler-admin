@@ -72,29 +72,13 @@ class BlogContentController extends Controller
 
         $locale = app()->getLocale();
 
-        $oldHtml = $content->content ?? '';
+        $content->setTranslation('title', $locale, $data['title']);
 
-        $newHtml = $data['content'];
+        $content->setTranslation('content', $locale, $data['content']);
 
-        preg_match_all('#/media/(\d+)#', $oldHtml, $oldMatches);
-        preg_match_all('#/media/(\d+)#', $newHtml, $newMatches);
+        $content->status = $data['status'];
+        $content->sort_order = $data['sort_order'];
 
-        $oldImageIds = collect($oldMatches[1] ?? [])->unique();
-        $newImageIds = collect($newMatches[1] ?? [])->unique();
-
-        $deletedImageIds = $oldImageIds->diff($newImageIds);
-
-        if ($deletedImageIds->isNotEmpty()) {
-            Image::whereIn('id', $deletedImageIds)
-                ->where('source', 'blog_content')
-                ->where('source_id', $content->id)
-                ->get()
-                ->each(function ($image) {
-                    $image->delete();
-                });
-        }
-
-        $content->setTranslation('content', $locale, $newHtml);
         $content->save();
 
         return redirect()
