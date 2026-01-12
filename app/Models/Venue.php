@@ -16,6 +16,7 @@ class Venue extends Model
 
     protected $fillable = [
         'name',
+        'description',
         'slug',
         'city_id',
         'museum_id',
@@ -29,6 +30,7 @@ class Venue extends Model
 
     public $translatable = [
         'name',
+        'description',
         'slug',
     ];
 

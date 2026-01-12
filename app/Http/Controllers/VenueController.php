@@ -35,6 +35,7 @@ class VenueController extends Controller
 
         $venue = Venue::create([
             'name' => $data['name'],
+            'description' => null,
             'city_id' => $data['city_id'],
             'sources' => $sources,
             'source_ids' => $sourceIds,
@@ -80,6 +81,7 @@ class VenueController extends Controller
 
         $data = $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'slug' => 'required|string|max:255',
             'affiliate_id' => 'nullable|exists:affiliate_partners,id',
             'affiliate_link' => 'nullable|url|max:255',
@@ -89,6 +91,7 @@ class VenueController extends Controller
 
         $venue->update([
             'name' => $data['name'],
+            'description' => $data['description'] ?? null,
             'slug' => Str::slug($data['slug']),
             'sources' => $sources,
             'source_ids' => $sourceIds,
