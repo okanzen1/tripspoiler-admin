@@ -9,7 +9,7 @@ class FaqController extends Controller
 {
     public function index()
     {
-        $faqs = Faq::orderBy('sort_order')->paginate(10);
+        $faqs = Faq::orderBy('id','desc')->paginate(10);
 
         return view('admin.faqs.index', compact('faqs'));
     }
