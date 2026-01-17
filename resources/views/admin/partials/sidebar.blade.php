@@ -23,14 +23,6 @@
                 </a>
             </li>
 
-            {{-- VENUES --}}
-            <li class="sidebar-item {{ request()->routeIs('venues.*') ? 'active' : '' }}">
-                <a class="sidebar-link" href="{{ route('venues.index') }}">
-                    <i class="align-middle" data-feather="map"></i>
-                    <span class="align-middle ms-2">Mekanlar</span>
-                </a>
-            </li>
-
             {{-- MUSEUMS --}}
             <li class="sidebar-item {{ request()->routeIs('museums.*') ? 'active' : '' }}">
                 <a class="sidebar-link" href="{{ route('museums.index') }}">

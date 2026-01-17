@@ -91,11 +91,6 @@
                     <input name="source_id" value="{{ old('source_id', $blog->source_id) }}" class="form-control">
                 </div>
 
-                <div class="mb-3">
-                    <label>Source Venue ID (Opsiyonel)</label>
-                    <input name="source_venue_id" value="{{ old('source_venue_id', $blog->source_venue_id) }}"
-                        class="form-control">
-                </div>
 
                 <div class="mb-3">
                     <label>Source Activity ID (Opsiyonel)</label>

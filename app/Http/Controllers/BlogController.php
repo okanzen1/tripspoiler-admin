@@ -43,7 +43,6 @@ class BlogController extends Controller
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string',
             'themes' => 'nullable|string',
-            'source_venue_id' => 'nullable|exists:venues,id',
             'source_activity_id' => 'nullable|exists:activities,id',
         ]);
 
@@ -54,7 +53,6 @@ class BlogController extends Controller
         $blog->status = $data['status'] ?? false;
         $blog->sort_order = $data['sort_order'] ?? 0;
         $blog->click_count = 0;
-        $blog->source_venue_id = $data['source_venue_id'] ?? null;
         $blog->source_activity_id = $data['source_activity_id'] ?? null;
 
         $blog->setTranslation('title', $locale, $data['title']);
@@ -109,8 +107,6 @@ class BlogController extends Controller
             'status' => 'required|boolean',
             'sort_order' => 'required|integer',
             'themes' => 'nullable|string',
-
-            'source_venue_id' => 'nullable|exists:venues,id',
             'source_activity_id' => 'nullable|exists:activities,id',
         ]);
 
@@ -119,8 +115,6 @@ class BlogController extends Controller
         $blog->city_id = $data['city_id'];
         $blog->status = $data['status'];
         $blog->sort_order = $data['sort_order'];
-
-        $blog->source_venue_id = $data['source_venue_id'] ?? null;
         $blog->source_activity_id = $data['source_activity_id'] ?? null;
 
         $blog->setTranslation('title', $locale, $data['title']);

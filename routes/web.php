@@ -12,7 +12,6 @@ use App\Http\Controllers\MuseumController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BlogContentController;
 use App\Http\Controllers\BlogSubscriberController;
-use App\Http\Controllers\VenueController;
 
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -32,7 +31,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('museums', MuseumController::class);
     Route::resource('countries', CountryController::class);
     Route::resource('activities', ActivityController::class);
-    Route::resource('venues', VenueController::class)->middleware('admin');
 
     Route::resource('blogs', BlogController::class);
     Route::get('/blogs/{blog}/contents/create', [BlogContentController::class, 'create'])->name('blogs.content.create');

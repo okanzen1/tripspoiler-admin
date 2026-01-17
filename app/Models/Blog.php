@@ -24,7 +24,6 @@ class Blog extends Model
         'city_id',
         'source',
         'source_id',
-        'source_venue_id',
         'source_activity_id',
         'sort_order',
         'status',
