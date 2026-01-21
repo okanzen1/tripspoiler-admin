@@ -11,12 +11,32 @@ use Illuminate\Support\Str;
 
 class ActivityController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $activities = Activity::orderBy('sort_order')->paginate(10);
+        $cities = City::where('active', true)->orderBy('name')->get();
 
-        return view('admin.activities.index', compact('activities'));
+        $query = Activity::query()->orderBy('sort_order');
+
+        // Varsayılan şehir = 1
+        $cityId = (int) $request->get('city_id', 1);
+        $query->where('city_id', $cityId);
+
+        // Varsayılan durum = AKTİF (1)
+        $status = (int) $request->get('status', 1);
+        $query->where('status', $status);
+
+        $activities = $query
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin.activities.index', compact(
+            'activities',
+            'cities',
+            'cityId',
+            'status'
+        ));
     }
+
 
     public function create()
     {
@@ -53,7 +73,7 @@ class ActivityController extends Controller
         $affiliatePartners = AffiliatePartner::where('active', true)->orderBy('name')->get();
         $cities = City::with('museums')->where('active', true)->orderBy('id')->get();
         $museums = $cities->pluck('museums')->flatten()->where('status', true)
-        ->where('city_id', $activity->city_id);
+            ->where('city_id', $activity->city_id);
 
         return view('admin.activities.edit', compact('activity', 'museums', 'cities', 'affiliatePartners'));
     }

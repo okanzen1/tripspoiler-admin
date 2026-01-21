@@ -28,6 +28,42 @@
             </div>
         @endif
 
+        <form method="GET" class="row g-2 mb-3">
+
+            {{-- Şehir --}}
+            <div class="col-md-3">
+                <select name="city_id" class="form-select">
+                    @foreach ($cities as $city)
+                        <option value="{{ $city->id }}"
+                            {{ (int) request('city_id', 1) === $city->id ? 'selected' : '' }}>
+                            {{ $city->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Durum --}}
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="1" {{ (int) request('status', 1) === 1 ? 'selected' : '' }}>
+                        Aktif
+                    </option>
+                    <option value="0" {{ (int) request('status', 1) === 0 ? 'selected' : '' }}>
+                        Pasif
+                    </option>
+                </select>
+            </div>
+
+            {{-- Butonlar --}}
+            <div class="col-md-3 d-flex gap-2">
+                <button class="btn btn-primary">Filtrele</button>
+                <a href="{{ route('activities.index') }}" class="btn btn-outline-secondary">
+                    Sıfırla
+                </a>
+            </div>
+
+        </form>
+
         <div class="card shadow-sm">
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -58,12 +94,13 @@
                                     </td>
                                     <td class="text-end">
 
-                                        <a href="{{ route('activities.edit', $activity) }}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ route('activities.edit', $activity) }}"
+                                            class="btn btn-sm btn-outline-primary">
                                             Düzenle
                                         </a>
 
-                                        <form action="{{ route('activities.destroy', $activity) }}" method="POST" class="d-inline"
-                                            onsubmit="return confirm('Silinsin mi?');">
+                                        <form action="{{ route('activities.destroy', $activity) }}" method="POST"
+                                            class="d-inline" onsubmit="return confirm('Silinsin mi?');">
 
                                             @csrf
                                             @method('DELETE')
