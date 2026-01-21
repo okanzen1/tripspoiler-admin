@@ -72,6 +72,7 @@ class ActivityController extends Controller
             'museum_id' => 'nullable|exists:museums,id',
             'affiliate_id' => 'nullable|exists:affiliate_partners,id',
             'affiliate_link' => 'nullable|url|max:255',
+            'city_id' => 'required|exists:cities,id',
             'status' => 'required|boolean',
             'sort_order' => 'nullable|integer',
         ]);
@@ -91,6 +92,7 @@ class ActivityController extends Controller
             'museum_id' => $data['museum_id'] ?? null,
             'affiliate_id' => $data['affiliate_id'] ?? null,
             'affiliate_link' => $data['affiliate_link'] ?? null,
+            'city_id' => $data['city_id'],
             'status' => $data['status'],
             'sort_order' => $data['sort_order'] ?? 0,
         ]);
