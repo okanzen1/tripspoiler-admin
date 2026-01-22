@@ -23,14 +23,6 @@
                 </a>
             </li>
 
-            {{-- MUSEUMS --}}
-            <li class="sidebar-item {{ request()->routeIs('museums.*') ? 'active' : '' }}">
-                <a class="sidebar-link" href="{{ route('museums.index') }}">
-                    <i class="align-middle" data-feather="archive"></i>
-                    <span class="align-middle ms-2">Müzeler</span>
-                </a>
-            </li>
-
             {{-- BLOGS --}}
             <li class="sidebar-item {{ request()->routeIs('blogs.*') ? 'active' : '' }}">
                 <a class="sidebar-link" href="{{ route('blogs.index') }}">

@@ -52,18 +52,6 @@
                 </div>
 
                 <div class="mb-3">
-                    <label>Müze</label>
-                    <select name="museum_id" class="form-select">
-                        <option value="">- yok -</option>
-                        @foreach ($museums as $museum)
-                            <option value="{{ $museum->id }}" @selected(old('museum_id', $activity->museum_id) == $museum->id)>
-                                {{ $museum->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="mb-3">
                     <label>İş Ortakları</label>
                     <select name="affiliate_id" class="form-select">
                         <option value="">- yok -</option>

@@ -20,7 +20,6 @@ class Activity extends Model
         'slug',
         'activity_type',
         'city_id',
-        'museum_id',
         'sort_order',
         'affiliate_link',
         'affiliate_id',

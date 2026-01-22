@@ -9,8 +9,8 @@ return new class extends Migration {
     {
         Schema::create('images', function (Blueprint $table) {
             $table->id();
-            $table->string('path');          // private storage path
-            $table->string('source');        // activity, museum, city
+            $table->string('path');
+            $table->string('source');
             $table->unsignedBigInteger('source_id');
             $table->integer('sort_order')->default(0);
             $table->timestamps();
