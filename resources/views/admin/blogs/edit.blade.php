@@ -173,7 +173,7 @@
                     </thead>
 
                     <tbody>
-                        @forelse($blog->content ? [$blog->content] : [] as $content)
+                        @forelse($contents as $content)
                             <tr>
                                 <td>{{ $content->id }}</td>
 

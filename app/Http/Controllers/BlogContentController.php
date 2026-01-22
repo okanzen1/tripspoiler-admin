@@ -4,19 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Blog;
 use App\Models\BlogContent;
-use App\Models\Image;
 use Illuminate\Http\Request;
 
 class BlogContentController extends Controller
 {
     public function create(Blog $blog)
     {
-        $content = BlogContent::where('blog_id', $blog->id)->first();
-
-        if ($content) {
-            return redirect()->route('blogs.content.edit', [$blog, $content]);
-        }
-
         return view('admin.blog_contents.create', compact('blog'));
     }
 
@@ -30,17 +23,11 @@ class BlogContentController extends Controller
 
         $locale = app()->getLocale();
 
-        $content = BlogContent::where('blog_id', $blog->id)->first();
-        if ($content) {
-            return redirect()->route('blogs.content.edit', [$blog, $content]);
-        }
-
         $content = BlogContent::create([
             'blog_id' => $blog->id,
             'title' => [
                 $locale => $data['title'],
             ],
-
             'content' => [],
             'status' => false,
             'sort_order' => 0,
@@ -73,16 +60,13 @@ class BlogContentController extends Controller
         $locale = app()->getLocale();
 
         $content->setTranslation('title', $locale, $data['title']);
-
         $content->setTranslation('content', $locale, $data['content']);
-
         $content->status = $data['status'];
         $content->sort_order = $data['sort_order'];
-
         $content->save();
 
         return redirect()
-            ->route('blogs.edit', $blog)
+            ->route('blogs.content.edit', [$blog, $content])
             ->with('success', 'İçerik güncellendi.');
     }
 
@@ -93,7 +77,7 @@ class BlogContentController extends Controller
 
         $content->delete();
 
-        return back()->with('success', 'İçerik ve görselleri silindi.');
+        return back()->with('success', 'İçerik silindi.');
     }
 
     protected function authorizeSuperAdmin(): void
