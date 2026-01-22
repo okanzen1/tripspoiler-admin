@@ -18,6 +18,7 @@ class Activity extends Model
     protected $fillable = [
         'name',
         'slug',
+        'activity_type',
         'city_id',
         'museum_id',
         'sort_order',

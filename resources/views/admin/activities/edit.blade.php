@@ -108,6 +108,17 @@
                         class="form-control">
                 </div>
 
+                <div class="mb-3">
+                    <label>Aktivite Tipi</label>
+                    <select name="activity_type" class="form-select" required>
+                        @foreach ($productTypes as $key => $label)
+                            <option value="{{ $key }}" @selected(old('activity_type', $activity->activity_type) === $key)>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <button type="submit" class="btn btn-primary"
                     style="position: fixed; bottom: 60px; right: 20px; z-index: 1050;">
                     Güncelle

@@ -11,6 +11,13 @@ use Illuminate\Support\Str;
 
 class ActivityController extends Controller
 {
+
+    protected array $productTypes = [
+        'product' => 'product',
+        'pass' => 'Pass',
+        'package' => 'Package',
+    ];
+
     public function index(Request $request)
     {
         $cities = City::where('active', true)->orderBy('name')->get();
@@ -31,6 +38,12 @@ class ActivityController extends Controller
             $query->where('most_popular', (int) $mostPopular);
         }
 
+        // ACTIVITY TYPE FİLTRESİ
+        $activityType = $request->get('activity_type');
+        if ($activityType !== null && $activityType !== '') {
+            $query->where('activity_type', $activityType);
+        }
+
         $activities = $query
             ->paginate(10)
             ->withQueryString();
@@ -41,7 +54,7 @@ class ActivityController extends Controller
             'cityId',
             'status',
             'mostPopular'
-        ));
+        ))->with('productTypes', $this->productTypes);
     }
 
     public function create()
@@ -81,7 +94,10 @@ class ActivityController extends Controller
         $museums = $cities->pluck('museums')->flatten()->where('status', true)
             ->where('city_id', $activity->city_id);
 
-        return view('admin.activities.edit', compact('activity', 'museums', 'cities', 'affiliatePartners'));
+        return view(
+            'admin.activities.edit',
+            compact('activity', 'museums', 'cities', 'affiliatePartners')
+        )->with('productTypes', $this->productTypes);
     }
 
     public function update(Request $request, string $id)
@@ -102,6 +118,7 @@ class ActivityController extends Controller
             'status' => 'required|boolean',
             'most_popular' => 'required|boolean',
             'sort_order' => 'nullable|integer',
+            'activity_type' => 'required|in:' . implode(',', array_keys($this->productTypes)),
         ]);
 
         if (!empty($data['museum_id'])) {
@@ -123,6 +140,7 @@ class ActivityController extends Controller
             'status' => $data['status'],
             'most_popular' => $data['most_popular'],
             'sort_order' => $data['sort_order'] ?? 0,
+            'activity_type' => $data['activity_type'],
         ]);
 
         return redirect()

@@ -62,6 +62,17 @@
                 </select>
             </div>
 
+            <div class="col-md-3">
+                <select name="activity_type" class="form-select">
+                    <option value="">Aktivite Tipi (Hepsi)</option>
+
+                    @foreach ($productTypes as $key => $label)
+                        <option value="{{ $key }}" @selected(request('activity_type') === $key)>
+                            {{ $label }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
             {{-- Butonlar --}}
             <div class="col-md-3 d-flex gap-2">
@@ -83,6 +94,7 @@
                                 <th>#</th>
                                 <th>Aktivite Adı</th>
                                 <th>Şehir</th>
+                                <th>Aktivite Türü</th>
                                 <th>Durum</th>
                                 <th class="text-end">İşlem</th>
                             </tr>
@@ -92,8 +104,23 @@
                             @forelse($activities as $activity)
                                 <tr>
                                     <td>{{ $activity->id }}</td>
-                                    <td>{{ $activity->name }}</td>
+                                    <td>{{ $activity->name }}
+                                    </td>
                                     <td>{{ $activity->city?->name ?? '-' }}</td>
+                                    <td>
+                                        @php
+                                            $typeBadgeColors = [
+                                                'product' => 'primary',
+                                                'pass' => 'success',
+                                                'package' => 'warning',
+                                            ];
+                                        @endphp
+
+                                        <span
+                                            class="badge bg-{{ $typeBadgeColors[$activity->activity_type] ?? 'secondary' }} ms-1">
+                                            {{ $productTypes[$activity->activity_type] ?? $activity->activity_type }}
+                                        </span>
+                                    </td>
                                     <td>
                                         @if ($activity->status)
                                             <span class="badge bg-success">Aktif</span>
