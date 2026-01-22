@@ -12,7 +12,7 @@ class ActivityController extends Controller
 {
 
     protected array $productTypes = [
-        'product' => 'product',
+        'product' => 'Product',
         'pass' => 'Pass',
         'package' => 'Package',
     ];
@@ -90,7 +90,7 @@ class ActivityController extends Controller
         $activity = Activity::findOrFail($id);
         $affiliatePartners = AffiliatePartner::where('active', true)->orderBy('name')->get();
         $cities = City::where('active', true)->orderBy('id')->get();
-        
+
         return view(
             'admin.activities.edit',
             compact('activity', 'cities', 'affiliatePartners')
@@ -146,5 +146,18 @@ class ActivityController extends Controller
         return redirect()
             ->route('activities.index')
             ->with('success', 'Activity deleted successfully.');
+    }
+
+    public function toggleStatus(Activity $activity)
+    {
+        if (auth()->user()?->role !== 'super_admin') {
+            return back()->withErrors('Yetkin yok.');
+        }
+
+        $activity->update([
+            'status' => ! $activity->status,
+        ]);
+
+        return back()->with('success', 'Durum güncellendi.');
     }
 }

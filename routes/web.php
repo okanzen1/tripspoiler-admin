@@ -28,7 +28,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('faqs', FaqController::class);
     Route::resource('cities', CityController::class);
     Route::resource('countries', CountryController::class);
+
     Route::resource('activities', ActivityController::class);
+    Route::patch('/activities/{activity}/toggle-status',[ActivityController::class, 'toggleStatus'])->name('activities.toggle-status');
 
     Route::resource('blogs', BlogController::class);
     Route::get('/blogs/{blog}/contents/create', [BlogContentController::class, 'create'])->name('blogs.content.create');
