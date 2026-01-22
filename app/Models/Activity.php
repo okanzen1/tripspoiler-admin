@@ -23,6 +23,7 @@ class Activity extends Model
         'sort_order',
         'affiliate_link',
         'affiliate_id',
+        'most_popular',
         'status',
     ];
 

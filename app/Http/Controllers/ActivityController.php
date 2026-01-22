@@ -25,6 +25,12 @@ class ActivityController extends Controller
         $status = (int) $request->get('status', 1);
         $query->where('status', $status);
 
+        // MOST POPULAR FİLTRESİ
+        $mostPopular = $request->get('most_popular');
+        if ($mostPopular !== null && $mostPopular !== '') {
+            $query->where('most_popular', (int) $mostPopular);
+        }
+
         $activities = $query
             ->paginate(10)
             ->withQueryString();
@@ -33,10 +39,10 @@ class ActivityController extends Controller
             'activities',
             'cities',
             'cityId',
-            'status'
+            'status',
+            'mostPopular'
         ));
     }
-
 
     public function create()
     {
@@ -94,6 +100,7 @@ class ActivityController extends Controller
             'affiliate_link' => 'nullable|url|max:255',
             'city_id' => 'required|exists:cities,id',
             'status' => 'required|boolean',
+            'most_popular' => 'required|boolean',
             'sort_order' => 'nullable|integer',
         ]);
 
@@ -114,6 +121,7 @@ class ActivityController extends Controller
             'affiliate_link' => $data['affiliate_link'] ?? null,
             'city_id' => $data['city_id'],
             'status' => $data['status'],
+            'most_popular' => $data['most_popular'],
             'sort_order' => $data['sort_order'] ?? 0,
         ]);
 

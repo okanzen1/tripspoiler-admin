@@ -54,6 +54,15 @@
                 </select>
             </div>
 
+            <div class="col-md-3">
+                <select name="most_popular" class="form-select">
+                    <option value="">Most Popular (Hepsi)</option>
+                    <option value="1" @selected(request('most_popular') === '1')>Evet</option>
+                    <option value="0" @selected(request('most_popular') === '0')>Hayır</option>
+                </select>
+            </div>
+
+
             {{-- Butonlar --}}
             <div class="col-md-3 d-flex gap-2">
                 <button class="btn btn-primary">Filtrele</button>

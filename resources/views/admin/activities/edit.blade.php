@@ -82,6 +82,19 @@
                 </div>
 
                 <div class="mb-3">
+                    <label>Most Popular</label>
+                    <select name="most_popular" class="form-select">
+                        <option value="1" @selected(old('most_popular', $activity->most_popular))>
+                            Evet
+                        </option>
+                        <option value="0" @selected(!old('most_popular', $activity->most_popular))>
+                            Hayır
+                        </option>
+                    </select>
+                </div>
+
+
+                <div class="mb-3">
                     <label>Durum</label>
                     <select name="status" class="form-select">
                         <option value="1" @selected(old('status', $activity->status))>Aktif</option>
