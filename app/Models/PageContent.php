@@ -14,17 +14,11 @@ class PageContent extends Model
     protected $fillable = [
         'page_id',
         'city_id',
-        'meta_title',
-        'meta_description',
-        'h1',
         'content',
         'is_active',
     ];
 
     public $translatable = [
-        'meta_title',
-        'meta_description',
-        'h1',
         'content',
     ];
 

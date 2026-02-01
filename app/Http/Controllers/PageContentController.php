@@ -29,9 +29,6 @@ class PageContentController extends Controller
 
         $data = $request->validate([
             'city_id' => 'required|exists:cities,id',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string',
-            'h1' => 'nullable|string|max:255',
             'content' => 'nullable|string',
         ]);
 
@@ -47,9 +44,6 @@ class PageContentController extends Controller
             ]
         );
 
-        $content->setTranslation('meta_title', $locale, $data['meta_title'] ?? '');
-        $content->setTranslation('meta_description', $locale, $data['meta_description'] ?? '');
-        $content->setTranslation('h1', $locale, $data['h1'] ?? '');
         $content->setTranslation('content', $locale, $data['content'] ?? '');
         $content->save();
 
