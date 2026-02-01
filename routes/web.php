@@ -11,6 +11,8 @@ use App\Http\Controllers\ImageController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BlogContentController;
 use App\Http\Controllers\BlogSubscriberController;
+use App\Http\Controllers\PageController;
+use App\Http\Controllers\PageContentController;
 
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +30,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('faqs', FaqController::class);
     Route::resource('cities', CityController::class);
     Route::resource('countries', CountryController::class);
+    Route::resource('pages', PageController::class);
+    Route::get('/pages/{page}/contents/{city}', [PageContentController::class, 'show'])->name('pages.contents.show');
+    Route::post('/pages/{page}/contents', [PageContentController::class, 'storeOrUpdate'])->name('pages.contents.store');
 
     Route::resource('activities', ActivityController::class);
     Route::patch('/activities/{activity}/toggle-status',[ActivityController::class, 'toggleStatus'])->name('activities.toggle-status');

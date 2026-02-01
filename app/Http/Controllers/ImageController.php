@@ -19,6 +19,7 @@ class ImageController extends Controller
         return match ($source) {
             'activity' => 'activities',
             'city' => 'cities',
+            'page_content' => 'page_contents',
             default => $source,
         };
     }

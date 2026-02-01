@@ -55,6 +55,14 @@
                 </a>
             </li>
 
+            {{-- PAGES --}}
+            <li class="sidebar-item {{ request()->routeIs('pages.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('pages.index') }}">
+                    <i class="align-middle" data-feather="file-text"></i>
+                    <span class="align-middle ms-2">Sayfalar</span>
+                </a>
+            </li>
+
             {{-- CITIES --}}
             <li class="sidebar-item {{ request()->routeIs('cities.*') ? 'active' : '' }}">
                 <a class="sidebar-link" href="{{ route('cities.index') }}">
