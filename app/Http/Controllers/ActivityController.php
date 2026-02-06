@@ -108,6 +108,8 @@ class ActivityController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:500',
             'affiliate_id' => 'nullable|exists:affiliate_partners,id',
             'affiliate_link' => 'nullable|url|max:255',
             'city_id' => 'required|exists:cities,id',
@@ -115,11 +117,16 @@ class ActivityController extends Controller
             'most_popular' => 'required|boolean',
             'sort_order' => 'nullable|integer',
             'activity_type' => 'required|in:' . implode(',', array_keys($this->productTypes)),
+            'duration' => 'nullable|string|max:50',
+            'audio_guide' => 'required|boolean',
+            'description' => 'nullable|string',
         ]);
 
         $activity->update([
             'name' => $data['name'],
             'slug' => Str::slug($data['slug']),
+            'meta_title' => $data['meta_title'] ?? null,
+            'meta_description' => $data['meta_description'] ?? null,
             'affiliate_id' => $data['affiliate_id'] ?? null,
             'affiliate_link' => $data['affiliate_link'] ?? null,
             'city_id' => $data['city_id'],
@@ -127,6 +134,9 @@ class ActivityController extends Controller
             'most_popular' => $data['most_popular'],
             'sort_order' => $data['sort_order'] ?? 0,
             'activity_type' => $data['activity_type'],
+            'duration' => $data['duration'] ?? null,
+            'audio_guide' => $data['audio_guide'],
+            'description' => $data['description'],
         ]);
 
         return redirect()

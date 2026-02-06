@@ -26,7 +26,7 @@ class PageContent extends Model
         'is_active' => 'boolean',
     ];
 
-    /** 🔑 Image sistemi için */
+    /** Image sistemi için */
     public function getImageSource(): string
     {
         return 'page_content';

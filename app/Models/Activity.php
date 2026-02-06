@@ -18,6 +18,8 @@ class Activity extends Model
     protected $fillable = [
         'name',
         'slug',
+        'meta_title',
+        'meta_description',
         'activity_type',
         'city_id',
         'sort_order',
@@ -25,15 +27,23 @@ class Activity extends Model
         'affiliate_id',
         'most_popular',
         'status',
+        'duration',
+        'audio_guide',
+        'description',
     ];
 
     public $translatable = [
         'name',
         'slug',
+        'meta_title',
+        'meta_description',
+        'duration',
+        'description',
     ];
 
     protected $casts = [
         'status' => 'boolean',
+        'audio_guide' => 'boolean',
     ];
 
     public function getSlugOptions(): SlugOptions
