@@ -30,6 +30,7 @@ class Activity extends Model
         'duration',
         'audio_guide',
         'description',
+        'source_product_id',
     ];
 
     public $translatable = [

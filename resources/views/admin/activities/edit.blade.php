@@ -74,6 +74,15 @@
                 </div>
 
                 <div class="mb-3">
+                    <label>İş Ortağı Ürün ID <span class="text-danger">*</span></label>
+                    <input type="number" name="source_product_id"
+                        value="{{ old('source_product_id', $activity->source_product_id) }}" class="form-control" required>
+                    <small class="text-muted">
+                        Aynı Affiliate için aynı Product ID ikinci kez eklenemez.
+                    </small>
+                </div>
+
+                <div class="mb-3">
                     <label>İş Ortağı Linki</label>
                     <input type="url" name="affiliate_link"
                         value="{{ old('affiliate_link', $activity->affiliate_link) }}" class="form-control">
@@ -90,7 +99,6 @@
                         </option>
                     </select>
                 </div>
-
 
                 <div class="mb-3">
                     <label>Durum</label>

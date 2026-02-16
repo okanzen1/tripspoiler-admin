@@ -110,7 +110,8 @@ class ActivityController extends Controller
             'slug' => 'required|string|max:255',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
-            'affiliate_id' => 'nullable|exists:affiliate_partners,id',
+            'affiliate_id' => 'required|exists:affiliate_partners,id',
+            'source_product_id' => 'required|integer',
             'affiliate_link' => 'nullable|url|max:255',
             'city_id' => 'required|exists:cities,id',
             'status' => 'required|boolean',
@@ -137,6 +138,7 @@ class ActivityController extends Controller
             'duration' => $data['duration'] ?? null,
             'audio_guide' => $data['audio_guide'],
             'description' => $data['description'],
+            'source_product_id' => $data['source_product_id'],
         ]);
 
         return redirect()
