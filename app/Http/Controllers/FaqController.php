@@ -35,7 +35,7 @@ class FaqController extends Controller
         // Source filtre
         if ($request->filled('source')) {
             $query->where('source', $request->source);
-        } else {
+        } elseif (!$request->filled('search') && !$request->filled('source_id')) {
             $query->where('source', 'home');
         }
 
