@@ -40,7 +40,17 @@
 
                 <div class="mb-3">
                     <label>Kaynak (Opsiyonel)</label>
-                    <input name="source" value="{{ $faq->source }}" class="form-control">
+
+                    <select name="source" class="form-select">
+                        <option value="">Seçiniz</option>
+
+                        @foreach ($sources as $key => $label)
+                            <option value="{{ $key }}" @selected($faq->source === $key)>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+
+                    </select>
                 </div>
 
                 <div class="mb-3">

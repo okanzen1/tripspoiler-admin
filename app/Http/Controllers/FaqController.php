@@ -87,7 +87,10 @@ class FaqController extends Controller
 
     public function edit(Faq $faq)
     {
-        return view('admin.faqs.edit', compact('faq'));
+        return view('admin.faqs.edit', [
+            'faq' => $faq,
+            'sources' => self::SOURCES,
+        ]);
     }
 
     public function update(Request $request, Faq $faq)
