@@ -7,11 +7,53 @@ use Illuminate\Http\Request;
 
 class FaqController extends Controller
 {
-    public function index()
-    {
-        $faqs = Faq::orderBy('id','desc')->paginate(10);
 
-        return view('admin.faqs.index', compact('faqs'));
+    public const SOURCES = [
+        'activity' => 'Activity',
+        'blog'     => 'Blog',
+        'pass'     => 'Pass',
+        'general'  => 'General',
+        'home' => 'Home',
+        'activity-show' => 'Activity Show',
+    ];
+
+
+    public function index(Request $request)
+    {
+        $query = Faq::query();
+
+        // Soru arama
+        if ($request->filled('search')) {
+            $query->where('question', 'like', '%' . $request->search . '%');
+        }
+
+        // Status filtre
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Source filtre
+        if ($request->filled('source')) {
+            $query->where('source', $request->source);
+        } else {
+            $query->where('source', 'home');
+        }
+
+        // Source ID filtre
+        if ($request->filled('source_id')) {
+            $query->where('source_id', $request->source_id);
+        }
+
+        $faqs = $query
+            ->orderBy('sort_order')
+            ->orderBy('id', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin.faqs.index', [
+            'faqs' => $faqs,
+            'sources' => self::SOURCES,
+        ]);
     }
 
     public function create()

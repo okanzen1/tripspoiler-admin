@@ -15,6 +15,59 @@
             <div class="alert alert-success small">{{ session('success') }}</div>
         @endif
 
+        <div class="card mb-3">
+            <div class="card-body">
+
+                <form method="GET" action="{{ route('faqs.index') }}">
+                    <div class="row g-2">
+
+                        <div class="col-md-3">
+                            <input type="text" name="search" value="{{ request('search') }}"
+                                class="form-control form-control-sm" placeholder="Soru ara...">
+                        </div>
+
+                        <div class="col-md-2">
+                            <select name="status" class="form-select form-select-sm">
+                                <option value="">Durum</option>
+                                <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Aktif</option>
+                                <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Pasif</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <select name="source" class="form-select form-select-sm">
+                                <option value="">Kaynak</option>
+
+                                @foreach ($sources as $key => $label)
+                                    <option value="{{ $key }}" {{ request('source') === $key ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <input type="number" name="source_id" value="{{ request('source_id') }}"
+                                class="form-control form-control-sm" placeholder="Kaynak ID">
+                        </div>
+
+                        <div class="col-md-3 d-flex gap-2">
+                            <button type="submit" class="btn btn-sm btn-primary w-100">
+                                Filtrele
+                            </button>
+
+                            <a href="{{ route('faqs.index') }}" class="btn btn-sm btn-outline-secondary w-100">
+                                Temizle
+                            </a>
+                        </div>
+
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
         <div class="card">
             <div class="table-responsive">
                 <table class="table mb-0">
