@@ -31,6 +31,18 @@
                     <input name="title" class="form-control" required>
                 </div>
 
+                <div class="mb-3">
+                    <label>Şehir</label>
+                    <select name="city_id" class="form-select" required>
+                        <option value="">Şehir Seçiniz</option>
+                        @foreach($cities as $city)
+                            <option value="{{ $city->id }}">
+                                {{ $city->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <div class="text-end">
                     <button class="btn btn-primary">Kaydet</button>
                 </div>

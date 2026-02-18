@@ -58,13 +58,10 @@
 
                 <div class="mb-3">
                     <label>Şehir</label>
-                    <select name="city_id" class="form-select" required>
-                        @foreach ($cities as $city)
-                            <option value="{{ $city->id }}" @selected(old('city_id', $blog->city_id) == $city->id)>
-                                {{ $city->name ?? '' }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <input type="text"
+                        class="form-control"
+                        value="{{ $blog->city->name ?? '-' }}"
+                        readonly>
                 </div>
 
                 @php($locale = app()->getLocale())
@@ -80,22 +77,21 @@
                         Virgülle ayırarak girin (örn: Art, History, Culture)
                     </small>
                 </div>
-
+                
                 <div class="mb-3">
-                    <label>Kaynak (Opsiyonel)</label>
-                    <input name="source" value="{{ old('source', $blog->source) }}" class="form-control">
-                </div>
+                    <label>Bağlı Aktiviteler</label>
 
-                <div class="mb-3">
-                    <label>Kaynak ID (Opsiyonel)</label>
-                    <input name="source_id" value="{{ old('source_id', $blog->source_id) }}" class="form-control">
-                </div>
+                    <select name="activities[]" id="activitySelect" class="form-select" multiple>
+                        @foreach($activities as $activity)
+                            <option value="{{ $activity->id }}"
+                                @selected($blog->activities->contains($activity->id))>
 
+                                {{ $activity->id }} - 
+                                {{ $activity->getTranslation('name', app()->getLocale()) }}
 
-                <div class="mb-3">
-                    <label>Source Activity ID (Opsiyonel)</label>
-                    <input name="source_activity_id" value="{{ old('source_activity_id', $blog->source_activity_id) }}"
-                        class="form-control">
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="mb-3">
@@ -286,4 +282,13 @@
             });
         });
     </script>
+
+    <script>
+        $(document).ready(function() {
+            $('#activitySelect').select2({
+                placeholder: "Aktivite ara ve seç...",
+                width: '100%'
+            });
+        });
+</script>
 @endsection

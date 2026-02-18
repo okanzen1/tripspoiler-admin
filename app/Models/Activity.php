@@ -81,4 +81,9 @@ class Activity extends Model
     {
         return 'activity';
     }
+
+    public function blogs()
+    {
+        return $this->belongsToMany(Blog::class);
+    }
 }

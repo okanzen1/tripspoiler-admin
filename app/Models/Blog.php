@@ -22,9 +22,6 @@ class Blog extends Model
         'meta_description',
         'themes',
         'city_id',
-        'source',
-        'source_id',
-        'source_activity_id',
         'sort_order',
         'status',
         'click_count',
@@ -72,5 +69,10 @@ class Blog extends Model
         return $this->hasMany(Image::class, 'source_id')
             ->where('source', 'blog')
             ->orderBy('sort_order');
+    }
+
+    public function activities()
+    {
+        return $this->belongsToMany(Activity::class);
     }
 }
