@@ -30,6 +30,8 @@ class PageContentController extends Controller
         $data = $request->validate([
             'city_id' => 'required|exists:cities,id',
             'content' => 'nullable|string',
+            'meta_title' => 'nullable|string|max:60',
+            'meta_description' => 'nullable|string|max:160',
         ]);
 
         $locale = app()->getLocale();
@@ -45,6 +47,8 @@ class PageContentController extends Controller
         );
 
         $content->setTranslation('content', $locale, $data['content'] ?? '');
+        $content->setTranslation('meta_title', $locale, $data['meta_title'] ?? '');
+        $content->setTranslation('meta_description', $locale, $data['meta_description'] ?? '');
         $content->save();
 
         return back()->with('success', 'Şehir içeriği kaydedildi.');

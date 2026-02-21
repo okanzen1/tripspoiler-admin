@@ -24,23 +24,17 @@
         <div class="card mb-4">
             <div class="card-header fw-bold">Sayfa Bilgisi</div>
             <div class="card-body">
-                <form method="POST" action="{{ route('pages.update', $page) }}">
-                    @csrf
-                    @method('PUT')
 
-                    <div class="mb-3">
-                        <label class="form-label">Slug</label>
-                        <input name="slug" class="form-control" value="{{ old('slug', $page->slug) }}" required>
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label">Slug</label>
+                    <input class="form-control" value="{{ $page->slug }}" disabled>
+                </div>
 
-                    <button class="btn btn-primary">Slug Güncelle</button>
-                </form>
             </div>
         </div>
 
         {{-- CITY CONTENT --}}
         <div class="card">
-            <div class="card-header fw-bold">Şehir Bazlı İçerik</div>
             <div class="card-body">
 
                 {{-- CITY SELECT --}}
@@ -53,7 +47,12 @@
                         @endforeach
                     </select>
                 </div>
+                
+            </div>
+        </div>
 
+        <div class="card">
+            <div class="card-body">
                 {{-- CONTENT FORM --}}
                 <form id="pageContentForm" method="POST" action="{{ route('pages.contents.store', $page) }}"
                     class="d-none">
@@ -62,13 +61,22 @@
                     <input type="hidden" name="city_id" id="city_id">
                     <input type="hidden" id="page_content_id">
 
+                    <div class="mb-3">
+                        <label class="form-label">Meta Başlık</label>
+                        <input type="text" name="meta_title" id="meta_title" class="form-control" placeholder="Meta başlık (maksimum 60 karakter)" maxlength="60">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Meta Açıklama</label>
+                        <input type="text" name="meta_description" id="meta_description" class="form-control" maxlength="160" placeholder="Maksimum 160 karakter">
+                    </div>
+
                     {{-- EDITOR --}}
                     <div class="mb-4">
-                        <div class="card-header"><strong>İçerik</strong></div>
-                        <div class="card-body">
-                            <div id="editor" style="min-height: 400px;"></div>
-                            <input type="hidden" name="content" id="contentInput">
-                        </div>
+                        <label class="form-label">İçerik</label>
+
+                        <div id="editor" style="min-height: 400px;"></div>
+                        <input type="hidden" name="content" id="contentInput">
                     </div>
 
                     <button type="button" id="saveBtn" class="btn btn-success"
@@ -98,6 +106,8 @@
         const cityInput = document.getElementById('city_id');
         const pageContentIdInput = document.getElementById('page_content_id');
         const saveBtn = document.getElementById('saveBtn');
+        const metaTitleInput = document.getElementById('meta_title');
+        const metaDescriptionInput = document.getElementById('meta_description');
 
         let activeCityId = null;
 
@@ -153,6 +163,7 @@
 
                     pageContentIdInput.value = data.id ?? '';
                     setEditorContent(data.content);
+                    setMetaFields(data);
                 });
         }
 
@@ -173,11 +184,31 @@
 
         function clearEditor() {
             quill.root.innerHTML = '';
+            metaTitleInput.value = '';
+            metaDescriptionInput.value = '';
         }
 
         function hideForm() {
             form.classList.add('d-none');
             clearEditor();
+        }
+
+        function setMetaFields(data) {
+            if (!data) return;
+
+            // meta_title
+            if (typeof data.meta_title === 'object' && data.meta_title !== null) {
+                metaTitleInput.value = data.meta_title[LOCALE] ?? '';
+            } else {
+                metaTitleInput.value = '';
+            }
+
+            // meta_description
+            if (typeof data.meta_description === 'object' && data.meta_description !== null) {
+                metaDescriptionInput.value = data.meta_description[LOCALE] ?? '';
+            } else {
+                metaDescriptionInput.value = '';
+            }
         }
     </script>
 @endsection

@@ -40,14 +40,14 @@
                                         Düzenle
                                     </a>
 
-                                    <form action="{{ route('pages.destroy', $page) }}" method="POST" class="d-inline"
+                                    {{-- <form action="{{ route('pages.destroy', $page) }}" method="POST" class="d-inline"
                                         onsubmit="return confirm('Silinsin mi?');">
                                         @csrf
                                         @method('DELETE')
                                         <button class="btn btn-sm btn-outline-danger">
                                             Sil
                                         </button>
-                                    </form>
+                                    </form> --}}
                                 </td>
                             </tr>
                         @empty

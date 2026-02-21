@@ -15,11 +15,15 @@ class PageContent extends Model
         'page_id',
         'city_id',
         'content',
+        'meta_title',
+        'meta_description',
         'is_active',
     ];
 
     public $translatable = [
         'content',
+        'meta_title',
+        'meta_description',
     ];
 
     protected $casts = [
