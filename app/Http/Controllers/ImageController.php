@@ -16,10 +16,15 @@ class ImageController extends Controller
 
     private function folderForSource(string $source): string
     {
+        if (str_ends_with($source, '_page')) {
+            return 'pages/' . $source;
+        }
+
         return match ($source) {
             'activity' => 'activities',
             'activity_description' => 'activities/descriptions',
             'city' => 'cities',
+            'blog' => 'blogs',
             'page_content' => 'page_contents',
             default => $source,
         };

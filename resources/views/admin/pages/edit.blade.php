@@ -88,6 +88,39 @@
             </div>
         </div>
 
+        {{-- PAGE IMAGES --}}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Sayfa Görselleri</h5>
+            </div>
+            <div class="card-body">
+
+                <form action="{{ route('images.upload') }}"
+                    class="dropzone mt-4"
+                    id="page-dropzone">
+                    @csrf
+                    <input type="hidden" name="source" value="{{ $page->slug }}_page">
+                    <input type="hidden" name="source_id" value="{{ $page->id }}">
+                </form>
+
+                <div id="sortable-page-images" class="row mt-3">
+                    @foreach ($page->images as $image)
+                        <div class="col-md-3 mb-2" data-id="{{ $image->id }}">
+                            <div class="border rounded p-1">
+                                <img src="{{ $image->url }}" class="img-fluid">
+                                <button type="button"
+                                        class="btn btn-danger btn-sm w-100 mt-1 delete-page-image"
+                                        data-delete-url="{{ route('images.destroy', $image) }}">
+                                    Sil
+                                </button>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+            </div>
+        </div>
+
     </div>
 @endsection
 @section('scripts')
@@ -210,5 +243,67 @@
                 metaDescriptionInput.value = '';
             }
         }
+    </script>
+    <script>
+        Dropzone.autoDiscover = false;
+
+        new Dropzone("#page-dropzone", {
+            maxFilesize: 2,
+            acceptedFiles: 'image/*',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            },
+            success: function() {
+                location.reload();
+            },
+            error: function(file, msg) {
+                console.error(msg);
+                alert('Upload hatası');
+            }
+        });
+
+        // Sortable
+        const pageGrid = document.getElementById('sortable-page-images');
+
+        if (pageGrid) {
+            new Sortable(pageGrid, {
+                animation: 150,
+                onEnd: function() {
+                    const order = [];
+                    pageGrid.querySelectorAll('[data-id]').forEach(el => order.push(el.dataset.id));
+
+                    fetch("{{ route('images.sort') }}", {
+                        method: "POST",
+                        headers: {
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                            "Accept": "application/json",
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ order })
+                    });
+                }
+            });
+        }
+
+        // Delete
+        document.querySelectorAll('.delete-page-image').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (!confirm('Silinsin mi?')) return;
+
+                fetch(this.dataset.deleteUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error();
+                    location.reload();
+                })
+                .catch(() => alert('Silme hatası'));
+            });
+        });
     </script>
 @endsection
