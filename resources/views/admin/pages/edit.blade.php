@@ -121,6 +121,76 @@
             </div>
         </div>
 
+        @if($page->slug === 'cities')
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Deneyim Kategorileri</h5>
+                </div>
+
+                <div class="card-body">
+
+                    {{-- Yeni kategori --}}
+                    <form id="categoryForm" class="row g-2 mb-3">
+                        @csrf
+
+                        <div class="col-md-5">
+                            <input type="text"
+                                id="category_name"
+                                class="form-control"
+                                placeholder="Kategori adı"
+                                required>
+                        </div>
+
+                        <div class="col-md-2">
+                            <input type="number"
+                                id="category_sort_order"
+                                class="form-control"
+                                placeholder="Sıra">
+                        </div>
+
+                        <div class="col-md-2 d-flex align-items-center">
+                            <div class="form-check mt-2">
+                                <input type="checkbox"
+                                    id="category_status"
+                                    class="form-check-input"
+                                    checked>
+                                <label class="form-check-label">Aktif</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <button class="btn btn-success w-100">
+                                + Yeni Kategori
+                            </button>
+                        </div>
+                    </form>
+
+                    {{-- Liste --}}
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Ad</th>
+                                    <th>Sıra</th>
+                                    <th>Status</th>
+                                    <th class="text-end">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoryTableBody">
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        Şehir seçildiğinde kategoriler burada listelenecek.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        @endif
+
     </div>
 @endsection
 @section('scripts')
@@ -197,6 +267,12 @@
                     pageContentIdInput.value = data.id ?? '';
                     setEditorContent(data.content);
                     setMetaFields(data);
+
+                    if (data?.id) {
+                        loadCategories(data.id);
+                    } else {
+                        loadCategories(null);
+                    }
                 });
         }
 
@@ -306,4 +382,154 @@
             });
         });
     </script>
+
+    @if($page->slug === 'cities')
+        <script>
+
+            let activePageContentIdForCategories = null;
+
+            const categoryForm = document.getElementById('categoryForm');
+            const categoryTableBody = document.getElementById('categoryTableBody');
+            const categoryNameInput = document.getElementById('category_name');
+            const categorySortInput = document.getElementById('category_sort_order');
+            const categoryStatusInput = document.getElementById('category_status');
+
+            function renderCategoryName(name) {
+                if (typeof name === 'object' && name !== null) {
+                    return name[LOCALE] ?? '';
+                }
+                return name ?? '';
+            }
+
+            function renderCategories(items) {
+
+                categoryTableBody.innerHTML = '';
+
+                if (!items || items.length === 0) {
+                    categoryTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                Henüz kategori eklenmedi.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                items.forEach(cat => {
+                    categoryTableBody.innerHTML += `
+                        <tr>
+                            <td>${cat.id}</td>
+                            <td>${renderCategoryName(cat.name)}</td>
+                            <td>${cat.sort_order ?? 0}</td>
+                            <td>
+                                <span class="badge ${cat.status ? 'bg-success' : 'bg-secondary'} toggleStatus"
+                                    style="cursor:pointer"
+                                    data-id="${cat.id}">
+                                    ${cat.status ? 'Aktif' : 'Pasif'}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a href="/experience-categories/${cat.id}/edit"
+                                class="btn btn-sm btn-outline-primary me-1">
+                                    Düzenle
+                                </a>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger deleteCategory"
+                                        data-id="${cat.id}">
+                                    Sil
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            function loadCategories(pageContentId) {
+
+                if (!pageContentId) {
+                    activePageContentIdForCategories = null;
+                    renderCategories([]);
+                    return;
+                }
+
+                activePageContentIdForCategories = pageContentId;
+
+                fetch(`/page-contents/${pageContentId}/experience-categories`)
+                    .then(res => res.json())
+                    .then(data => renderCategories(data));
+            }
+
+            categoryForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                if (!activePageContentIdForCategories) {
+                    alert('Önce şehir seç.');
+                    return;
+                }
+
+                fetch(`/page-contents/${activePageContentIdForCategories}/experience-categories`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: categoryNameInput.value,
+                        sort_order: categorySortInput.value
+                            ? parseInt(categorySortInput.value)
+                            : 0,
+                        status: categoryStatusInput.checked
+                    })
+                })
+                .then(res => res.json())
+                .then(() => {
+                    categoryNameInput.value = '';
+                    categorySortInput.value = '';
+                    categoryStatusInput.checked = true;
+
+                    loadCategories(activePageContentIdForCategories);
+                });
+            });
+
+            document.addEventListener('click', function(e) {
+
+                if (!e.target.classList.contains('deleteCategory')) return;
+
+                if (!confirm('Silinsin mi?')) return;
+
+                fetch(`/experience-categories/${e.target.dataset.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(() => {
+                    loadCategories(activePageContentIdForCategories);
+                });
+            });
+
+            document.addEventListener('click', function(e) {
+
+                if (!e.target.classList.contains('toggleStatus')) return;
+
+                fetch(`/experience-categories/${e.target.dataset.id}/toggle-status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(() => {
+                    loadCategories(activePageContentIdForCategories);
+                });
+
+            });
+
+        </script>
+    @endif
 @endsection

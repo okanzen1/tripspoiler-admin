@@ -26,6 +26,7 @@ class ImageController extends Controller
             'city' => 'cities',
             'blog' => 'blogs',
             'page_content' => 'page_contents',
+            'city_experience_category_description' => 'categories/descriptions',
             default => $source,
         };
     }

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Blog;
 use App\Models\BlogContent;
 use Illuminate\Http\Request;
+use App\Models\Image;
+use Illuminate\Support\Facades\Storage;
 
 class BlogContentController extends Controller
 {
@@ -64,6 +66,22 @@ class BlogContentController extends Controller
         $content->status = $data['status'];
         $content->sort_order = $data['sort_order'];
         $content->save();
+
+        preg_match_all('/\/media\/(\d+)/', $data['content'], $matches);
+        $usedImageIds = $matches[1] ?? [];
+
+        $allImages = Image::where('source', 'blog_content')
+            ->where('source_id', $content->id)
+            ->get();
+
+        foreach ($allImages as $image) {
+
+            if (!in_array($image->id, $usedImageIds)) {
+
+                Storage::disk('private')->delete($image->path);
+                $image->delete();
+            }
+        }
 
         return redirect()
             ->route('blogs.content.edit', [$blog, $content])

@@ -13,6 +13,7 @@ use App\Http\Controllers\BlogContentController;
 use App\Http\Controllers\BlogSubscriberController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PageContentController;
+use App\Http\Controllers\CityExperienceCategoryController;
 
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +37,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::resource('activities', ActivityController::class);
     Route::patch('/activities/{activity}/toggle-status',[ActivityController::class, 'toggleStatus'])->name('activities.toggle-status');
+
+    Route::get('page-contents/{pageContent}/experience-categories',[CityExperienceCategoryController::class, 'index']);
+    Route::post('page-contents/{pageContent}/experience-categories',[CityExperienceCategoryController::class, 'store']);
+    Route::delete('experience-categories/{category}',[CityExperienceCategoryController::class, 'destroy']);
+    Route::patch('experience-categories/{category}/toggle-status',[CityExperienceCategoryController::class, 'toggleStatus']);
+    Route::get('experience-categories/{category}/edit',[CityExperienceCategoryController::class, 'edit']);
+    Route::put('experience-categories/{category}',[CityExperienceCategoryController::class, 'update'])->name('experience-categories.update');
 
     Route::resource('blogs', BlogController::class);
     Route::get('/blogs/{blog}/contents/create', [BlogContentController::class, 'create'])->name('blogs.content.create');

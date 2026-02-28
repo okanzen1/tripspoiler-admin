@@ -52,4 +52,11 @@ class PageContent extends Model
             ->where('source', 'page_content')
             ->orderBy('sort_order');
     }
+
+    public function experienceCategories()
+    {
+        return $this->hasMany(\App\Models\CityExperienceCategory::class)
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
 }
