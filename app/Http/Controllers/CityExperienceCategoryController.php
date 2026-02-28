@@ -94,8 +94,26 @@ class CityExperienceCategoryController extends Controller
 
     public function destroy(CityExperienceCategory $category)
     {
+        $pageContent = $category->pageContent;
+        $page = $pageContent->page; 
+
+        foreach ($category->descriptions as $description) {
+
+            $images = Image::where('source', 'city_experience_category_description')
+                ->where('source_id', $description->id)
+                ->get();
+
+            foreach ($images as $image) {
+                Storage::disk('private')->delete($image->path);
+                $image->delete();
+            }
+        }
+
         $category->delete();
-        return response()->json(['success' => true]);
+
+        return redirect()
+            ->route('pages.edit', $page->id)
+            ->with('success', 'Kategori silindi.');
     }
 
     public function toggleStatus(CityExperienceCategory $category)

@@ -40,7 +40,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::get('page-contents/{pageContent}/experience-categories',[CityExperienceCategoryController::class, 'index']);
     Route::post('page-contents/{pageContent}/experience-categories',[CityExperienceCategoryController::class, 'store']);
-    Route::delete('experience-categories/{category}',[CityExperienceCategoryController::class, 'destroy']);
+    Route::delete('experience-categories/{category}',[CityExperienceCategoryController::class, 'destroy'])->name('experience-categories.destroy');
     Route::patch('experience-categories/{category}/toggle-status',[CityExperienceCategoryController::class, 'toggleStatus']);
     Route::get('experience-categories/{category}/edit',[CityExperienceCategoryController::class, 'edit']);
     Route::put('experience-categories/{category}',[CityExperienceCategoryController::class, 'update'])->name('experience-categories.update');

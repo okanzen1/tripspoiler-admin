@@ -25,27 +25,35 @@
                         <input type="number" name="sort_order" class="form-control" value="{{ $category->sort_order }}">
                     </div>
 
-                    {{-- DESCRIPTION --}}
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            <strong>Description</strong>
-                        </div>
-                        <div class="card-body">
+                    <div class="mb-3">
+                        <label>Description</label>
+                        @php
+                            $desc = $category->descriptions()->first();
+                            $content = $desc?->getTranslation('description', app()->getLocale()) ?? '';
+                        @endphp
 
-                            @php
-                                $desc = $category->descriptions()->first();
-                                $content = $desc?->getTranslation('description', app()->getLocale()) ?? '';
-                            @endphp
-
-                            <div id="editor" style="min-height: 350px;"></div>
-
-                            <input type="hidden" name="description" id="descriptionInput">
-                        </div>
+                        <div id="editor" style="min-height: 350px;"></div>
+                        <input type="hidden" name="description" id="descriptionInput">
                     </div>
 
-                    <button type="button" id="saveBtn" class="btn btn-primary mt-4">
-                        Güncelle
-                    </button>
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+
+                        <button type="button" class="btn btn-danger" id="deleteBtn">
+                            Kategoriyi Sil
+                        </button>
+
+                        <button type="button" id="saveBtn" class="btn btn-primary">
+                            Güncelle
+                        </button>
+
+                    </div>
+                </form>
+
+                {{-- DELETE FORM (DIŞARIDA) --}}
+                <form id="deleteForm" method="POST" action="{{ route('experience-categories.destroy', $category) }}">
+                    @csrf
+                    @method('DELETE')
+                </form>
 
                 </form>
 
@@ -156,6 +164,14 @@
                 };
             }
 
+        });
+    </script>
+    <script>
+        document.getElementById('deleteBtn').addEventListener('click', function() {
+            if (!confirm('Bu kategori tamamen silinsin mi? Bu işlem geri alınamaz!')) {
+                return;
+            }
+            document.getElementById('deleteForm').submit();
         });
     </script>
 
