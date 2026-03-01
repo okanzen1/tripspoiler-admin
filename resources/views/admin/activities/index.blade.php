@@ -86,6 +86,7 @@
                     <tr>
                         <th width="70">#</th>
                         <th>Aktivite</th>
+                        <th>Partner Urun Id</th>
                         <th>Şehir</th>
                         <th>Tür</th>
                         <th>Durum</th>
@@ -101,6 +102,8 @@
                             <td>
                                 <div class="fw-semibold">{{ $activity->name }}</div>
                             </td>
+
+                            <td>{{ $activity->source_product_id ?? '-' }}</td>
 
                             <td>{{ $activity->city?->name ?? '-' }}</td>
 
