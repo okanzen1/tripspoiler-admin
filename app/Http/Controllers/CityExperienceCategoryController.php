@@ -10,28 +10,60 @@ use Illuminate\Http\Request;
 
 class CityExperienceCategoryController extends Controller
 {
+    /**
+     * Sabit şehir kategori listesi
+     */
+    private const FIXED_CITY_CATEGORIES = [
+        "City Overview",
+        "History & Identity",
+        "Iconic Landmarks",
+        "Neighborhood Guide",
+        "Scenic Views",
+        "Food & Local Culture",
+        "Travel Tips",
+        "Why Visit",
+    ];
+
+    /**
+     * Liste
+     */
     public function index(PageContent $pageContent)
     {
         return response()->json(
-            $pageContent->experienceCategories()->get()
+            $pageContent->experienceCategories()
+                ->orderBy('sort_order')
+                ->get()
         );
     }
 
+    /**
+     * Store (Sadece sabit kategoriler eklenebilir)
+     */
     public function store(Request $request, PageContent $pageContent)
     {
-
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'sort_order' => 'nullable|integer',
             'status' => 'required|boolean',
         ]);
 
+        if (!in_array($data['name'], self::FIXED_CITY_CATEGORIES)) {
+            abort(403, 'Geçersiz kategori.');
+        }
+
+        $exists = $pageContent->experienceCategories()
+            ->where('name->' . app()->getLocale(), $data['name'])
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'message' => 'Bu kategori zaten mevcut.'
+            ], 422);
+        }
+
         $category = new CityExperienceCategory();
         $category->page_content_id = $pageContent->id;
-
-        // spatie translatable
         $category->setTranslation('name', app()->getLocale(), $data['name']);
-
         $category->sort_order = $data['sort_order'] ?? 0;
         $category->status = $data['status'];
         $category->save();
@@ -39,23 +71,26 @@ class CityExperienceCategoryController extends Controller
         return response()->json($category);
     }
 
+    /**
+     * Edit
+     */
     public function edit(CityExperienceCategory $category)
     {
         return view('admin.experience-categories.edit', compact('category'));
     }
 
+    /**
+     * Update (İsim değiştirilemez)
+     */
     public function update(Request $request, CityExperienceCategory $category)
     {
         $data = $request->validate([
-            'name' => 'required|string|max:255',
             'sort_order' => 'required|integer',
             'description' => 'required|string',
         ]);
 
         $locale = app()->getLocale();
 
-        // Name update
-        $category->setTranslation('name', $locale, $data['name']);
         $category->sort_order = $data['sort_order'];
         $category->save();
 
@@ -79,9 +114,7 @@ class CityExperienceCategoryController extends Controller
             ->get();
 
         foreach ($allImages as $image) {
-
             if (!in_array($image->id, $usedImageIds)) {
-
                 Storage::disk('private')->delete($image->path);
                 $image->delete();
             }
@@ -92,10 +125,13 @@ class CityExperienceCategoryController extends Controller
             ->with('success', 'Kategori güncellendi.');
     }
 
+    /**
+     * Destroy
+     */
     public function destroy(CityExperienceCategory $category)
     {
         $pageContent = $category->pageContent;
-        $page = $pageContent->page; 
+        $page = $pageContent->page;
 
         foreach ($category->descriptions as $description) {
 
@@ -116,12 +152,17 @@ class CityExperienceCategoryController extends Controller
             ->with('success', 'Kategori silindi.');
     }
 
+    /**
+     * Toggle Status
+     */
     public function toggleStatus(CityExperienceCategory $category)
     {
         $category->update([
             'status' => ! $category->status,
         ]);
 
-        return response()->json(['status' => $category->status]);
+        return response()->json([
+            'status' => $category->status
+        ]);
     }
 }

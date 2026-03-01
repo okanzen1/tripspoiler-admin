@@ -15,9 +15,10 @@
                     @method('PUT')
 
                     <div class="mb-3">
-                        <label>Kategori Adı</label>
-                        <input type="text" name="name" class="form-control"
-                            value="{{ $category->getTranslation('name', app()->getLocale()) }}">
+                        <label class="fw-bold">Kategori</label>
+                        <div class="form-control bg-light">
+                            {{ $category->getTranslation('name', app()->getLocale()) }}
+                        </div>
                     </div>
 
                     <div class="mb-3">

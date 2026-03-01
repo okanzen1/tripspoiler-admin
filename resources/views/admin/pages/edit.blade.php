@@ -134,11 +134,9 @@
                         @csrf
 
                         <div class="col-md-5">
-                            <input type="text"
-                                id="category_name"
-                                class="form-control"
-                                placeholder="Kategori adı"
-                                required>
+                            <select id="category_name" class="form-select" required>
+                                <option value="">Kategori seç</option>
+                            </select>
                         </div>
 
                         <div class="col-md-2">
@@ -385,6 +383,16 @@
 
     @if($page->slug === 'cities')
         <script>
+            const FIXED_CITY_CATEGORIES = [
+                "City Overview",
+                "History & Identity",
+                "Iconic Landmarks",
+                "Neighborhood Guide",
+                "Scenic Views",
+                "Food & Local Culture",
+                "Travel Tips",
+                "Why Visit"
+            ];
 
             let activePageContentIdForCategories = null;
 
@@ -464,6 +472,21 @@
             categoryForm.addEventListener('submit', function(e) {
                 e.preventDefault();
 
+                const selectedCategory = categoryNameInput.value;
+
+                if (!selectedCategory) {
+                    alert("Kategori seç.");
+                    return;
+                }
+
+                const existingNames = Array.from(categoryTableBody.querySelectorAll('tr td:nth-child(2)'))
+                    .map(td => td.innerText.trim());
+
+                if (existingNames.includes(selectedCategory)) {
+                    alert("Bu kategori zaten eklendi.");
+                    return;
+                }
+
                 if (!activePageContentIdForCategories) {
                     alert('Önce şehir seç.');
                     return;
@@ -529,6 +552,19 @@
                 });
 
             });
+
+            function populateCategorySelect() {
+                const select = document.getElementById('category_name');
+                select.innerHTML = '<option value="">Kategori seç</option>';
+
+                FIXED_CITY_CATEGORIES.forEach(cat => {
+                    select.innerHTML += `<option value="${cat}">${cat}</option>`;
+                });
+            }
+
+            if (categoryNameInput) {
+                populateCategorySelect();
+            }
 
         </script>
     @endif
