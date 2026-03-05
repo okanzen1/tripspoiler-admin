@@ -17,7 +17,6 @@ class BlogContentController extends Controller
 
     public function store(Request $request, Blog $blog)
     {
-        $this->authorizeSuperAdmin();
 
         $data = $request->validate([
             'title' => 'required|string|max:255',
@@ -49,7 +48,6 @@ class BlogContentController extends Controller
 
     public function update(Request $request, Blog $blog, BlogContent $content)
     {
-        $this->authorizeSuperAdmin();
         abort_if($content->blog_id !== $blog->id, 404);
 
         $data = $request->validate([
@@ -90,7 +88,6 @@ class BlogContentController extends Controller
 
     public function destroy(Blog $blog, BlogContent $content)
     {
-        $this->authorizeSuperAdmin();
         abort_if($content->blog_id !== $blog->id, 404);
 
         $content->delete();
@@ -98,10 +95,4 @@ class BlogContentController extends Controller
         return back()->with('success', 'İçerik silindi.');
     }
 
-    protected function authorizeSuperAdmin(): void
-    {
-        if (auth()->user()?->role !== 'super_admin') {
-            abort(403, 'Yetkin yok.');
-        }
-    }
 }

@@ -21,9 +21,6 @@ class AffiliatePartnerController extends Controller
 
     public function store(Request $request)
     {
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Sadece super admin partner oluşturabilir.');
-        }
 
         $data = $request->validate([
             'name'   => ['required', 'string', 'max:255'],
@@ -44,9 +41,6 @@ class AffiliatePartnerController extends Controller
 
    public function update(Request $request, AffiliatePartner $affiliate_partner)
     {
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar güncelleyemez.');
-        }
 
         $data = $request->validate([
             'name'   => ['required', 'string', 'max:255'],
@@ -62,9 +56,6 @@ class AffiliatePartnerController extends Controller
 
     public function destroy(AffiliatePartner $affiliate_partner)
     {
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar silemez.');
-        }
 
         $affiliate_partner->delete();
 

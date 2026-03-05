@@ -63,9 +63,6 @@ class FaqController extends Controller
 
     public function store(Request $request)
     {
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar ekleyemez.');
-        }
 
         $data = $request->validate([
             'question' => 'required|string|max:255',
@@ -95,9 +92,6 @@ class FaqController extends Controller
 
     public function update(Request $request, Faq $faq)
     {
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar güncelleyemez.');
-        }
 
         $data = $request->validate([
             'question' => 'required|string|max:255',
@@ -124,10 +118,6 @@ class FaqController extends Controller
 
     public function destroy(Faq $faq)
     {
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar silemez.');
-        }
-
         $faq->delete();
 
         return redirect()

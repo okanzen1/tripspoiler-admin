@@ -31,9 +31,6 @@ class BlogController extends Controller
 
     public function store(Request $request)
     {
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar ekleyemez.');
-        }
 
         $data = $request->validate([
             'title' => 'required|string|max:255',
@@ -94,9 +91,6 @@ class BlogController extends Controller
 
     public function update(Request $request, Blog $blog)
     {
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar güncelleyemez.');
-        }
 
         $data = $request->validate([
             'title' => 'required|string|max:255',
@@ -139,10 +133,6 @@ class BlogController extends Controller
 
     public function destroy(Blog $blog)
     {
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar silemez.');
-        }
-
         $blog->delete();
 
         return redirect()

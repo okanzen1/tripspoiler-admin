@@ -9,11 +9,6 @@ use Illuminate\Http\Request;
 
 class PageContentController extends Controller
 {
-    private function ensureSuperAdmin(): void
-    {
-        abort_unless(auth()->check() && auth()->user()?->role === 'super_admin', 403);
-    }
-
     /** AJAX: şehir içeriğini getir */
     public function show(Page $page, City $city)
     {
@@ -25,8 +20,6 @@ class PageContentController extends Controller
     /** Kaydet / Güncelle */
     public function storeOrUpdate(Request $request, Page $page)
     {
-        $this->ensureSuperAdmin();
-
         $data = $request->validate([
             'city_id' => 'required|exists:cities,id',
             'content' => 'nullable|string',

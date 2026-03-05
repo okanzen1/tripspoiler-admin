@@ -8,10 +8,6 @@ use Illuminate\Http\Request;
 
 class PageController extends Controller
 {
-    private function ensureSuperAdmin(): void
-    {
-        abort_unless(auth()->check() && auth()->user()?->role === 'super_admin', 403);
-    }
 
     public function index()
     {
@@ -26,8 +22,6 @@ class PageController extends Controller
 
     public function store(Request $request)
     {
-        $this->ensureSuperAdmin();
-
         $data = $request->validate([
             'slug' => 'required|string|max:255|unique:pages,slug',
         ]);
@@ -51,8 +45,6 @@ class PageController extends Controller
 
     public function update(Request $request, Page $page)
     {
-        $this->ensureSuperAdmin();
-
         $data = $request->validate([
             'slug' => 'required|string|max:255|unique:pages,slug,' . $page->id,
         ]);
@@ -66,8 +58,6 @@ class PageController extends Controller
 
     public function destroy(Page $page)
     {
-        $this->ensureSuperAdmin();
-
         $page->delete();
 
         return redirect()

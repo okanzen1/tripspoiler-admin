@@ -36,10 +36,6 @@ class UserController extends Controller
     {
         $roles = ['super_admin', 'admin', 'user'];
 
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Sadece super admin yeni user oluşturabilir.');
-        }
-
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:users,username'],
@@ -80,10 +76,6 @@ class UserController extends Controller
     {
         $roles = ['super_admin', 'admin', 'user'];
 
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar güncelleyemez.');
-        }
-
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($user->id)],
@@ -109,10 +101,6 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar silemez.');
-        }
-
         $user->delete();
 
         return redirect()->route('users.index')

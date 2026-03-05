@@ -9,10 +9,6 @@ use Illuminate\Support\Str;
 
 class ImageController extends Controller
 {
-    private function ensureSuperAdmin(): void
-    {
-        abort_unless(auth()->check() && auth()->user()?->role === 'super_admin', 403);
-    }
 
     private function folderForSource(string $source): string
     {
@@ -46,8 +42,6 @@ class ImageController extends Controller
 
     public function store(Request $request)
     {
-        $this->ensureSuperAdmin();
-
         $data = $request->validate([
             'file' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
             'source' => 'required|string|max:50',
@@ -82,8 +76,6 @@ class ImageController extends Controller
 
     public function sort(Request $request)
     {
-        $this->ensureSuperAdmin();
-
         $order = $request->input('order', []);
         abort_unless(is_array($order), 422);
 
@@ -96,8 +88,6 @@ class ImageController extends Controller
    
    public function destroy(Image $image)
     {
-        $this->ensureSuperAdmin();
-
         Storage::disk('private')->delete($image->path);
         $image->delete();
 

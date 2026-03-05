@@ -26,10 +26,6 @@ class CityController extends Controller
 
     public function store(Request $request)
     {
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar ekleyemez.');
-        }
-
         $data = $request->validate([
             'country_id' => ['required', 'exists:countries,id'],
             'name'       => ['required', 'string', 'max:255'],
@@ -58,10 +54,6 @@ class CityController extends Controller
 
     public function update(Request $request, City $city)
     {
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar güncelleyemez.');
-        }
-
         $data = $request->validate([
             'country_id' => ['required', 'exists:countries,id'],
             'name'       => ['required', 'string', 'max:255'],
@@ -83,10 +75,6 @@ class CityController extends Controller
 
     public function destroy(City $city)
     {
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar silemez.');
-        }
-
         $city->delete();
         
         return redirect()

@@ -65,10 +65,6 @@ class ActivityController extends Controller
 
     public function store(Request $request)
     {
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar ekleyemez.');
-        }
-
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'city_id' => 'required|exists:cities,id',
@@ -99,10 +95,6 @@ class ActivityController extends Controller
 
     public function update(Request $request, string $id)
     {
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar güncelleyemez.');
-        }
-
         $activity = Activity::findOrFail($id);
 
         $data = $request->validate([
@@ -148,10 +140,6 @@ class ActivityController extends Controller
 
     public function destroy(string $id)
     {
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Super admin dışındaki kullanıcılar silemez.');
-        }
-
         $activity = Activity::findOrFail($id);
         $activity->delete();
 
@@ -162,10 +150,6 @@ class ActivityController extends Controller
 
     public function toggleStatus(Activity $activity)
     {
-        if (auth()->user()?->role !== 'super_admin') {
-            return back()->withErrors('Yetkin yok.');
-        }
-
         $activity->update([
             'status' => ! $activity->status,
         ]);
