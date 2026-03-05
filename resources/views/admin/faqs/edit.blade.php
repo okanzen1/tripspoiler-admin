@@ -4,7 +4,6 @@
 
 @section('content')
 
-
     @if (session('success'))
         <div class="alert alert-success small">
             {{ session('success') }}
@@ -39,23 +38,45 @@
                 </div>
 
                 <div class="mb-3">
-                    <label>Kaynak (Opsiyonel)</label>
+                    <label>Kaynak</label>
 
-                    <select name="source" class="form-select">
-                        <option value="">Seçiniz</option>
-
+                    <select class="form-select" disabled>
                         @foreach ($sources as $key => $label)
                             <option value="{{ $key }}" @selected($faq->source === $key)>
                                 {{ $label }}
                             </option>
                         @endforeach
-
                     </select>
+
+                    <input type="hidden" name="source" value="{{ $faq->source }}">
                 </div>
 
                 <div class="mb-3">
-                    <label>Kaynak ID (Opsiyonel)</label>
-                    <input name="source_id" value="{{ $faq->source_id }}" class="form-control">
+                    @if ($faq->source === 'activity-show')
+                        <label>Kaynak</label>
+                        <select name="source_id" class="form-select source-select">
+                            <option value="">Activity seç</option>
+
+                            @foreach ($activities as $activity)
+                                <option value="{{ $activity->id }}" @selected($faq->source_id == $activity->id)>
+                                    {{ $activity->id }} - {{ $activity->name }}
+                                </option>
+                            @endforeach
+
+                        </select>
+                    @elseif ($faq->source === 'blog-show')
+                        <label>Kaynak</label>
+                        <select name="source_id" class="form-select source-select">
+                            <option value="">Blog seç</option>
+
+                            @foreach ($blogs as $blog)
+                                <option value="{{ $blog->id }}" @selected($faq->source_id == $blog->id)>
+                                    {{ $blog->id }} - {{ $blog->title }}
+                                </option>
+                            @endforeach
+                        </select>
+                    @endif
+
                 </div>
 
                 <div class="mb-3">
@@ -79,4 +100,20 @@
         </div>
     </div>
 
+@endsection
+@section('scripts')
+
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            $('.source-select').select2({
+                placeholder: "Arama yap...",
+                allowClear: true,
+                width: '100%'
+            });
+
+        });
+    </script>
 @endsection

@@ -88,11 +88,33 @@
                             <tr>
                                 <td>{{ $faq->id }}</td>
 
-                                <td>{{ $faq->question }}</td>
+                                <td>{{ Str::limit($faq->question, 10) }}</td>
 
-                                <td>{{ $faq->source ?? '-' }}</td>
+                                <td>
+                                    {{ $sources[$faq->source] ?? '-' }}
+                                </td>
 
-                                <td>{{ $faq->source_id ?? '-' }}</td>
+                                <td>
+
+                                    @if ($faq->source === 'activity-show' && $faq->source_id)
+
+                                        <a href="{{ url('/activities/'.$faq->source_id.'/edit') }}" class="text-decoration-none">
+                                            {{ \Illuminate\Support\Str::limit($activityMap[$faq->source_id] ?? '-', 35) }}
+                                        </a>
+
+                                    @elseif ($faq->source === 'blog-show' && $faq->source_id)
+
+                                        <a href="{{ url('/blogs/'.$faq->source_id.'/edit') }}" class="text-decoration-none">
+                                            {{ \Illuminate\Support\Str::limit($blogMap[$faq->source_id] ?? '-', 35) }}
+                                        </a>
+
+                                    @else
+
+                                        {{ $faq->source_id ?? '-' }}
+
+                                    @endif
+
+                                </td>
 
                                 <td>
                                     @if ($faq->status)

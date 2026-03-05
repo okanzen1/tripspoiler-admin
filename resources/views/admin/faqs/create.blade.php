@@ -4,23 +4,39 @@
 
 @section('content')
 
-    <div class="card">
-        <div class="card-body">
+<div class="card">
+    <div class="card-body">
 
-            <form method="POST" action="{{ route('faqs.store') }}">
-                @csrf
+        <form method="POST" action="{{ route('faqs.store') }}">
+            @csrf
 
-                <div class="mb-3">
-                    <label>Soru</label>
-                    <input name="question" class="form-control" required>
-                </div>
+            <div class="mb-3">
+                <label>Soru</label>
+                <input name="question" class="form-control" required>
+            </div>
 
-                <div class="text-end">
-                    <button class="btn btn-primary">Kaydet</button>
-                </div>
-            </form>
+            <div class="mb-3">
+                <label>Kaynak</label>
 
-        </div>
+                <select name="source" class="form-select" required>
+                    <option value="">Seçiniz</option>
+
+                    @foreach ($sources as $key => $label)
+                        <option value="{{ $key }}">
+                            {{ $label }}
+                        </option>
+                    @endforeach
+
+                </select>
+            </div>
+
+            <div class="text-end">
+                <button class="btn btn-primary">Kaydet</button>
+            </div>
+
+        </form>
+
     </div>
+</div>
 
 @endsection
