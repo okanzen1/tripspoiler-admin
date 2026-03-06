@@ -86,6 +86,15 @@
                     <span class="align-middle ms-2">Kullanıcılar</span>
                 </a>
             </li>
+
+            {{-- LANGUAGES --}}
+            <li class="sidebar-item {{ request()->routeIs('languages.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('translators.index') }}">
+                    <i class="align-middle" data-feather="globe"></i>
+                    <span class="align-middle ms-2">Çeviri ayarları</span>
+                </a>
+            </li>
+            
         </ul>
     </div>
 </nav>

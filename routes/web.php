@@ -15,6 +15,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PageContentController;
 use App\Http\Controllers\CityExperienceCategoryController;
 use App\Http\Controllers\DevelopController;
+use App\Http\Controllers\TranslatorController;
 
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +60,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/images/{image}', [ImageController::class, 'destroy'])->name('images.destroy');
     Route::get('/media/{image}', [ImageController::class, 'show'])->name('images.view');
 
-    Route::resource('develop', DevelopController::class);
-    Route::get('/develop/translate-activities', [DevelopController::class, 'index']);
+    Route::get('/admin/translators',[TranslatorController::class,'index'])->name('translators.index');
+    Route::post('/admin/translators',[TranslatorController::class,'store'])->name('translators.store');
+    Route::patch('/admin/translators/{translator}/toggle',[TranslatorController::class,'toggle'])->name('translators.toggle');
+    Route::delete('/admin/translators/{translator}',[TranslatorController::class,'destroy'])->name('translators.destroy');
+    
+    Route::get('/develop', [DevelopController::class, 'index']);
 });
