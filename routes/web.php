@@ -60,4 +60,5 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/media/{image}', [ImageController::class, 'show'])->name('images.view');
 
     Route::resource('develop', DevelopController::class);
+    Route::get('/develop/translate-activities', [DevelopController::class, 'index']);
 });
