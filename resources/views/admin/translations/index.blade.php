@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Dil Yönetimi')
+@section('title', 'Çeviri Yönetimi')
 
 @section('content')
 
