@@ -7,9 +7,27 @@ use App\Models\BlogContent;
 use Illuminate\Http\Request;
 use App\Models\Image;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Translator;
 
 class BlogContentController extends Controller
 {
+    public function saveTranslation(Request $request)
+    {
+        $content = BlogContent::findOrFail($request->content_id);
+
+        $content->setTranslation(
+            $request->field,
+            $request->lang,
+            $request->text
+        );
+
+        $content->save();
+
+        return response()->json([
+            'success' => true
+        ]);
+    }
+
     public function create(Blog $blog)
     {
         return view('admin.blog_contents.create', compact('blog'));
@@ -43,7 +61,11 @@ class BlogContentController extends Controller
     {
         abort_if($content->blog_id !== $blog->id, 404);
 
-        return view('admin.blog_contents.edit', compact('blog', 'content'));
+        $languages = Translator::where('active', 1)
+        ->where('code', '!=', 'en')
+        ->pluck('code');
+
+        return view('admin.blog_contents.edit', compact('blog', 'content', 'languages'));
     }
 
     public function update(Request $request, Blog $blog, BlogContent $content)
@@ -94,5 +116,4 @@ class BlogContentController extends Controller
 
         return back()->with('success', 'İçerik silindi.');
     }
-
 }

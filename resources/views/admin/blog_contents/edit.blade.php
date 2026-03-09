@@ -24,8 +24,17 @@
 
                 <div class="mb-3">
                     <label>Blog Adı</label>
-                    <input type="text" name="title" class="form-control"
-                        value="{{ old('title', $content->title) }}" required>
+                    <div class="input-group">
+
+                        <input id="title_en" type="text" name="title" class="form-control"
+                            value="{{ old('title', $content->getTranslation('title', 'en')) }}" required>
+
+                        <button type="button" class="btn btn-outline-primary"
+                            onclick="openTranslationModal('title','title_en',translations.title)">
+                            🌍
+                        </button>
+
+                    </div>
                 </div>
 
                 <div class="mb-3">
@@ -50,10 +59,17 @@
             <div class="card-body">
 
                 <div id="editor" style="min-height: 400px;">
-                    {!! old('content', $content->content) !!}
+                    {!! old('content', $content->getTranslation('content', 'en')) !!}
                 </div>
 
                 <input type="hidden" name="content" id="contentInput">
+
+                <div class="mt-2 text-end">
+                    <button type="button" class="btn btn-outline-primary btn-sm"
+                        onclick="openTranslationModal('content','contentInput',translations.content)">
+                        🌍 Translate Content
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -69,7 +85,13 @@
 
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
-
+    <script>
+        const languages = ['en', ...@json($languages)];
+        const translations = {
+            title: @json($content->getTranslations('title')),
+            content: @json($content->getTranslations('content'))
+        };
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
@@ -162,5 +184,173 @@
             });
 
         });
+    </script>
+
+    <script>
+        function openTranslationModal(field, sourceInputId, existingTranslations) {
+
+            let targetOptions = '';
+
+            languages.forEach(lang => {
+                if (lang !== 'en') {
+                    targetOptions += `<option value="${lang}">${lang.toUpperCase()}</option>`;
+                }
+            });
+
+            let sourceText = '';
+
+            if (sourceInputId === 'contentInput') {
+                sourceText = document.querySelector('#editor .ql-editor').innerHTML;
+            } else {
+                const el = document.getElementById(sourceInputId);
+                sourceText = el ? el.value : '';
+            }
+
+            Swal.fire({
+                title: "Translation",
+                width: 700,
+                showConfirmButton: false,
+
+                html: `
+                <div style="text-align:left">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Source Language</label>
+                        <input class="form-control" value="EN (source)" disabled>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Source Text</label>
+                        <textarea id="source_text" class="form-control" disabled style="min-height:120px;"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Target Language</label>
+                        <select id="translation_lang" class="form-select">
+                            ${targetOptions}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Translation</label>
+                        <textarea id="translation_text" class="form-control" style="min-height:160px;"></textarea>
+                    </div>
+
+                    <div style="display:flex;justify-content:space-between">
+                        <button id="translate_btn" class="btn btn-primary">
+                            Translate
+                        </button>
+
+                        <div>
+                            <button id="cancel_btn" class="btn btn-secondary me-2">
+                                Cancel
+                            </button>
+
+                            <button id="save_btn" class="btn btn-success">
+                                Save
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            `,
+
+                didOpen: () => {
+
+                    document.getElementById('source_text').value = sourceText;
+
+                    const langSelect = document.getElementById('translation_lang');
+                    const textInput = document.getElementById('translation_text');
+                    const translateBtn = document.getElementById('translate_btn');
+
+                    function loadExisting() {
+                        const lang = langSelect.value;
+                        let existing = existingTranslations?.[lang] ?? '';
+
+                        if (field === 'content' && existing) {
+                            textInput.value = existing;
+                        } else {
+                            textInput.value = existing;
+                        }
+                    }
+
+                    loadExisting();
+
+                    langSelect.addEventListener('change', loadExisting);
+
+                    translateBtn.addEventListener('click', async () => {
+
+                        const lang = langSelect.value;
+
+                        translateBtn.disabled = true;
+                        translateBtn.innerText = "Translating...";
+
+                        const res = await fetch("/admin/translate", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                            },
+                            body: JSON.stringify({
+                                text: sourceText,
+                                lang: lang
+                            })
+                        });
+
+                        const data = await res.json();
+
+                        let result = data.translation ?? '';
+                        textInput.value = result;
+
+                        translateBtn.disabled = false;
+                        translateBtn.innerText = "Translate";
+                    });
+
+                    document.getElementById('save_btn').onclick = () => {
+                        const lang = langSelect.value;
+                        const text = textInput.value;
+
+                        saveTranslation(field, lang, text);
+                        Swal.close();
+                    };
+
+                    document.getElementById('cancel_btn').onclick = () => Swal.close();
+                }
+            });
+        }
+
+        function saveTranslation(field, lang, text) {
+
+            fetch("{{ route('admin.saveBlogContentTranslation') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({
+                        content_id: {{ $content->id }},
+                        field: field,
+                        lang: lang,
+                        text: text
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+
+                    if (data.success) {
+
+                        if (!translations[field]) {
+                            translations[field] = {};
+                        }
+
+                        translations[field][lang] = text;
+
+                        Swal.fire({
+                            icon: "success",
+                            title: "Saved"
+                        });
+                    }
+                });
+        }
     </script>
 @endsection

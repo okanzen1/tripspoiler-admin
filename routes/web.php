@@ -56,6 +56,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/blogs/{blog}/contents/{content}/edit', [BlogContentController::class, 'edit'])->name('blogs.content.edit');
     Route::put('/blogs/{blog}/contents/{content}', [BlogContentController::class, 'update'])->name('blogs.content.update');
     Route::delete('/blogs/{blog}/contents/{content}', [BlogContentController::class, 'destroy'])->name('blogs.content.destroy');
+    Route::post('/admin/save-blog-content-translation', [BlogContentController::class, 'saveTranslation'])->name('admin.saveBlogContentTranslation');
     Route::resource('blog-subscribers', BlogSubscriberController::class)->only(['index', 'store', 'update', 'destroy']);
 
     Route::post('/images/upload', [ImageController::class, 'store'])->name('images.upload');
