@@ -7,9 +7,39 @@ use App\Models\City;
 use App\Models\AffiliatePartner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use App\Models\Translator;
+use App\Services\TranslatorService;
 
 class ActivityController extends Controller
 {
+    public function autoTranslate(Request $request, TranslatorService $translator)
+    {
+        $translation = $translator->translateSingle(
+            $request->text,
+            $request->lang
+        );
+
+        return response()->json([
+            'translation'=>$translation
+        ]);
+    }
+
+    public function saveTranslation(Request $request)
+    {
+        $activity = Activity::findOrFail($request->activity_id);
+
+        $activity->setTranslation(
+            $request->field,
+            $request->lang,
+            $request->text
+        );
+
+        $activity->save();
+
+        return response()->json([
+            'success' => true
+        ]);
+    }
 
     protected array $productTypes = [
         'product' => 'Product',
@@ -86,10 +116,11 @@ class ActivityController extends Controller
         $activity = Activity::findOrFail($id);
         $affiliatePartners = AffiliatePartner::where('active', true)->orderBy('name')->get();
         $cities = City::where('active', true)->orderBy('id')->get();
+        $languages = Translator::where('active',1)->where('code','!=','en')->pluck('code');
 
         return view(
             'admin.activities.edit',
-            compact('activity', 'cities', 'affiliatePartners')
+            compact('activity', 'cities', 'affiliatePartners', 'languages')
         )->with('productTypes', $this->productTypes);
     }
 

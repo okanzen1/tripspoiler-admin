@@ -39,6 +39,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::resource('activities', ActivityController::class);
     Route::patch('/activities/{activity}/toggle-status',[ActivityController::class, 'toggleStatus'])->name('activities.toggle-status');
+    Route::post('/admin/translate',[ActivityController::class,'autoTranslate'])->name('admin.translate');
+    Route::post('/admin/save-translation',[ActivityController::class,'saveTranslation'])->name('admin.saveTranslation');
 
     Route::get('page-contents/{pageContent}/experience-categories',[CityExperienceCategoryController::class, 'index']);
     Route::post('page-contents/{pageContent}/experience-categories',[CityExperienceCategoryController::class, 'store']);

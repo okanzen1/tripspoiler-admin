@@ -29,12 +29,37 @@
 
                 <div class="mb-3">
                     <label>Aktivite Adı</label>
-                    <input name="name" value="{{ old('name', $activity->name) }}" class="form-control" required>
+                    <div class="input-group">
+
+                        <input id="name_en" name="name"
+                            value="{{ old('name', $activity->getTranslation('name', 'en')) }}" class="form-control">
+
+                        <button type="button" class="btn btn-outline-primary"
+                            onclick="openTranslationModal('name','name_en',translations.name)">
+
+                            🌍 Translate
+
+                        </button>
+
+                    </div>
                 </div>
 
                 <div class="mb-3">
                     <label>Slug</label>
-                    <input name="slug" value="{{ old('slug', $activity->slug) }}" class="form-control" required>
+                    <div class="input-group">
+
+                        <input id="slug_en" name="slug"
+                            value="{{ old('slug', $activity->getTranslation('slug', 'en')) }}" class="form-control"
+                            required>
+
+                        <button type="button" class="btn btn-outline-primary"
+                            onclick="openTranslationModal('slug','slug_en',translations.slug)">
+
+                            🌍
+
+                        </button>
+
+                    </div>
                     <small class="text-muted">
                         URL slug (küçük harf, boşluksuz).
                     </small>
@@ -42,12 +67,37 @@
 
                 <div class="mb-3">
                     <label>Meta Başlık</label>
-                    <input name="meta_title" value="{{ old('meta_title', $activity->meta_title) }}" class="form-control">
+                    <div class="input-group">
+
+                        <input id="meta_title_en" name="meta_title"
+                            value="{{ old('meta_title', $activity->getTranslation('meta_title', 'en')) }}"
+                            class="form-control">
+
+                        <button type="button" class="btn btn-outline-primary"
+                            onclick="openTranslationModal('meta_title','meta_title_en',translations.meta_title)">
+
+                            🌍
+
+                        </button>
+
+                    </div>
                 </div>
 
                 <div class="mb-3">
                     <label>Meta Açıklama</label>
-                    <textarea name="meta_description" class="form-control">{{ old('meta_description', $activity->meta_description) }}</textarea>
+
+                    <div class="input-group">
+
+                        <textarea id="meta_description_en" name="meta_description" class="form-control">{{ old('meta_description', $activity->getTranslation('meta_description', 'en')) }}</textarea>
+
+                        <button type="button" class="btn btn-outline-primary"
+                            onclick="openTranslationModal('meta_description','meta_description_en',translations.meta_description)">
+
+                            🌍
+
+                        </button>
+
+                    </div>
                 </div>
 
                 <div class="mb-3">
@@ -127,9 +177,22 @@
 
                 <div class="mb-3">
                     <label>Duration</label>
-                    <input type="text" name="duration" class="form-control"
-                        placeholder="45 minutes / 1–1.5 hours / Full day"
-                        value="{{ old('duration', $activity->duration) }}">
+
+
+                    <div class="input-group">
+
+                        <input id="duration_en" type="text" name="duration" class="form-control"
+                            placeholder="45 minutes / 1–1.5 hours / Full day"
+                            value="{{ old('duration', $activity->getTranslation('duration', 'en')) }}">
+
+                        <button type="button" class="btn btn-outline-primary"
+                            onclick="openTranslationModal('duration','duration_en',translations.duration)">
+
+                            🌍
+
+                        </button>
+
+                    </div>
                 </div>
 
                 <div class="mb-3">
@@ -145,15 +208,28 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="mb-4 d-block">
+
+                    <label class="mb-2 d-block">
                         <strong>Açıklama</strong>
                     </label>
 
                     <div id="activity-editor" style="min-height:300px">
-                        {!! old('description', $activity->description) !!}
+                        {!! old('description', $activity->getTranslation('description', 'en')) !!}
                     </div>
 
                     <input type="hidden" name="description" id="descriptionInput">
+
+                    <div class="mt-2 text-end">
+
+                        <button type="button" class="btn btn-outline-primary btn-sm"
+                            onclick="openTranslationModal('description','descriptionInput',translations.description)">
+
+                            🌍 Translate Description
+
+                        </button>
+
+                    </div>
+
                 </div>
 
                 <button type="submit" class="btn btn-primary"
@@ -199,6 +275,17 @@
 @section('scripts')
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <script>
+        const languages = ['en', ...@json($languages)];
+        const translations = {
+            name: @json($activity->getTranslations('name')),
+            slug: @json($activity->getTranslations('slug')),
+            meta_title: @json($activity->getTranslations('meta_title')),
+            meta_description: @json($activity->getTranslations('meta_description')),
+            duration: @json($activity->getTranslations('duration')),
+            description: @json($activity->getTranslations('description'))
+        };
+    </script>
 
     <script>
         // Dropzone
@@ -339,5 +426,222 @@
                 };
             }
         });
+    </script>
+
+    <script>
+        function slugify(text){
+
+            const map = {
+                'ç':'c',
+                'ğ':'g',
+                'ı':'i',
+                'ö':'o',
+                'ş':'s',
+                'ü':'u',
+                'Ç':'c',
+                'Ğ':'g',
+                'İ':'i',
+                'Ö':'o',
+                'Ş':'s',
+                'Ü':'u'
+            };
+
+            return text
+                .replace(/[çğıöşüÇĞİÖŞÜ]/g, m => map[m])
+                .toLowerCase()
+                .replace(/\s+/g,'-')
+                .replace(/[^\w-]+/g,'')
+                .replace(/--+/g,'-')
+                .replace(/^-+|-+$/g,'');
+        }
+
+        function openTranslationModal(field, sourceInputId, existingTranslations) {
+
+            let targetOptions = '';
+
+            languages.forEach(lang => {
+                if (lang !== 'en') {
+                    targetOptions += `<option value="${lang}">${lang.toUpperCase()}</option>`;
+                }
+            });
+
+            let sourceText = '';
+
+            if (sourceInputId === 'descriptionInput') {
+                sourceText = document.querySelector('#activity-editor .ql-editor').innerHTML;
+            } else {
+                const el = document.getElementById(sourceInputId);
+                sourceText = el ? el.value : '';
+            }
+
+            Swal.fire({
+                title: "Translation",
+                width: 700,
+                showConfirmButton: false,
+
+                html: `
+                    <div style="text-align:left">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Source Language</label>
+                            <input class="form-control" value="EN (source)" disabled>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Source Text</label>
+                            <textarea id="source_text" class="form-control" disabled></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Target Language</label>
+                            <select id="translation_lang" class="form-select">
+                                ${targetOptions}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Translation</label>
+                            <textarea id="translation_text" class="form-control"></textarea>
+                        </div>
+
+                        <div style="display:flex;justify-content:space-between">
+
+                            <button id="translate_btn" class="btn btn-primary">
+                                Translate
+                            </button>
+
+                            <div>
+
+                                <button id="cancel_btn" class="btn btn-secondary me-2">
+                                    Cancel
+                                </button>
+
+                                <button id="save_btn" class="btn btn-success">
+                                    Save
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                `,
+
+                didOpen: () => {
+
+                    document.getElementById('source_text').value = sourceText;
+
+                    const langSelect = document.getElementById('translation_lang');
+                    const textInput = document.getElementById('translation_text');
+                    const translateBtn = document.getElementById('translate_btn');
+
+                    function loadExisting() {
+                        const lang = langSelect.value;
+                        textInput.value = existingTranslations?.[lang] ?? '';
+                    }
+
+                    loadExisting();
+
+                    langSelect.addEventListener('change', loadExisting);
+
+                    translateBtn.addEventListener('click', async () => {
+
+                        const lang = langSelect.value;
+
+                        translateBtn.disabled = true;
+                        translateBtn.innerText = "Translating...";
+
+                        let textForTranslation = sourceText;
+
+                        // slug ise - yerine boşluk gönder
+                        if (field === 'slug') {
+                            textForTranslation = sourceText.replaceAll('-', ' ');
+                        }
+
+                        const res = await fetch("/admin/translate", {
+
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                            },
+
+                            body: JSON.stringify({
+                                text: textForTranslation,
+                                lang: lang
+                            })
+
+                        });
+
+                        const data = await res.json();
+
+                        let result = data.translation ?? '';
+
+                        // slug ise tekrar slug yap
+                        if (field === 'slug') {
+                            result = slugify(result);
+                        }
+
+                        textInput.value = result;
+
+                        translateBtn.disabled = false;
+                        translateBtn.innerText = "Translate";
+
+                    });
+
+                    document.getElementById('save_btn').onclick = () => {
+
+                        const lang = langSelect.value;
+                        const text = textInput.value;
+
+                        saveTranslation(field, lang, text);
+
+                        Swal.close();
+
+                    };
+
+                    document.getElementById('cancel_btn').onclick = () => Swal.close();
+
+                }
+
+            });
+
+        }
+
+        function saveTranslation(field, lang, text) {
+
+            fetch("{{ route('admin.saveTranslation') }}", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+
+                    body: JSON.stringify({
+                        activity_id: {{ $activity->id }},
+                        field: field,
+                        lang: lang,
+                        text: text
+                    })
+
+                })
+                .then(res => res.json())
+                .then(data => {
+
+                    if (data.success) {
+
+                        Swal.fire({
+                            icon: "success",
+                            title: "Saved"
+                        });
+
+                    }
+
+                });
+
+        }
     </script>
 @endsection
