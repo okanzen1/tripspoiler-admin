@@ -6,6 +6,7 @@ use App\Models\Faq;
 use App\Models\Activity;
 use App\Models\Blog;
 use Illuminate\Http\Request;
+use App\Models\Translator;
 
 class FaqController extends Controller
 {
@@ -19,6 +20,22 @@ class FaqController extends Controller
         'blog' => 'Blog Sayfası',
     ];
 
+    public function saveTranslation(Request $request)
+    {
+        $faq = Faq::findOrFail($request->faq_id);
+
+        $faq->setTranslation(
+            $request->field,
+            $request->lang,
+            $request->text
+        );
+
+        $faq->save();
+
+        return response()->json([
+            'success' => true
+        ]);
+    }
 
     public function index(Request $request)
     {
@@ -147,12 +164,15 @@ class FaqController extends Controller
                 ->orderBy('id', 'desc')
                 ->get();
         }
-
+        
+        $languages = Translator::where('active', 1)->where('code', '!=', 'en')->pluck('code');
+        
         return view('admin.faqs.edit', [
             'faq' => $faq,
             'sources' => self::SOURCES,
             'activities' => $activities,
             'blogs' => $blogs,
+            'languages' => $languages,
         ]);
     }
 

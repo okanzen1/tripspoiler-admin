@@ -30,12 +30,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
     Route::resource('affiliate-partners', AffiliatePartnerController::class);
     Route::resource('users', UserController::class);
-    Route::resource('faqs', FaqController::class);
     Route::resource('cities', CityController::class);
     Route::resource('countries', CountryController::class);
     Route::resource('pages', PageController::class);
     Route::get('/pages/{page}/contents/{city}', [PageContentController::class, 'show'])->name('pages.contents.show');
     Route::post('/pages/{page}/contents', [PageContentController::class, 'storeOrUpdate'])->name('pages.contents.store');
+
+    Route::resource('faqs', FaqController::class);
+    Route::post('/admin/save-faq-translation', [FaqController::class, 'saveTranslation'])->name('admin.saveFaqTranslation');
 
     Route::resource('activities', ActivityController::class);
     Route::patch('/activities/{activity}/toggle-status', [ActivityController::class, 'toggleStatus'])->name('activities.toggle-status');
