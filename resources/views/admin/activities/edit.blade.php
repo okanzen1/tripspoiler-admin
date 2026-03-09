@@ -37,7 +37,7 @@
                         <button type="button" class="btn btn-outline-primary"
                             onclick="openTranslationModal('name','name_en',translations.name)">
 
-                            🌍 Translate
+                            🌍
 
                         </button>
 
@@ -632,6 +632,11 @@
                 .then(data => {
 
                     if (data.success) {
+
+                        if(!translations[field]){
+                            translations[field] = {};
+                        }
+                        translations[field][lang] = text;
 
                         Swal.fire({
                             icon: "success",
