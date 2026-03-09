@@ -29,64 +29,115 @@
 
                 <div class="mb-3">
                     <label>Blog Adı</label>
-                    <input type="text" name="title" class="form-control" value="{{ old('title', $blog->title) }}"
-                        required>
+                    <div class="input-group">
+
+                        <input id="title_en" type="text" name="title" class="form-control"
+                            value="{{ old('title', $blog->getTranslation('title', 'en')) }}" required>
+
+                        <button type="button" class="btn btn-outline-primary"
+                            onclick="openTranslationModal('title','title_en',translations.title)">
+                            🌍
+                        </button>
+
+                    </div>
                 </div>
 
                 <div class="mb-3">
                     <label>Özet</label>
-                    <textarea name="excerpt" class="form-control" rows="3">{{ old('excerpt', $blog->excerpt) }}</textarea>
+                    <div class="input-group">
+
+                        <textarea id="excerpt_en" name="excerpt" class="form-control" rows="3">{{ old('excerpt', $blog->getTranslation('excerpt', 'en')) }}</textarea>
+
+                        <button type="button" class="btn btn-outline-primary"
+                            onclick="openTranslationModal('excerpt','excerpt_en',translations.excerpt)">
+                            🌍
+                        </button>
+
+                    </div>
                 </div>
 
                 <div class="mb-3">
                     <label>Slug</label>
-                    <input type="text" name="slug" class="form-control"
-                        value="{{ old('slug', $blog->getTranslation('slug', 'tr')) }}" required>
+                    <div class="input-group">
+
+                        <input id="slug_en" type="text" name="slug" class="form-control"
+                            value="{{ old('slug', $blog->getTranslation('slug', 'en')) }}" required>
+
+                        <button type="button" class="btn btn-outline-primary"
+                            onclick="openTranslationModal('slug','slug_en',translations.slug)">
+                            🌍
+                        </button>
+
+                    </div>
                 </div>
 
                 <div class="mb-3">
                     <label>Meta Title</label>
-                    <input type="text" name="meta_title" class="form-control"
-                        value="{{ old('meta_title', $blog->getTranslation('meta_title', 'tr')) }}">
+                    <div class="input-group">
+
+                        <input id="meta_title_en" type="text" name="meta_title" class="form-control"
+                            value="{{ old('meta_title', $blog->getTranslation('meta_title', 'en')) }}">
+
+                        <button type="button" class="btn btn-outline-primary"
+                            onclick="openTranslationModal('meta_title','meta_title_en',translations.meta_title)">
+                            🌍
+                        </button>
+
+                    </div>
                 </div>
 
                 <div class="mb-3">
                     <label>Meta Description</label>
-                    <input type="text" name="meta_description" class="form-control"
-                        value="{{ old('meta_description', $blog->getTranslation('meta_description', 'tr')) }}">
+                    <div class="input-group">
+
+                        <input id="meta_description_en" type="text" name="meta_description" class="form-control"
+                            value="{{ old('meta_description', $blog->getTranslation('meta_description', 'en')) }}">
+
+                        <button type="button" class="btn btn-outline-primary"
+                            onclick="openTranslationModal('meta_description','meta_description_en',translations.meta_description)">
+                            🌍
+                        </button>
+
+                    </div>
                 </div>
 
                 <div class="mb-3">
                     <label>Şehir</label>
-                    <input type="text"
-                        class="form-control"
-                        value="{{ $blog->city->name ?? '-' }}"
-                        readonly>
+                    <input type="text" class="form-control" value="{{ $blog->city->name ?? '-' }}" readonly>
                 </div>
 
                 @php($locale = app()->getLocale())
 
                 <div class="mb-3">
                     <label>Tema / Etiketler</label>
-                    <input type="text" name="themes" class="form-control" placeholder="Art, History, Culture"
-                        value="{{ old(
-                            'themes',
-                            $blog->getTranslation('themes', $locale) ? implode(', ', $blog->getTranslation('themes', $locale)) : '',
-                        ) }}">
+                    <div class="input-group">
+
+                        <input id="themes_en" type="text" name="themes" class="form-control"
+                            placeholder="Art, History, Culture"
+                            value="{{ old(
+                                'themes',
+                                $blog->getTranslation('themes', 'en') ? implode(', ', $blog->getTranslation('themes', 'en')) : '',
+                            ) }}">
+
+                        <button type="button" class="btn btn-outline-primary"
+                            onclick="openTranslationModal('themes','themes_en',translations.themes)">
+                            🌍
+                        </button>
+
+                    </div>
                     <small class="text-muted">
                         Virgülle ayırarak girin (örn: Art, History, Culture)
                     </small>
                 </div>
-                
+
                 <div class="mb-3">
                     <label>Bağlı Aktiviteler</label>
 
                     <select name="activities[]" id="activitySelect" class="form-select" multiple>
-                        @foreach($activities as $activity)
-                            <option value="{{ $activity->id }}"
-                                @selected($blog->activities->contains($activity->id))>
+                        @foreach ($activities as $activity)
+                            <option value="{{ $activity->id }}" @selected($blog->activities->contains($activity->id))>
 
-                                {{ $activity->id }} - 
+                                {{ $activity->id }} -
                                 {{ $activity->getTranslation('name', app()->getLocale()) }}
 
                             </option>
@@ -222,6 +273,19 @@
 
 @section('scripts')
     <script>
+        const languages = ['en', ...@json($languages)];
+
+        const translations = {
+            title: @json($blog->getTranslations('title')),
+            excerpt: @json($blog->getTranslations('excerpt')),
+            themes: @json($blog->getTranslations('themes')),
+            slug: @json($blog->getTranslations('slug')),
+            meta_title: @json($blog->getTranslations('meta_title')),
+            meta_description: @json($blog->getTranslations('meta_description'))
+        };
+    </script>
+
+    <script>
         // Dropzone
         Dropzone.autoDiscover = false;
 
@@ -290,5 +354,209 @@
                 width: '100%'
             });
         });
-</script>
+    </script>
+
+    <script>
+        function slugify(text) {
+
+            const map = {
+                'ç': 'c',
+                'ğ': 'g',
+                'ı': 'i',
+                'ö': 'o',
+                'ş': 's',
+                'ü': 'u',
+                'Ç': 'c',
+                'Ğ': 'g',
+                'İ': 'i',
+                'Ö': 'o',
+                'Ş': 's',
+                'Ü': 'u'
+            };
+
+            return text
+                .replace(/[çğıöşüÇĞİÖŞÜ]/g, m => map[m])
+                .toLowerCase()
+                .replace(/\s+/g, '-')
+                .replace(/[^\w-]+/g, '')
+                .replace(/--+/g, '-')
+                .replace(/^-+|-+$/g, '');
+
+        }
+
+        function openTranslationModal(field, sourceInputId, existingTranslations) {
+
+            let targetOptions = '';
+
+            languages.forEach(lang => {
+                if (lang !== 'en') {
+                    targetOptions += `<option value="${lang}">${lang.toUpperCase()}</option>`;
+                }
+            });
+
+            let sourceText = document.getElementById(sourceInputId).value ?? '';
+
+            Swal.fire({
+
+                title: "Translation",
+                width: 700,
+                showConfirmButton: false,
+
+                html: `
+                    <div>
+
+                        <label>Source</label>
+                        <textarea id="source_text" class="form-control" disabled></textarea>
+
+                        <label class="mt-3">Language</label>
+                        <select id="translation_lang" class="form-select">
+                        ${targetOptions}
+                        </select>
+
+                        <label class="mt-3">Translation</label>
+                        <textarea id="translation_text" class="form-control"></textarea>
+
+                        <div class="mt-3 d-flex justify-content-between">
+
+                            <button id="translate_btn" class="btn btn-primary">
+                            Translate
+                            </button>
+
+                            <div>
+                            <button id="cancel_btn" class="btn btn-secondary me-2">
+                            Cancel
+                            </button>
+
+                            <button id="save_btn" class="btn btn-success">
+                            Save
+                            </button>
+                            </div>
+
+                        </div>
+
+                    </div>
+                `,
+
+                didOpen: () => {
+
+                    document.getElementById('source_text').value = sourceText;
+
+                    const langSelect = document.getElementById('translation_lang');
+                    const textInput = document.getElementById('translation_text');
+                    const translateBtn = document.getElementById('translate_btn');
+
+                    function loadExisting() {
+                        const lang = langSelect.value;
+                        textInput.value = existingTranslations?.[lang] ?? '';
+                    }
+
+                    loadExisting();
+
+                    langSelect.addEventListener('change', loadExisting);
+
+                    translateBtn.onclick = async () => {
+
+                        const lang = langSelect.value;
+
+                        translateBtn.disabled = true;
+
+                        let textForTranslation = sourceText;
+
+                        if (field === 'slug') {
+                            textForTranslation = sourceText.replaceAll('-', ' ');
+                        }
+
+                        const res = await fetch("/admin/translate", {
+
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                            },
+
+                            body: JSON.stringify({
+                                text: textForTranslation,
+                                lang: lang
+                            })
+
+                        });
+
+                        const data = await res.json();
+
+                        let result = data.translation ?? '';
+
+                        if (field === 'slug') {
+                            result = slugify(result);
+                        }
+
+                        textInput.value = result;
+
+                        translateBtn.disabled = false;
+
+                    };
+
+                    document.getElementById('save_btn').onclick = () => {
+
+                        const lang = langSelect.value;
+                        const text = textInput.value;
+
+                        saveTranslation(field, lang, text);
+
+                        Swal.close();
+
+                    };
+
+                    document.getElementById('cancel_btn').onclick = () => Swal.close();
+
+                }
+
+            });
+
+        }
+
+        function saveTranslation(field, lang, text) {
+
+            fetch("{{ route('admin.saveBlogTranslation') }}", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+
+                    body: JSON.stringify({
+
+                        blog_id: {{ $blog->id }},
+                        field: field,
+                        lang: lang,
+                        text: text
+
+                    })
+
+                })
+
+                .then(res => res.json())
+                .then(data => {
+
+                    if (data.success) {
+
+                        if (!translations[field]) {
+                            translations[field] = {};
+                        }
+
+                        translations[field][lang] = text;
+
+                        Swal.fire({
+                            icon: "success",
+                            title: "Saved"
+                        });
+
+                    }
+
+                });
+
+        }
+    </script>
 @endsection

@@ -8,9 +8,38 @@ use App\Models\BlogContent;
 use App\Models\City;
 use Illuminate\Http\Request;
 use App\Models\Activity;
+use App\Models\Translator;
 
 class BlogController extends Controller
 {
+    public function saveTranslation(Request $request)
+    {
+        $blog = Blog::findOrFail($request->blog_id);
+
+        $value = $request->text;
+
+        // THEMES ARRAY OLMALI
+        if ($request->field === 'themes') {
+
+            $value = collect(explode(',', $request->text))
+                ->map(fn($item) => trim($item))
+                ->filter()
+                ->values()
+                ->toArray();
+        }
+
+        $blog->setTranslation(
+            $request->field,
+            $request->lang,
+            $value
+        );
+
+        $blog->save();
+
+        return response()->json([
+            'success' => true
+        ]);
+    }
     public function index()
     {
         $blogs = Blog::with('city')
@@ -58,7 +87,7 @@ class BlogController extends Controller
 
         if (!empty($data['themes'])) {
             $themesArray = collect(explode(',', $data['themes']))
-                ->map(fn ($item) => trim($item))
+                ->map(fn($item) => trim($item))
                 ->filter()
                 ->values()
                 ->toArray();
@@ -79,14 +108,16 @@ class BlogController extends Controller
         $blogCityId = $blog->city_id;
         $cities = City::where('active', true)->orderBy('name')->get();
         $contents = BlogContent::where('blog_id', $blog->id)->orderBy('created_at', 'desc')->get();
+        $languages = Translator::where('active', 1)->where('code', '!=', 'en')->pluck('code');
         $activities = Activity::where('status', true)->orderBy('id', 'desc')
-        ->where(function ($query) use ($blogCityId) {
-            $query->where('city_id', $blogCityId)
-                ->orWhereNull('city_id');
-        })
-        ->get();
+            ->where(function ($query) use ($blogCityId) {
+                $query->where('city_id', $blogCityId)
+                    ->orWhereNull('city_id');
+            })
+            ->get();
 
-        return view('admin.blogs.edit', compact('blog', 'cities', 'contents', 'activities'));
+
+        return view('admin.blogs.edit', compact('blog', 'cities', 'contents', 'activities', 'languages'));
     }
 
     public function update(Request $request, Blog $blog)
@@ -94,6 +125,7 @@ class BlogController extends Controller
 
         $data = $request->validate([
             'title' => 'required|string|max:255',
+            'slug' => 'required|string|max:255',
             'excerpt' => 'nullable|string',
             'meta_title' => 'required|string|max:255',
             'meta_description' => 'required|string',
@@ -110,13 +142,14 @@ class BlogController extends Controller
         $blog->sort_order = $data['sort_order'];
 
         $blog->setTranslation('title', $locale, $data['title']);
+        $blog->setTranslation('slug', $locale, $data['slug']);
         $blog->setTranslation('excerpt', $locale, $data['excerpt'] ?? '');
         $blog->setTranslation('meta_title', $locale, $data['meta_title']);
         $blog->setTranslation('meta_description', $locale, $data['meta_description']);
 
         if (!empty($data['themes'])) {
             $themesArray = collect(explode(',', $data['themes']))
-                ->map(fn ($item) => trim($item))
+                ->map(fn($item) => trim($item))
                 ->filter()
                 ->values()
                 ->toArray();
