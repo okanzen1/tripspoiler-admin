@@ -32,12 +32,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('cities', CityController::class);
     Route::resource('countries', CountryController::class);
+   
+    Route::resource('faqs', FaqController::class);
+    Route::post('/admin/save-faq-translation', [FaqController::class, 'saveTranslation'])->name('admin.saveFaqTranslation');
+
     Route::resource('pages', PageController::class);
     Route::get('/pages/{page}/contents/{city}', [PageContentController::class, 'show'])->name('pages.contents.show');
     Route::post('/pages/{page}/contents', [PageContentController::class, 'storeOrUpdate'])->name('pages.contents.store');
-
-    Route::resource('faqs', FaqController::class);
-    Route::post('/admin/save-faq-translation', [FaqController::class, 'saveTranslation'])->name('admin.saveFaqTranslation');
+    Route::post('/admin/save-page-content-translation', [PageContentController::class, 'saveTranslation'])->name('admin.savePageContentTranslation');
 
     Route::resource('activities', ActivityController::class);
     Route::patch('/activities/{activity}/toggle-status', [ActivityController::class, 'toggleStatus'])->name('activities.toggle-status');
@@ -50,6 +52,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::patch('experience-categories/{category}/toggle-status', [CityExperienceCategoryController::class, 'toggleStatus']);
     Route::get('experience-categories/{category}/edit', [CityExperienceCategoryController::class, 'edit']);
     Route::put('experience-categories/{category}', [CityExperienceCategoryController::class, 'update'])->name('experience-categories.update');
+    Route::post('/admin/save-category-description-translation',[CityExperienceCategoryController::class, 'saveDescriptionTranslation'])->name('admin.saveCategoryDescriptionTranslation');
 
     Route::resource('blogs', BlogController::class);
     Route::post('/admin/save-blog-translation', [BlogController::class, 'saveTranslation'])->name('admin.saveBlogTranslation');

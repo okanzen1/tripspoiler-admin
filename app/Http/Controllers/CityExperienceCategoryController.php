@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\PageContent;
 use App\Models\CityExperienceCategory;
+use App\Models\CityExperienceCategoryDescription;
 use App\Models\Image;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Translator;
 use Illuminate\Http\Request;
 
 class CityExperienceCategoryController extends Controller
@@ -24,6 +26,30 @@ class CityExperienceCategoryController extends Controller
         "Why Visit",
     ];
 
+
+    public function saveDescriptionTranslation(Request $request)
+    {
+        $data = $request->validate([
+            'description_id' => 'required|exists:city_experience_category_descriptions,id',
+            'field' => 'required|in:description',
+            'lang' => 'required|string|max:10',
+            'text' => 'nullable|string',
+        ]);
+
+        $description = CityExperienceCategoryDescription::findOrFail($data['description_id']);
+
+        $description->setTranslation(
+            $data['field'],
+            $data['lang'],
+            $data['text'] ?? ''
+        );
+
+        $description->save();
+
+        return response()->json([
+            'success' => true
+        ]);
+    }
     /**
      * Liste
      */
@@ -75,8 +101,9 @@ class CityExperienceCategoryController extends Controller
      * Edit
      */
     public function edit(CityExperienceCategory $category)
-    {
-        return view('admin.experience-categories.edit', compact('category'));
+    {   
+        $languages = Translator::where('active', 1)->where('code', '!=', 'en')->pluck('code');
+        return view('admin.experience-categories.edit', compact('category', 'languages'));
     }
 
     /**

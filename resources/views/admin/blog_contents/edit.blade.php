@@ -67,7 +67,7 @@
                 <div class="mt-2 text-end">
                     <button type="button" class="btn btn-outline-primary btn-sm"
                         onclick="openTranslationModal('content','contentInput',translations.content)">
-                        🌍 Translate Content
+                        🌍
                     </button>
                 </div>
             </div>

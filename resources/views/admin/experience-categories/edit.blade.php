@@ -35,6 +35,14 @@
 
                         <div id="editor" style="min-height: 350px;"></div>
                         <input type="hidden" name="description" id="descriptionInput">
+                        <div class="mt-2 text-end">
+
+                            <button type="button" class="btn btn-outline-primary btn-sm"
+                                onclick="openTranslationModal('description','descriptionInput',translations.description)">
+                                🌍
+                            </button>
+
+                        </div>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mt-4">
@@ -95,7 +103,7 @@
                 }
             });
 
-            // 🔥 HTML’i düzgün inject et
+            // HTML’i düzgün inject et
             const initialContent = @json($content);
 
             if (initialContent) {
@@ -174,6 +182,155 @@
             }
             document.getElementById('deleteForm').submit();
         });
+    </script>
+    <script>
+        const languages = ['en', ...@json($languages)];
+
+        const translations = {
+            description: @json($desc?->getTranslations('description') ?? [])
+        };
+
+        function openTranslationModal(field, sourceInputId, existingTranslations) {
+
+            let targetOptions = '';
+
+            languages.forEach(lang => {
+                if (lang !== 'en') {
+                    targetOptions += `<option value="${lang}">${lang.toUpperCase()}</option>`;
+                }
+            });
+
+            let sourceText = document.querySelector('#editor .ql-editor').innerHTML;
+
+            Swal.fire({
+                title: "Translation",
+                width: 700,
+                showConfirmButton: false,
+                html: `
+                    <div>
+
+                        <label>Source</label>
+                        <textarea id="source_text" class="form-control" disabled></textarea>
+
+                        <label class="mt-3">Language</label>
+                        <select id="translation_lang" class="form-select">
+                            ${targetOptions}
+                        </select>
+
+                        <label class="mt-3">Translation</label>
+                        <textarea id="translation_text" class="form-control"></textarea>
+
+                        <div class="mt-3 d-flex justify-content-between">
+
+                            <button id="translate_btn" class="btn btn-primary">
+                                Translate
+                            </button>
+
+                            <div>
+                                <button id="cancel_btn" class="btn btn-secondary me-2">
+                                    Cancel
+                                </button>
+
+                                <button id="save_btn" class="btn btn-success">
+                                    Save
+                                </button>
+                            </div>
+
+                        </div>
+
+                    </div>
+                `,
+                didOpen: () => {
+
+                    document.getElementById('source_text').value = sourceText;
+
+                    const langSelect = document.getElementById('translation_lang');
+                    const textInput = document.getElementById('translation_text');
+
+                    function loadExisting() {
+                        const lang = langSelect.value;
+                        textInput.value = existingTranslations?.[lang] ?? '';
+                    }
+
+                    loadExisting();
+
+                    langSelect.addEventListener('change', loadExisting);
+
+                    document.getElementById('translate_btn').onclick = async () => {
+
+                        const lang = langSelect.value;
+
+                        const res = await fetch("/admin/translate", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                            },
+                            body: JSON.stringify({
+                                text: sourceText,
+                                lang: lang
+                            })
+                        });
+
+                        const data = await res.json();
+
+                        textInput.value = data.translation ?? '';
+                    };
+
+                    document.getElementById('save_btn').onclick = () => {
+
+                        const lang = langSelect.value;
+                        const text = textInput.value;
+
+                        saveTranslation(field, lang, text);
+
+                        Swal.close();
+                    };
+
+                    document.getElementById('cancel_btn').onclick = () => Swal.close();
+                }
+            });
+        }
+
+        function saveTranslation(field, lang, text) {
+
+            fetch("{{ route('admin.saveCategoryDescriptionTranslation') }}", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+
+                    body: JSON.stringify({
+                        description_id: "{{ $desc?->id }}",
+                        field: field,
+                        lang: lang,
+                        text: text
+                    })
+
+                })
+                .then(res => res.json())
+                .then(data => {
+
+                    if (data.success) {
+
+                        if (!translations[field]) {
+                            translations[field] = {};
+                        }
+
+                        translations[field][lang] = text;
+
+                        Swal.fire({
+                            icon: "success",
+                            title: "Saved"
+                        });
+                    }
+
+                });
+
+        }
     </script>
 
 @endsection

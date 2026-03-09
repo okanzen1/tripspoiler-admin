@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\City;
 use App\Models\Page;
+use App\Models\Translator;
 use Illuminate\Http\Request;
 
 class PageController extends Controller
 {
-
     public function index()
     {
         $pages = Page::orderBy('id')->get();
@@ -40,7 +40,9 @@ class PageController extends Controller
         // İstanbul id sabit (senin dediğin)
         $defaultCityId = 1;
 
-        return view('admin.pages.edit', compact('page', 'cities', 'defaultCityId'));
+        $languages = Translator::where('active', 1)->where('code', '!=', 'en')->pluck('code');
+
+        return view('admin.pages.edit', compact('page', 'cities', 'defaultCityId', 'languages'));
     }
 
     public function update(Request $request, Page $page)

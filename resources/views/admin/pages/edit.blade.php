@@ -47,7 +47,7 @@
                         @endforeach
                     </select>
                 </div>
-                
+
             </div>
         </div>
 
@@ -63,12 +63,32 @@
 
                     <div class="mb-3">
                         <label class="form-label">Meta Başlık</label>
-                        <input type="text" name="meta_title" id="meta_title" class="form-control" placeholder="Meta başlık (maksimum 60 karakter)" maxlength="60">
+                        <div class="input-group">
+
+                            <input type="text" name="meta_title" id="meta_title" class="form-control"
+                                placeholder="Meta başlık (maksimum 60 karakter)" maxlength="60">
+
+                            <button type="button" class="btn btn-outline-primary"
+                                onclick="openTranslationModal('meta_title','meta_title',translations.meta_title)">
+                                🌍
+                            </button>
+
+                        </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Meta Açıklama</label>
-                        <input type="text" name="meta_description" id="meta_description" class="form-control" maxlength="160" placeholder="Maksimum 160 karakter">
+                        <div class="input-group">
+
+                            <input type="text" name="meta_description" id="meta_description" class="form-control"
+                                maxlength="160" placeholder="Maksimum 160 karakter">
+
+                            <button type="button" class="btn btn-outline-primary"
+                                onclick="openTranslationModal('meta_description','meta_description',translations.meta_description)">
+                                🌍
+                            </button>
+
+                        </div>
                     </div>
 
                     {{-- EDITOR --}}
@@ -76,7 +96,12 @@
                         <label class="form-label">İçerik</label>
 
                         <div id="editor" style="min-height: 400px;"></div>
-                        <input type="hidden" name="content" id="contentInput">
+                        <div class="mt-2 text-end">
+                            <button type="button" class="btn btn-outline-primary btn-sm"
+                                onclick="openTranslationModal('content','contentInput',translations.content)">
+                                🌍
+                            </button>
+                        </div>
                     </div>
 
                     <button type="button" id="saveBtn" class="btn btn-success"
@@ -95,9 +120,7 @@
             </div>
             <div class="card-body">
 
-                <form action="{{ route('images.upload') }}"
-                    class="dropzone mt-4"
-                    id="page-dropzone">
+                <form action="{{ route('images.upload') }}" class="dropzone mt-4" id="page-dropzone">
                     @csrf
                     <input type="hidden" name="source" value="{{ $page->slug }}_page">
                     <input type="hidden" name="source_id" value="{{ $page->id }}">
@@ -108,9 +131,8 @@
                         <div class="col-md-3 mb-2" data-id="{{ $image->id }}">
                             <div class="border rounded p-1">
                                 <img src="{{ $image->url }}" class="img-fluid">
-                                <button type="button"
-                                        class="btn btn-danger btn-sm w-100 mt-1 delete-page-image"
-                                        data-delete-url="{{ route('images.destroy', $image) }}">
+                                <button type="button" class="btn btn-danger btn-sm w-100 mt-1 delete-page-image"
+                                    data-delete-url="{{ route('images.destroy', $image) }}">
                                     Sil
                                 </button>
                             </div>
@@ -121,7 +143,7 @@
             </div>
         </div>
 
-        @if($page->slug === 'cities')
+        @if ($page->slug === 'cities')
             <div class="card mt-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Deneyim Kategorileri</h5>
@@ -140,18 +162,12 @@
                         </div>
 
                         <div class="col-md-2">
-                            <input type="number"
-                                id="category_sort_order"
-                                class="form-control"
-                                placeholder="Sıra">
+                            <input type="number" id="category_sort_order" class="form-control" placeholder="Sıra">
                         </div>
 
                         <div class="col-md-2 d-flex align-items-center">
                             <div class="form-check mt-2">
-                                <input type="checkbox"
-                                    id="category_status"
-                                    class="form-check-input"
-                                    checked>
+                                <input type="checkbox" id="category_status" class="form-check-input" checked>
                                 <label class="form-check-label">Aktif</label>
                             </div>
                         </div>
@@ -194,6 +210,15 @@
 @section('scripts')
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <script>
+        const languages = ['en', ...@json($languages)];
+
+        const translations = {
+            meta_title: {},
+            meta_description: {},
+            content: {}
+        };
+    </script>
 
     <script>
         /* ---------------- CONFIG ---------------- */
@@ -265,6 +290,9 @@
                     pageContentIdInput.value = data.id ?? '';
                     setEditorContent(data.content);
                     setMetaFields(data);
+                    translations.meta_title = data?.meta_title ?? {};
+                    translations.meta_description = data?.meta_description ?? {};
+                    translations.content = data?.content ?? {};
 
                     if (data?.id) {
                         loadCategories(data.id);
@@ -293,6 +321,10 @@
             quill.root.innerHTML = '';
             metaTitleInput.value = '';
             metaDescriptionInput.value = '';
+
+            translations.meta_title = {};
+            translations.meta_description = {};
+            translations.content = {};
         }
 
         function hideForm() {
@@ -354,7 +386,9 @@
                             "Accept": "application/json",
                             "Content-Type": "application/json"
                         },
-                        body: JSON.stringify({ order })
+                        body: JSON.stringify({
+                            order
+                        })
                     });
                 }
             });
@@ -366,22 +400,22 @@
                 if (!confirm('Silinsin mi?')) return;
 
                 fetch(this.dataset.deleteUrl, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(res => {
-                    if (!res.ok) throw new Error();
-                    location.reload();
-                })
-                .catch(() => alert('Silme hatası'));
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(res => {
+                        if (!res.ok) throw new Error();
+                        location.reload();
+                    })
+                    .catch(() => alert('Silme hatası'));
             });
         });
     </script>
 
-    @if($page->slug === 'cities')
+    @if ($page->slug === 'cities')
         <script>
             const FIXED_CITY_CATEGORIES = [
                 "City Overview",
@@ -493,28 +527,27 @@
                 }
 
                 fetch(`/page-contents/${activePageContentIdForCategories}/experience-categories`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        name: categoryNameInput.value,
-                        sort_order: categorySortInput.value
-                            ? parseInt(categorySortInput.value)
-                            : 0,
-                        status: categoryStatusInput.checked
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            name: categoryNameInput.value,
+                            sort_order: categorySortInput.value ?
+                                parseInt(categorySortInput.value) : 0,
+                            status: categoryStatusInput.checked
+                        })
                     })
-                })
-                .then(res => res.json())
-                .then(() => {
-                    categoryNameInput.value = '';
-                    categorySortInput.value = '';
-                    categoryStatusInput.checked = true;
+                    .then(res => res.json())
+                    .then(() => {
+                        categoryNameInput.value = '';
+                        categorySortInput.value = '';
+                        categoryStatusInput.checked = true;
 
-                    loadCategories(activePageContentIdForCategories);
-                });
+                        loadCategories(activePageContentIdForCategories);
+                    });
             });
 
             document.addEventListener('click', function(e) {
@@ -524,15 +557,15 @@
                 if (!confirm('Silinsin mi?')) return;
 
                 fetch(`/experience-categories/${e.target.dataset.id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(() => {
-                    loadCategories(activePageContentIdForCategories);
-                });
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(() => {
+                        loadCategories(activePageContentIdForCategories);
+                    });
             });
 
             document.addEventListener('click', function(e) {
@@ -540,16 +573,16 @@
                 if (!e.target.classList.contains('toggleStatus')) return;
 
                 fetch(`/experience-categories/${e.target.dataset.id}/toggle-status`, {
-                    method: 'PATCH',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(res => res.json())
-                .then(() => {
-                    loadCategories(activePageContentIdForCategories);
-                });
+                        method: 'PATCH',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(() => {
+                        loadCategories(activePageContentIdForCategories);
+                    });
 
             });
 
@@ -565,7 +598,165 @@
             if (categoryNameInput) {
                 populateCategorySelect();
             }
+        </script>
+        <script>
+            function openTranslationModal(field, sourceInputId, existingTranslations) {
 
+                if (!pageContentIdInput.value) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Önce kaydet',
+                        text: 'Bu şehir için önce içerik kaydet.'
+                    });
+                    return;
+                }
+
+                let targetOptions = '';
+
+                languages.forEach(lang => {
+                    if (lang !== 'en') {
+                        targetOptions += `<option value="${lang}">${lang.toUpperCase()}</option>`;
+                    }
+                });
+
+                let sourceText = '';
+
+                if (sourceInputId === 'contentInput') {
+                    sourceText = document.querySelector('#editor .ql-editor').innerHTML;
+                } else {
+                    sourceText = document.getElementById(sourceInputId).value ?? '';
+                }
+
+                Swal.fire({
+                    title: "Translation",
+                    width: 700,
+                    showConfirmButton: false,
+                    html: `
+                        <div>
+
+                            <label>Source</label>
+                            <textarea id="source_text" class="form-control" disabled></textarea>
+
+                            <label class="mt-3">Language</label>
+                            <select id="translation_lang" class="form-select">
+                                ${targetOptions}
+                            </select>
+
+                            <label class="mt-3">Translation</label>
+                            <textarea id="translation_text" class="form-control"></textarea>
+
+                            <div class="mt-3 d-flex justify-content-between">
+
+                                <button id="translate_btn" class="btn btn-primary">
+                                    Translate
+                                </button>
+
+                                <div>
+                                    <button id="cancel_btn" class="btn btn-secondary me-2">
+                                        Cancel
+                                    </button>
+
+                                    <button id="save_btn" class="btn btn-success">
+                                        Save
+                                    </button>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    `,
+                    didOpen: () => {
+
+                        document.getElementById('source_text').value = sourceText;
+
+                        const langSelect = document.getElementById('translation_lang');
+                        const textInput = document.getElementById('translation_text');
+
+                        function loadExisting() {
+                            const lang = langSelect.value;
+                            textInput.value = existingTranslations?.[lang] ?? '';
+                        }
+
+                        loadExisting();
+
+                        langSelect.addEventListener('change', loadExisting);
+
+                        document.getElementById('translate_btn').onclick = async () => {
+
+                            const lang = langSelect.value;
+
+                            const res = await fetch("/admin/translate", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                                },
+                                body: JSON.stringify({
+                                    text: sourceText,
+                                    lang: lang
+                                })
+                            });
+
+                            const data = await res.json();
+
+                            textInput.value = data.translation ?? '';
+
+                        };
+
+                        document.getElementById('save_btn').onclick = () => {
+
+                            const lang = langSelect.value;
+                            const text = textInput.value;
+
+                            saveTranslation(field, lang, text);
+
+                            Swal.close();
+                        };
+
+                        document.getElementById('cancel_btn').onclick = () => Swal.close();
+                    }
+                });
+            }
+
+            function saveTranslation(field, lang, text) {
+
+                fetch("{{ route('admin.savePageContentTranslation') }}", {
+
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                        },
+
+                        body: JSON.stringify({
+                            page_content_id: pageContentIdInput.value,
+                            field: field,
+                            lang: lang,
+                            text: text
+                        })
+
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+
+                        if (data.success) {
+
+                            if (!translations[field]) {
+                                translations[field] = {};
+                            }
+
+                            translations[field][lang] = text;
+
+                            Swal.fire({
+                                icon: "success",
+                                title: "Saved"
+                            });
+                        }
+
+                    });
+
+            }
         </script>
     @endif
 @endsection
