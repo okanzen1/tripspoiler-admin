@@ -377,11 +377,13 @@
             return text
                 .replace(/[çğıöşüÇĞİÖŞÜ]/g, m => map[m])
                 .toLowerCase()
+
+                // unicode karakterleri korur (ar, zh, ja, ko, ru vs)
+                .replace(/[^\p{L}\p{N}\s-]/gu, '')
+
                 .replace(/\s+/g, '-')
-                .replace(/[^\w-]+/g, '')
                 .replace(/--+/g, '-')
                 .replace(/^-+|-+$/g, '');
-
         }
 
         function openTranslationModal(field, sourceInputId, existingTranslations) {
