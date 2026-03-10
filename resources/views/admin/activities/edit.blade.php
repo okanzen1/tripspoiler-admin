@@ -478,7 +478,7 @@
             }
 
             Swal.fire({
-                title: "Çeviri Düzenle",
+                title: "Çeviri " + field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
                 width: 700,
                 showConfirmButton: false,
 

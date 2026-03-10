@@ -162,10 +162,16 @@
 
                         translations[field][lang] = text;
 
-                        Swal.fire({
-                            icon: "success",
-                            title: "Saved"
-                        });
+                        const msg = document.createElement("div");
+                        msg.innerText = "Saved ✓";
+                        msg.style.color = "green";
+                        msg.style.marginTop = "10px";
+
+                        document.querySelector('.swal2-html-container').appendChild(msg);
+
+                        setTimeout(() => {
+                            msg.remove();
+                        }, 1500);
 
                     }
 
@@ -187,7 +193,7 @@
 
             Swal.fire({
 
-                title: "Translation",
+                title: "Çeviri " + field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
                 width: 700,
                 showConfirmButton: false,
 
@@ -197,27 +203,27 @@
                         <label>Source</label>
                         <textarea id="source_text" class="form-control" disabled></textarea>
 
-                        <label class="mt-3">Language</label>
+                        <label class="mt-3">Hedef Dil</label>
                         <select id="translation_lang" class="form-select">
                         ${targetOptions}
                         </select>
 
-                        <label class="mt-3">Translation</label>
+                        <label class="mt-3">Çeviri</label>
                         <textarea id="translation_text" class="form-control"></textarea>
 
                         <div class="mt-3 d-flex justify-content-between">
 
                             <button id="translate_btn" class="btn btn-primary">
-                            Translate
+                            Çevir
                             </button>
 
                             <div>
-                            <button id="cancel_btn" class="btn btn-secondary me-2">
-                            Cancel
+                            <button id="cancel_btn" class="btn btn-danger me-2">
+                            İptal
                             </button>
 
                             <button id="save_btn" class="btn btn-success">
-                            Save
+                            kaydet
                             </button>
                             </div>
 
@@ -282,7 +288,7 @@
 
                         saveTranslation(field, lang, text);
 
-                        Swal.close();
+                    
 
                     };
 
