@@ -429,30 +429,30 @@
     </script>
 
     <script>
-        function slugify(text){
+        function slugify(text) {
 
             const map = {
-                'ç':'c',
-                'ğ':'g',
-                'ı':'i',
-                'ö':'o',
-                'ş':'s',
-                'ü':'u',
-                'Ç':'c',
-                'Ğ':'g',
-                'İ':'i',
-                'Ö':'o',
-                'Ş':'s',
-                'Ü':'u'
+                'ç': 'c',
+                'ğ': 'g',
+                'ı': 'i',
+                'ö': 'o',
+                'ş': 's',
+                'ü': 'u',
+                'Ç': 'c',
+                'Ğ': 'g',
+                'İ': 'i',
+                'Ö': 'o',
+                'Ş': 's',
+                'Ü': 'u'
             };
 
             return text
                 .replace(/[çğıöşüÇĞİÖŞÜ]/g, m => map[m])
                 .toLowerCase()
-                .replace(/\s+/g,'-')
-                .replace(/[^\w-]+/g,'')
-                .replace(/--+/g,'-')
-                .replace(/^-+|-+$/g,'');
+                .replace(/\s+/g, '-')
+                .replace(/[^\w-]+/g, '')
+                .replace(/--+/g, '-')
+                .replace(/^-+|-+$/g, '');
         }
 
         function openTranslationModal(field, sourceInputId, existingTranslations) {
@@ -475,7 +475,7 @@
             }
 
             Swal.fire({
-                title: "Translation",
+                title: "Çeviri Düzenle",
                 width: 700,
                 showConfirmButton: false,
 
@@ -483,41 +483,41 @@
                     <div style="text-align:left">
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Source Language</label>
+                            <label class="form-label fw-bold">Kaynak Dil</label>
                             <input class="form-control" value="EN (source)" disabled>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Source Text</label>
+                            <label class="form-label fw-bold">Kaynak Metin</label>
                             <textarea id="source_text" class="form-control" disabled></textarea>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Target Language</label>
+                            <label class="form-label fw-bold">Hedef Dil</label>
                             <select id="translation_lang" class="form-select">
                                 ${targetOptions}
                             </select>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Translation</label>
+                            <label class="form-label fw-bold">Hedef Metin</label>
                             <textarea id="translation_text" class="form-control"></textarea>
                         </div>
 
                         <div style="display:flex;justify-content:space-between">
 
                             <button id="translate_btn" class="btn btn-primary">
-                                Translate
+                                Çevir
                             </button>
 
                             <div>
 
-                                <button id="cancel_btn" class="btn btn-secondary me-2">
-                                    Cancel
+                                <button id="cancel_btn" class="btn btn-danger me-2">
+                                    iptal
                                 </button>
 
                                 <button id="save_btn" class="btn btn-success">
-                                    Save
+                                    Kaydet
                                 </button>
 
                             </div>
@@ -549,7 +549,7 @@
                         const lang = langSelect.value;
 
                         translateBtn.disabled = true;
-                        translateBtn.innerText = "Translating...";
+                        translateBtn.innerText = "Çeviriliyor...";
 
                         let textForTranslation = sourceText;
 
@@ -586,7 +586,7 @@
                         textInput.value = result;
 
                         translateBtn.disabled = false;
-                        translateBtn.innerText = "Translate";
+                        translateBtn.innerText = "Çevir";
 
                     });
 
@@ -596,8 +596,6 @@
                         const text = textInput.value;
 
                         saveTranslation(field, lang, text);
-
-                        Swal.close();
 
                     };
 
@@ -633,15 +631,21 @@
 
                     if (data.success) {
 
-                        if(!translations[field]){
+                        if (!translations[field]) {
                             translations[field] = {};
                         }
                         translations[field][lang] = text;
 
-                        Swal.fire({
-                            icon: "success",
-                            title: "Saved"
-                        });
+                        const msg = document.createElement("div");
+                        msg.innerText = "Saved ✓";
+                        msg.style.color = "green";
+                        msg.style.marginTop = "10px";
+
+                        document.querySelector('.swal2-html-container').appendChild(msg);
+
+                        setTimeout(() => {
+                            msg.remove();
+                        }, 1500);
 
                     }
 
