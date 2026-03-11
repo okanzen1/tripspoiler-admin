@@ -404,7 +404,13 @@
 
                 const exists = translations[field]?.[lang];
 
-                if (exists && exists.trim() !== '') {
+                if (Array.isArray(exists)) {
+                    if (exists.length > 0) {
+                        html += `<span style="color:green;margin-right:8px;">${lang.toUpperCase()} ✓</span>`;
+                    } else {
+                        html += `<span style="color:#999;margin-right:8px;">${lang.toUpperCase()} -</span>`;
+                    }
+                } else if (exists && exists.trim() !== '') {
                     html += `<span style="color:green;margin-right:8px;">${lang.toUpperCase()} ✓</span>`;
                 } else {
                     html += `<span style="color:#999;margin-right:8px;">${lang.toUpperCase()} -</span>`;

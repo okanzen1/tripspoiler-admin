@@ -592,13 +592,13 @@
                     const textInput = document.getElementById('translation_text');
                     const translateBtn = document.getElementById('translate_btn');
 
-                    function loadExisting(){
+                    function loadExisting() {
 
                         const lang = langSelect.value;
 
-                        textInput.value = translations[field]?.[lang] 
-                            ?? existingTranslations?.[lang] 
-                            ?? '';
+                        textInput.value = translations[field]?.[lang] ??
+                            existingTranslations?.[lang] ??
+                            '';
 
                     }
 
@@ -764,7 +764,13 @@
 
                 const exists = translations[field]?.[lang];
 
-                if (exists && exists.trim() !== '') {
+                if (Array.isArray(exists)) {
+                    if (exists.length > 0) {
+                        html += `<span style="color:green;margin-right:8px;">${lang.toUpperCase()} ✓</span>`;
+                    } else {
+                        html += `<span style="color:#999;margin-right:8px;">${lang.toUpperCase()} -</span>`;
+                    }
+                } else if (exists && exists.trim() !== '') {
                     html += `<span style="color:green;margin-right:8px;">${lang.toUpperCase()} ✓</span>`;
                 } else {
                     html += `<span style="color:#999;margin-right:8px;">${lang.toUpperCase()} -</span>`;
