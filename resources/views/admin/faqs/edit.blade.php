@@ -162,6 +162,8 @@
 
                         translations[field][lang] = text;
 
+                        renderTranslationStatus(field); // STATUS GÜNCELLE
+
                         const msg = document.createElement("div");
                         msg.innerText = "Saved ✓";
                         msg.style.color = "green";
@@ -211,10 +213,16 @@
                         <label class="mt-3">Çeviri</label>
                         <textarea id="translation_text" class="form-control"></textarea>
 
+                        <div id="translation_status" class="mt-2 small text-muted"></div>
+
                         <div class="mt-3 d-flex justify-content-between">
 
                             <button id="translate_btn" class="btn btn-primary">
                             Çevir
+                            </button>
+
+                            <button id="translate_all_btn" class="btn btn-dark">
+                            Tümünü Çevir
                             </button>
 
                             <div>
@@ -241,13 +249,20 @@
                     const translateBtn = document.getElementById('translate_btn');
 
                     function loadExisting() {
+
                         const lang = langSelect.value;
-                        textInput.value = existingTranslations?.[lang] ?? '';
+
+                        textInput.value = translations[field]?.[lang] ??
+                            existingTranslations?.[lang] ??
+                            '';
+
                     }
 
                     loadExisting();
 
                     langSelect.addEventListener('change', loadExisting);
+
+                    renderTranslationStatus(field); // MODAL AÇILINCA GÖSTER
 
                     translateBtn.onclick = async () => {
 
@@ -273,7 +288,7 @@
 
                         const data = await res.json();
 
-                        let result = data.translation ?? '';
+                        const result = data.translation ?? '';
 
                         textInput.value = result;
 
@@ -288,15 +303,116 @@
 
                         saveTranslation(field, lang, text);
 
-                    
-
                     };
 
                     document.getElementById('cancel_btn').onclick = () => Swal.close();
 
+                    document.getElementById('translate_all_btn').onclick = async () => {
+
+                        const sourceText = document.getElementById('source_text').value;
+
+                        if (!sourceText) {
+                            alert("Kaynak metin boş");
+                            return;
+                        }
+
+                        const btn = document.getElementById('translate_all_btn');
+
+                        btn.disabled = true;
+                        btn.innerText = "Çevriliyor...";
+
+                        Swal.showLoading();
+
+                        await Promise.all(
+
+                            languages
+                            .filter(lang => lang !== 'en')
+                            .map(async (lang) => {
+
+                                const res = await fetch("/admin/translate", {
+
+                                    method: "POST",
+
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                                    },
+
+                                    body: JSON.stringify({
+                                        text: sourceText,
+                                        lang: lang
+                                    })
+
+                                });
+
+                                const data = await res.json();
+
+                                const result = data.translation ?? '';
+
+                                saveTranslation(field, lang, result);
+
+                                if (!translations[field]) {
+                                    translations[field] = {};
+                                }
+
+                                translations[field][lang] = result;
+
+                            })
+
+                        );
+
+                        Swal.hideLoading();
+
+                        renderTranslationStatus(field); // TÜMÜ ÇEVRİLDİKTEN SONRA GÜNCELLE
+
+                        const msg = document.createElement("div");
+                        msg.innerText = "All translations saved ✓";
+                        msg.style.color = "green";
+                        msg.style.marginTop = "10px";
+
+                        document.querySelector('.swal2-html-container').appendChild(msg);
+
+                        setTimeout(() => {
+                            msg.remove();
+                        }, 2000);
+
+                        document.querySelector('.swal2-html-container').appendChild(msg);
+
+                        const currentLang = document.getElementById('translation_lang').value;
+                        textInput.value = translations[field]?.[currentLang] ?? '';
+
+                        btn.disabled = false;
+                        btn.innerText = "Tümünü Çevir";
+
+                    };
+
                 }
 
             });
+
+        }
+
+        function renderTranslationStatus(field) {
+
+            const container = document.getElementById('translation_status');
+
+            let html = '<strong>Languages:</strong> ';
+
+            languages.forEach(lang => {
+
+                if (lang === 'en') return;
+
+                const exists = translations[field]?.[lang];
+
+                if (exists && exists.trim() !== '') {
+                    html += `<span style="color:green;margin-right:8px;">${lang.toUpperCase()} ✓</span>`;
+                } else {
+                    html += `<span style="color:#999;margin-right:8px;">${lang.toUpperCase()} -</span>`;
+                }
+
+            });
+
+            container.innerHTML = html;
 
         }
     </script>

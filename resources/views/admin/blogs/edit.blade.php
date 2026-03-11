@@ -386,17 +386,68 @@
                 .replace(/^-+|-+$/g, '');
         }
 
+        function saveTranslation(field, lang, text) {
+
+            fetch("{{ route('admin.saveBlogTranslation') }}", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+
+                    body: JSON.stringify({
+
+                        blog_id: {{ $blog->id }},
+                        field: field,
+                        lang: lang,
+                        text: text
+
+                    })
+
+                })
+                .then(res => res.json())
+                .then(data => {
+
+                    if (data.success) {
+
+                        if (!translations[field]) {
+                            translations[field] = {};
+                        }
+
+                        translations[field][lang] = text;
+
+                        renderTranslationStatus(field);
+
+                        const msg = document.createElement("div");
+                        msg.innerText = "Saved ✓";
+                        msg.style.color = "green";
+                        msg.style.marginTop = "10px";
+
+                        document.querySelector('.swal2-html-container').appendChild(msg);
+
+                        setTimeout(() => msg.remove(), 1500);
+
+                    }
+
+                });
+
+        }
+
         function openTranslationModal(field, sourceInputId, existingTranslations) {
 
             let targetOptions = '';
 
             languages.forEach(lang => {
+
                 if (lang !== 'en') {
                     targetOptions += `<option value="${lang}">${lang.toUpperCase()}</option>`;
                 }
+
             });
 
-            let sourceText = document.getElementById(sourceInputId).value ?? '';
+            const sourceText = document.getElementById(sourceInputId).value ?? '';
 
             Swal.fire({
 
@@ -412,26 +463,38 @@
 
                         <label class="mt-3">Hedef Dil</label>
                         <select id="translation_lang" class="form-select">
-                        ${targetOptions}
+                            ${targetOptions}
                         </select>
 
                         <label class="mt-3">Çeviri</label>
                         <textarea id="translation_text" class="form-control"></textarea>
 
+                        <div id="translation_status" class="mt-2 small text-muted"></div>
+
                         <div class="mt-3 d-flex justify-content-between">
 
-                            <button id="translate_btn" class="btn btn-primary">
-                            Çevir
-                            </button>
+                            <div>
+
+                                <button id="translate_btn" class="btn btn-primary">
+                                    Çevir
+                                </button>
+
+                                <button id="translate_all_btn" class="btn btn-dark ms-2">
+                                    Tümünü Çevir
+                                </button>
+
+                            </div>
 
                             <div>
-                            <button id="cancel_btn" class="btn btn-danger me-2">
-                            İptal
-                            </button>
 
-                            <button id="save_btn" class="btn btn-success">
-                            Kaydet
-                            </button>
+                                <button id="cancel_btn" class="btn btn-danger me-2">
+                                    İptal
+                                </button>
+
+                                <button id="save_btn" class="btn btn-success">
+                                    Kaydet
+                                </button>
+
                             </div>
 
                         </div>
@@ -448,23 +511,32 @@
                     const translateBtn = document.getElementById('translate_btn');
 
                     function loadExisting() {
+
                         const lang = langSelect.value;
-                        textInput.value = existingTranslations?.[lang] ?? '';
+
+                        textInput.value = translations[field]?.[lang] ??
+                            existingTranslations?.[lang] ??
+                            '';
+
                     }
 
                     loadExisting();
 
                     langSelect.addEventListener('change', loadExisting);
 
+                    renderTranslationStatus(field);
+
+
                     translateBtn.onclick = async () => {
 
                         const lang = langSelect.value;
 
                         translateBtn.disabled = true;
+                        translateBtn.innerText = "Çeviriliyor...";
 
                         let textForTranslation = sourceText;
 
-                        if (field === 'slug') {
+                        if (field === "slug") {
                             textForTranslation = sourceText.replaceAll('-', ' ');
                         }
 
@@ -488,15 +560,17 @@
 
                         let result = data.translation ?? '';
 
-                        if (field === 'slug') {
+                        if (field === "slug") {
                             result = slugify(result);
                         }
 
                         textInput.value = result;
 
                         translateBtn.disabled = false;
+                        translateBtn.innerText = "Çevir";
 
                     };
+
 
                     document.getElementById('save_btn').onclick = () => {
 
@@ -505,11 +579,89 @@
 
                         saveTranslation(field, lang, text);
 
-                       
-
                     };
 
                     document.getElementById('cancel_btn').onclick = () => Swal.close();
+
+
+                    document.getElementById('translate_all_btn').onclick = async () => {
+
+                        const btn = document.getElementById('translate_all_btn');
+
+                        btn.disabled = true;
+                        btn.innerText = "Çevriliyor...";
+
+                        Swal.showLoading();
+
+                        await Promise.all(
+
+                            languages
+                            .filter(lang => lang !== 'en')
+                            .map(async (lang) => {
+
+                                let textForTranslation = sourceText;
+
+                                if (field === "slug") {
+                                    textForTranslation = sourceText.replaceAll('-', ' ');
+                                }
+
+                                const res = await fetch("/admin/translate", {
+
+                                    method: "POST",
+
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                                    },
+
+                                    body: JSON.stringify({
+                                        text: textForTranslation,
+                                        lang: lang
+                                    })
+
+                                });
+
+                                const data = await res.json();
+
+                                let result = data.translation ?? '';
+
+                                if (field === "slug") {
+                                    result = slugify(result);
+                                }
+
+                                saveTranslation(field, lang, result);
+
+                                if (!translations[field]) {
+                                    translations[field] = {};
+                                }
+
+                                translations[field][lang] = result;
+
+                            })
+
+                        );
+
+                        Swal.hideLoading();
+
+                        renderTranslationStatus(field);
+
+                        const msg = document.createElement("div");
+                        msg.innerText = "All translations saved ✓";
+                        msg.style.color = "green";
+                        msg.style.marginTop = "10px";
+
+                        document.querySelector('.swal2-html-container').appendChild(msg);
+
+                        setTimeout(() => msg.remove(), 2000);
+
+                        const currentLang = langSelect.value;
+
+                        textInput.value = translations[field]?.[currentLang] ?? '';
+
+                        btn.disabled = false;
+                        btn.innerText = "Tümünü Çevir";
+
+                    };
 
                 }
 
@@ -517,53 +669,27 @@
 
         }
 
-        function saveTranslation(field, lang, text) {
+        function renderTranslationStatus(field) {
 
-            fetch("{{ route('admin.saveBlogTranslation') }}", {
+            const container = document.getElementById('translation_status');
 
-                    method: "POST",
+            let html = '<strong>Languages:</strong> ';
 
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                    },
+            languages.forEach(lang => {
 
-                    body: JSON.stringify({
+                if (lang === 'en') return;
 
-                        blog_id: {{ $blog->id }},
-                        field: field,
-                        lang: lang,
-                        text: text
+                const exists = translations[field]?.[lang];
 
-                    })
+                if (exists && exists.trim() !== '') {
+                    html += `<span style="color:green;margin-right:8px;">${lang.toUpperCase()} ✓</span>`;
+                } else {
+                    html += `<span style="color:#999;margin-right:8px;">${lang.toUpperCase()} -</span>`;
+                }
 
-                })
+            });
 
-                .then(res => res.json())
-                .then(data => {
-
-                    if (data.success) {
-
-                        if (!translations[field]) {
-                            translations[field] = {};
-                        }
-
-                        translations[field][lang] = text;
-
-                        const msg = document.createElement("div");
-                        msg.innerText = "Saved ✓";
-                        msg.style.color = "green";
-                        msg.style.marginTop = "10px";
-
-                        document.querySelector('.swal2-html-container').appendChild(msg);
-
-                        setTimeout(() => {
-                            msg.remove();
-                        }, 1500);
-
-                    }
-
-                });
+            container.innerHTML = html;
 
         }
     </script>
