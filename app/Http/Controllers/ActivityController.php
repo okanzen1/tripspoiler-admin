@@ -61,6 +61,12 @@ class ActivityController extends Controller
         $status = (int) $request->get('status', 1);
         $query->where('status', $status);
 
+        $search = $request->get('search');
+
+        if ($search) {
+            $query->where('name->en', 'like', "%{$search}%");
+        }
+
         // MOST POPULAR FİLTRESİ
         $mostPopular = $request->get('most_popular');
         if ($mostPopular !== null && $mostPopular !== '') {
