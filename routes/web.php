@@ -15,6 +15,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PageContentController;
 use App\Http\Controllers\CityExperienceCategoryController;
 use App\Http\Controllers\DevelopController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\TranslatorController;
 
 use App\Http\Controllers\UserController;
@@ -73,6 +74,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/translators', [TranslatorController::class, 'store'])->name('translators.store');
     Route::patch('/admin/translators/{translator}/toggle', [TranslatorController::class, 'toggle'])->name('translators.toggle');
     Route::delete('/admin/translators/{translator}', [TranslatorController::class, 'destroy'])->name('translators.destroy');
+
+    Route::resource('reviews', ReviewController::class);
 
     Route::get('/develop', [DevelopController::class, 'index']);
 });

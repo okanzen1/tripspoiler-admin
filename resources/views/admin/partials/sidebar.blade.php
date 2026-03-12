@@ -46,6 +46,14 @@
                     <span class="align-middle ms-2">Sık. Sor. Sor.</span>
                 </a>
             </li>
+            
+            {{-- REVIEWS --}}
+            <li class="sidebar-item {{ request()->routeIs('reviews.*') ? 'active' : '' }}">
+                <a class="sidebar-link" href="{{ route('reviews.index') }}">
+                    <i class="align-middle" data-feather="star"></i>
+                    <span class="align-middle ms-2">Yorumlar</span>
+                </a>
+            </li>
 
             {{-- AFFILIATE PARTNERS --}}
             <li class="sidebar-item {{ request()->routeIs('affiliate-partners.*') ? 'active' : '' }}">

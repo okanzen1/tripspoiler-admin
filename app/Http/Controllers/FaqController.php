@@ -198,7 +198,7 @@ class FaqController extends Controller
         ]);
 
         return redirect()
-            ->route('faqs.index')
+            ->route('faqs.edit', $faq)
             ->with('success', 'FAQ güncellendi');
     }
 
