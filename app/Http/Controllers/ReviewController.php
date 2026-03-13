@@ -119,6 +119,10 @@ class ReviewController extends Controller
 
         ]);
 
+        if (isset($data['email'])) {
+            $data['email_hash'] = hash('sha256', $data['email']);
+        }
+
         $review->update($data);
 
 

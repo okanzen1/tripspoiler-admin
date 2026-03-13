@@ -10,6 +10,7 @@ class Review extends Model
     protected $fillable = [
         'name',
         'email',
+        'email_hash',
         'source',
         'source_id',
         'rating',
