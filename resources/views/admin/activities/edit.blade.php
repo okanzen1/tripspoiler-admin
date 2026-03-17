@@ -271,6 +271,82 @@
         </div>
     </div>
 
+    <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Activity FAQ</h5>
+
+            <a href="{{ route('faqs.create', [
+                'source' => 'activity-show',
+                'source_id' => $activity->id,
+                'return_to' => url()->current(),
+            ]) }}"
+                class="btn btn-primary btn-sm">
+                + FAQ Ekle
+            </a>
+        </div>
+
+        <div class="card-body">
+
+            @if ($activity->activityShowFaqs->isEmpty())
+                <p class="text-muted">Henüz FAQ yok</p>
+            @else
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Soru</th>
+                            <th>Sıra</th>
+                            <th>Durum</th>
+                            <th class="text-end">İşlem</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach ($activity->activityShowFaqs as $faq)
+                            <tr>
+                                <td>{{ $faq->id }}</td>
+
+                                <td>
+                                    {{ \Str::limit($faq->getTranslation('question', 'en'), 50) }}
+                                </td>
+
+                                <td>{{ $faq->sort_order }}</td>
+
+                                <td>
+                                    @if ($faq->status)
+                                        <span class="badge bg-success">Aktif</span>
+                                    @else
+                                        <span class="badge bg-secondary">Pasif</span>
+                                    @endif
+                                </td>
+
+                                <td class="text-end">
+                                    <a href="{{ route('faqs.edit', ['faq' => $faq->id, 'return_to' => url()->current()]) }}"
+                                        class="btn btn-sm btn-outline-primary">
+                                        Düzenle
+                                    </a>
+
+                                    <form action="{{ route('faqs.destroy', $faq) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <input type="hidden" name="return_to" value="{{ url()->current() }}">
+                                        <button class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Silinsin mi?')">
+                                            Sil
+                                        </button>
+                                    </form>
+
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+
+            @endif
+
+        </div>
+    </div>
+
 @endsection
 @section('scripts')
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">

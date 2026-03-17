@@ -123,7 +123,8 @@ class ActivityController extends Controller
 
     public function edit(string $id)
     {
-        $activity = Activity::findOrFail($id);
+        $activity = Activity::with('activityShowFaqs')->findOrFail($id);
+
         $affiliatePartners = AffiliatePartner::where('active', true)->orderBy('name')->get();
         $cities = City::where('active', true)->orderBy('id')->get();
         $languages = Translator::where('active',1)->where('code','!=','en')->pluck('code');

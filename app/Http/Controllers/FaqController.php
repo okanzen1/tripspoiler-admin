@@ -43,7 +43,7 @@ class FaqController extends Controller
 
         // Soru arama
         if ($request->filled('search')) {
-            $query->where('question', 'like', '%' . $request->search . '%');
+            $query->where('question->en', 'like', '%' . $request->search . '%');
         }
 
         // Status filtre
@@ -119,10 +119,12 @@ class FaqController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         return view('admin.faqs.create', [
             'sources' => self::SOURCES,
+            'defaultSource' => $request->get('source'),
+            'defaultSourceId' => $request->get('source_id'),
         ]);
     }
 
@@ -132,6 +134,7 @@ class FaqController extends Controller
         $data = $request->validate([
             'question' => 'required|string|max:255',
             'source' => 'required|string',
+            'source_id' => 'nullable|integer',
         ]);
 
         $faq = Faq::create([
@@ -142,6 +145,11 @@ class FaqController extends Controller
             'sort_order' => $data['sort_order'] ?? 0,
             'status' => $data['status'] ?? false,
         ]);
+
+        if ($request->filled('return_to')) {
+            return redirect($request->return_to)
+                ->with('success', 'FAQ oluşturuldu');
+        }
 
         return redirect()
             ->route('faqs.edit', $faq)
@@ -164,9 +172,9 @@ class FaqController extends Controller
                 ->orderBy('id', 'desc')
                 ->get();
         }
-        
+
         $languages = Translator::where('active', 1)->where('code', '!=', 'en')->pluck('code');
-        
+
         return view('admin.faqs.edit', [
             'faq' => $faq,
             'sources' => self::SOURCES,
@@ -183,7 +191,7 @@ class FaqController extends Controller
             'question' => 'required|string|max:255',
             'answer' => 'required|string',
             'source' => 'required|string',
-            'source_id' => in_array($request->source, ['activity-show','blog-show']) ? 'required|integer' : 'nullable',
+            'source_id' => in_array($request->source, ['activity-show', 'blog-show']) ? 'required|integer' : 'nullable',
             'sort_order' => 'nullable|integer',
             'status' => 'boolean',
         ]);
@@ -197,14 +205,24 @@ class FaqController extends Controller
             'status' => $data['status'] ?? true,
         ]);
 
+        if ($request->filled('return_to')) {
+            return redirect($request->return_to)
+                ->with('success', 'FAQ güncellendi');
+        }
+
         return redirect()
             ->route('faqs.edit', $faq)
             ->with('success', 'FAQ güncellendi');
     }
 
-    public function destroy(Faq $faq)
+    public function destroy(Request $request, Faq $faq)
     {
         $faq->delete();
+
+        if ($request->filled('return_to')) {
+            return redirect($request->return_to)
+                ->with('success', 'FAQ silindi');
+        }
 
         return redirect()
             ->route('faqs.index')

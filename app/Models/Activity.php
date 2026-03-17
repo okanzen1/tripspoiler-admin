@@ -86,4 +86,11 @@ class Activity extends Model
     {
         return $this->belongsToMany(Blog::class);
     }
+
+    public function activityShowFaqs()
+    {
+        return $this->hasMany(Faq::class, 'source_id')
+            ->where('source', 'activity-show')
+            ->orderBy('sort_order');
+    }
 }

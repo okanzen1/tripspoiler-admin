@@ -26,7 +26,7 @@
             <form method="POST" action="{{ route('faqs.update', $faq) }}">
                 @csrf
                 @method('PUT')
-
+                <input type="hidden" name="return_to" value="{{ request('return_to') }}">
                 <div class="mb-3">
                     <label>Soru</label>
                     <div class="input-group">
