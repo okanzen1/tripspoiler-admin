@@ -20,7 +20,7 @@ class ActivityController extends Controller
         );
 
         return response()->json([
-            'translation'=>$translation
+            'translation' => $translation
         ]);
     }
 
@@ -106,10 +106,14 @@ class ActivityController extends Controller
             'city_id' => 'required|exists:cities,id',
         ]);
 
+        // Aynı şehirde son sırayı bul
+        $maxOrder = Activity::where('city_id', $data['city_id'])->max('sort_order');
+
         $activity = Activity::create([
             'name' => $data['name'],
             'city_id' => $data['city_id'],
             'status' => $data['status'] ?? false,
+            'sort_order' => ($maxOrder ?? 0) + 1,
         ]);
 
         return redirect()
@@ -152,6 +156,40 @@ class ActivityController extends Controller
             'description' => 'nullable|string',
         ]);
 
+        $oldOrder = $activity->sort_order;
+        $oldCity = $activity->city_id;
+
+        $newOrder = $data['sort_order'] ?? $oldOrder;
+        $newCity = $data['city_id'];
+
+        // ŞEHİR DEĞİŞTİYSE
+        if ($oldCity != $newCity) {
+
+            // eski şehirde boşluk kapat
+            Activity::where('city_id', $oldCity)
+                ->where('sort_order', '>', $oldOrder)
+                ->decrement('sort_order');
+
+            // yeni şehirde sona ekle
+            $newOrder = (Activity::where('city_id', $newCity)->max('sort_order') ?? 0) + 1;
+        }
+
+        // AYNI ŞEHİRDE ORDER DEĞİŞTİYSE
+        elseif ($newOrder != $oldOrder) {
+
+            if ($newOrder > $oldOrder) {
+                // aşağı taşı
+                Activity::where('city_id', $oldCity)
+                    ->whereBetween('sort_order', [$oldOrder + 1, $newOrder])
+                    ->decrement('sort_order');
+            } else {
+                // yukarı taşı
+                Activity::where('city_id', $oldCity)
+                    ->whereBetween('sort_order', [$newOrder, $oldOrder - 1])
+                    ->increment('sort_order');
+            }
+        }
+
         $activity->update([
             'name' => $data['name'],
             'slug' => Str::slug($data['slug']),
@@ -159,10 +197,10 @@ class ActivityController extends Controller
             'meta_description' => $data['meta_description'] ?? null,
             'affiliate_id' => $data['affiliate_id'] ?? null,
             'affiliate_link' => $data['affiliate_link'] ?? null,
-            'city_id' => $data['city_id'],
+            'city_id' => $newCity,
             'status' => $data['status'],
             'most_popular' => $data['most_popular'],
-            'sort_order' => $data['sort_order'] ?? 0,
+            'sort_order' => $newOrder,
             'activity_type' => $data['activity_type'],
             'duration' => $data['duration'] ?? null,
             'audio_guide' => $data['audio_guide'],
@@ -178,6 +216,10 @@ class ActivityController extends Controller
     public function destroy(string $id)
     {
         $activity = Activity::findOrFail($id);
+
+        // silinince boşluk kapat
+        Activity::where('city_id', $activity->city_id)->where('sort_order', '>', $activity->sort_order)->decrement('sort_order');
+
         $activity->delete();
 
         return redirect()
