@@ -26,7 +26,8 @@
             <form method="POST" action="{{ route('reviews.update', $review) }}">
                 @csrf
                 @method('PUT')
-
+                <input type="hidden" name="return_to" value="{{ request('return_to') }}">
+                
                 <div class="mb-3">
 
                     <label>İsim</label>

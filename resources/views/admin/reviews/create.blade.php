@@ -9,7 +9,8 @@
 
             <form method="POST" action="{{ route('reviews.store') }}">
                 @csrf
-
+                <input type="hidden" name="return_to" value="{{ request('return_to') }}">
+                <input type="hidden" name="source_id" value="{{ $defaultSourceId ?? request('source_id') }}">
                 <div class="mb-3">
 
                     <label>İsim</label>

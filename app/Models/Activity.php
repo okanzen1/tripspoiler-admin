@@ -93,4 +93,11 @@ class Activity extends Model
             ->where('source', 'activity-show')
             ->orderBy('sort_order');
     }
+
+    public function activityShowReviews()
+    {
+        return $this->hasMany(Review::class, 'source_id')
+            ->where('source', 'activity-show')
+            ->latest();
+    }
 }

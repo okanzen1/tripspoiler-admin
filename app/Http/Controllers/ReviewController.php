@@ -31,11 +31,12 @@ class ReviewController extends Controller
     }
 
 
-    public function create()
+    public function create(Request $request)
     {
-
         return view('admin.reviews.create', [
-            'sources' => self::SOURCES
+            'sources' => self::SOURCES,
+            'defaultSource' => $request->get('source'),
+            'defaultSourceId' => $request->get('source_id'),
         ]);
     }
 
@@ -47,6 +48,7 @@ class ReviewController extends Controller
 
             'name' => 'required|string|max:255',
             'source' => 'required|string',
+            'source_id' => 'nullable|integer',
 
         ]);
 
@@ -57,19 +59,18 @@ class ReviewController extends Controller
             'email' => $data['email'] ?? null,
 
             'source' => $data['source'],
-            'source_id' => null,
+            'source_id' => $data['source_id'] ?? null,
 
             'rating' => 5,
             'comment' => null,
-
             'approved' => false,
-
         ]);
 
+        if ($request->filled('return_to')) {
+            return redirect($request->return_to);
+        }
 
-        return redirect()
-            ->route('reviews.edit', $review)
-            ->with('success', 'Yorum oluşturuldu');
+        return redirect()->route('reviews.edit', $review);
     }
 
 
@@ -125,20 +126,25 @@ class ReviewController extends Controller
 
         $review->update($data);
 
-
+        if ($request->filled('return_to')) {
+            return redirect($request->return_to);
+        }
+    
         return redirect()
             ->route('reviews.edit', $review)
             ->with('success', 'Yorum güncellendi');
     }
 
 
-    public function destroy(Review $review)
+    public function destroy(Request $request, Review $review)
     {
 
         $review->delete();
 
-        return redirect()
-            ->route('reviews.index')
-            ->with('success', 'Yorum silindi');
+        if ($request->filled('return_to')) {
+            return redirect($request->return_to);
+        }
+
+        return redirect()->route('reviews.index');
     }
 }

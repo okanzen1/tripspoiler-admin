@@ -347,6 +347,83 @@
         </div>
     </div>
 
+    <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Activity Reviews</h5>
+
+            <a href="{{ route('reviews.create', [
+                'source' => 'activity-show',
+                'source_id' => $activity->id,
+                'return_to' => url()->current(),
+            ]) }}"
+                class="btn btn-success btn-sm">
+                + Review Ekle
+            </a>
+        </div>
+
+        <div class="card-body">
+
+            @if ($activity->activityShowReviews->isEmpty())
+                <p class="text-muted">Henüz review yok</p>
+            @else
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>İsim</th>
+                            <th>Puan</th>
+                            <th>Durum</th>
+                            <th class="text-end">İşlem</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach ($activity->activityShowReviews as $review)
+                            <tr>
+                                <td>{{ $review->id }}</td>
+                                <td>{{ $review->name }}</td>
+                                <td>{{ $review->rating }}</td>
+
+                                <td>
+                                    @if ($review->approved)
+                                        <span class="badge bg-success">Yayında</span>
+                                    @else
+                                        <span class="badge bg-secondary">Bekliyor</span>
+                                    @endif
+                                </td>
+
+                                <td class="text-end">
+                                    <a href="{{ route('reviews.edit', [
+                                        'review' => $review->id,
+                                        'return_to' => url()->current(),
+                                    ]) }}"
+                                        class="btn btn-sm btn-outline-primary">
+                                        Düzenle
+                                    </a>
+
+                                    <form action="{{ route('reviews.destroy', $review) }}" method="POST"
+                                        class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+
+                                        <input type="hidden" name="return_to" value="{{ url()->current() }}">
+
+                                        <button class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Silinsin mi?')">
+                                            Sil
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+
+            @endif
+
+        </div>
+    </div>
+
 @endsection
 @section('scripts')
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
