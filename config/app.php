@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'Europe/Istanbul'),
 
     /*
     |--------------------------------------------------------------------------
@@ -81,6 +81,9 @@ return [
     'locale' => env('APP_LOCALE', 'en'),
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+
+    // Panelin seçilebilir dilleri (kullanıcı başına saklanır)
+    'panel_locales' => ['tr' => 'Türkçe', 'en' => 'English'],
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 

@@ -1,917 +1,197 @@
 @extends('layouts.admin')
 
-@section('title', 'Sayfa Düzenle')
+@section('title', $page->name)
+
+@php
+    $seoDone = filled($page->meta_title) && filled($page->meta_description);
+    $seoPending = count(array_filter(app(\App\Services\Translation\ModelTranslator::class)->status($page), fn ($s) => $s !== 'ok'));
+    $hero = $page->key === 'home' ? \App\Support\HeroSettings::all() : null;
+    $handle = '<span data-drag-handle draggable="true" title="' . e(__('Sürükleyerek sırala')) . '" class="absolute left-3 top-3 z-10 grid h-9 w-7 cursor-grab place-items-center rounded-lg bg-white/90 text-slate-400 shadow-sm ring-1 ring-slate-200 backdrop-blur transition hover:text-slate-700 active:cursor-grabbing"><svg class="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></span>';
+@endphp
+
+@section('header')
+    <x-admin.page-header :title="$page->name" :description="__('tripspoiler.com:path · Düzenlemek istediğin bölüme tıkla.', ['path' => $page->path])" :breadcrumb="['Yönetim' => route('management.index'), 'Sayfalar' => route('pages.index')]">
+        <x-slot:icon><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" /><path d="M14 3v5h5" /></x-slot:icon>
+        <a href="{{ $page->siteUrl() }}" target="_blank" rel="noopener"
+            class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-white">{{ __('Sayfayı aç') }} ↗</a>
+    </x-admin.page-header>
+@endsection
 
 @section('content')
-    <div class="container py-4">
+    <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3" data-sortable-grid data-order-key="page_cards_order" data-order-url="{{ route('cards.order') }}"
+        data-initial-order="{{ \App\Models\Setting::get('page_cards_order') }}">
 
-        {{-- FLASH --}}
-        @if (session('success'))
-            <div class="alert alert-success small">{{ session('success') }}</div>
+        {{-- SEO (aktivite detayında her aktivitenin kendi formunda) --}}
+        @if (!$page->hasOwnSeo())
+            <a href="{{ route('activities.index') }}" class="group relative block focus-visible:outline-none" data-card="seo">
+                <x-admin.card class="flex h-full flex-col overflow-hidden transition group-hover:-translate-y-1 group-hover:shadow-xl">
+                    {!! $handle !!}
+                    <div class="flex aspect-[16/8] flex-col justify-center bg-slate-100 px-8 pl-12">
+                        <div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/70">
+                            <p class="text-[10px] text-slate-500">tripspoiler.com/activities/…</p>
+                            <p class="mt-0.5 truncate text-sm font-medium text-blue-700">{{ __('Her aktivitenin kendi başlığı') }}</p>
+                            <p class="mt-0.5 text-[11px] text-slate-500">{{ __('Aktivite formundaki SEO adımı') }}</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-1 flex-col p-6">
+                        <div class="flex items-center justify-between gap-3">
+                            <p class="text-lg font-semibold text-slate-900">{{ __('SEO ayarları') }}</p>
+                            <span class="text-sm font-semibold text-brand-900 transition group-hover:translate-x-1">{{ __('Aktivitelere git') }} →</span>
+                        </div>
+                        <p class="mt-1.5 flex-1 text-sm leading-relaxed text-slate-600">{{ __('Her aktivitenin Google başlığı ve açıklaması kendi düzenleme formunda girilir; burada ortak ayar yok.') }}</p>
+                    </div>
+                </x-admin.card>
+            </a>
+        @else
+        <a href="{{ route('pages.seo', $page) }}" class="group relative block focus-visible:outline-none" data-card="seo">
+            <x-admin.card class="flex h-full flex-col overflow-hidden transition group-hover:-translate-y-1 group-hover:shadow-xl">
+                {!! $handle !!}
+                <div class="flex aspect-[16/8] flex-col justify-center bg-slate-100 px-8 pl-12">
+                    <div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/70">
+                        <p class="text-[10px] text-slate-500">tripspoiler.com{{ $page->path }}</p>
+                        <p class="mt-0.5 truncate text-sm font-medium text-blue-700">{{ $page->meta_title ?: $page->name . ' | TripSpoiler' }}</p>
+                        <p class="mt-0.5 line-clamp-2 text-[11px] text-slate-500">{{ $page->meta_description ?: __('Açıklama…') }}</p>
+                    </div>
+                </div>
+                <div class="flex flex-1 flex-col p-6">
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="text-lg font-semibold text-slate-900">{{ __('SEO ayarları') }}</p>
+                        <span class="text-sm font-semibold text-brand-900 transition group-hover:translate-x-1">{{ __('Düzenle') }} →</span>
+                    </div>
+                    <p class="mt-1.5 flex-1 text-sm leading-relaxed text-slate-600">{{ __('Google sonuçlarında bu sayfanın başlığı ve altındaki açıklama; 12 dile çevrilir.') }}</p>
+                    <p class="mt-3 text-xs font-medium {{ $seoDone ? ($seoPending ? 'text-amber-700' : 'text-emerald-700') : 'text-amber-700' }}">
+                        {{ !$seoDone ? __('Eksik: başlık ya da açıklama girilmemiş') : ($seoPending ? __(':count dil çeviri bekliyor', ['count' => $seoPending]) : __('✓ Tamam, tüm diller güncel')) }}
+                    </p>
+                </div>
+            </x-admin.card>
+        </a>
+
         @endif
 
-        @if ($errors->any())
-            <div class="alert alert-danger small">
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
+        {{-- HERO (şimdilik anasayfada) --}}
+        @if ($hero)
+            <a href="{{ route('site-settings.hero') }}" class="group relative block focus-visible:outline-none" data-card="hero">
+                <x-admin.card class="flex h-full flex-col overflow-hidden transition group-hover:-translate-y-1 group-hover:shadow-xl">
+                    {!! $handle !!}
+                    <div class="relative aspect-[16/8] overflow-hidden bg-slate-900">
+                        @if ($hero['image_url'])
+                            <img src="{{ $hero['image_url'] }}" alt="" class="absolute inset-0 size-full object-cover transition duration-700 group-hover:scale-105" style="object-position: {{ $hero['focus'] }}% center">
+                        @endif
+                        <div class="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/30 to-transparent"></div>
+                        <div class="absolute left-12 top-1/2 w-1/2 -translate-y-1/2 space-y-1.5">
+                            <div class="h-2.5 w-full rounded bg-white/90"></div>
+                            <div class="h-2.5 w-4/5 rounded bg-white/90"></div>
+                            <div class="h-2.5 w-3/5 rounded bg-red-500"></div>
+                        </div>
+                    </div>
+                    <div class="flex flex-1 flex-col p-6">
+                        <div class="flex items-center justify-between gap-3">
+                            <p class="text-lg font-semibold text-slate-900">{{ __('Hero alanı') }}</p>
+                            <span class="text-sm font-semibold text-brand-900 transition group-hover:translate-x-1">{{ __('Düzenle') }} →</span>
+                        </div>
+                        <p class="mt-1.5 flex-1 text-sm leading-relaxed text-slate-600">{{ __('Sayfayı açınca ilk görülen büyük alan: arka plan resmi, başlık yazıları ve kartlar.') }}</p>
+                        <p class="mt-3 text-xs font-medium {{ $hero['image'] ? 'text-emerald-700' : 'text-slate-500' }}">
+                            {{ $hero['image'] ? __('✓ Arka plan resmi yüklü') : __('Varsayılan resim kullanılıyor') }}
+                        </p>
+                    </div>
+                </x-admin.card>
+            </a>
         @endif
 
-        {{-- PAGE INFO --}}
-        <div class="card mb-4">
-            <div class="card-header fw-bold">Sayfa Bilgisi</div>
-            <div class="card-body">
-
-                <div class="mb-3">
-                    <label class="form-label">Slug</label>
-                    <input class="form-control" value="{{ $page->slug }}" disabled>
-                </div>
-
-            </div>
-        </div>
-
-        {{-- CITY CONTENT --}}
-        <div class="card">
-            <div class="card-body">
-
-                {{-- CITY SELECT --}}
-                <div class="mb-3">
-                    <label class="form-label">Şehir</label>
-                    <select id="citySelect" class="form-select">
-                        <option value="">Şehir seç</option>
-                        @foreach ($cities as $city)
-                            <option value="{{ $city->id }}">{{ $city->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-body">
-                {{-- CONTENT FORM --}}
-                <form id="pageContentForm" method="POST" action="{{ route('pages.contents.store', $page) }}"
-                    class="d-none">
-                    @csrf
-
-                    <input type="hidden" name="city_id" id="city_id">
-                    <input type="hidden" id="page_content_id">
-
-                    <div class="mb-3">
-                        <label class="form-label">Meta Başlık</label>
-                        <div class="input-group">
-
-                            <input type="text" name="meta_title" id="meta_title" class="form-control"
-                                placeholder="Meta başlık (maksimum 60 karakter)" maxlength="60">
-
-                            <button type="button" class="btn btn-outline-primary"
-                                onclick="openTranslationModal('meta_title','meta_title',translations.meta_title)">
-                                🌍
-                            </button>
-
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Meta Açıklama</label>
-                        <div class="input-group">
-
-                            <input type="text" name="meta_description" id="meta_description" class="form-control"
-                                maxlength="160" placeholder="Maksimum 160 karakter">
-
-                            <button type="button" class="btn btn-outline-primary"
-                                onclick="openTranslationModal('meta_description','meta_description',translations.meta_description)">
-                                🌍
-                            </button>
-
-                        </div>
-                    </div>
-
-                    {{-- EDITOR --}}
-                    <div class="mb-4">
-                        <label class="form-label">İçerik</label>
-
-                        <div id="editor" style="min-height: 400px;"></div>
-                        <div class="mt-2 text-end">
-                            <button type="button" class="btn btn-outline-primary btn-sm"
-                                onclick="openTranslationModal('content','contentInput',translations.content)">
-                                🌍
-                            </button>
-                        </div>
-                    </div>
-
-                    <button type="button" id="saveBtn" class="btn btn-success"
-                        style="position: fixed; bottom: 30px; right: 30px; z-index: 1050;">
-                        Şehir İçeriğini Kaydet
-                    </button>
-                </form>
-
-            </div>
-        </div>
-
-        {{-- PAGE IMAGES --}}
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5 class="mb-0">Sayfa Görselleri</h5>
-            </div>
-            <div class="card-body">
-
-                <form action="{{ route('images.upload') }}" class="dropzone mt-4" id="page-dropzone">
-                    @csrf
-                    <input type="hidden" name="source" value="{{ $page->slug }}_page">
-                    <input type="hidden" name="source_id" value="{{ $page->id }}">
-                </form>
-
-                <div id="sortable-page-images" class="row mt-3">
-                    @foreach ($page->images as $image)
-                        <div class="col-md-3 mb-2" data-id="{{ $image->id }}">
-                            <div class="border rounded p-1">
-                                <img src="{{ $image->url }}" class="img-fluid">
-                                <button type="button" class="btn btn-danger btn-sm w-100 mt-1 delete-page-image"
-                                    data-delete-url="{{ route('images.destroy', $image) }}">
-                                    Sil
-                                </button>
+        {{-- BÖLÜMLER (anasayfa hariç): sıra + aç/kapa --}}
+        @if (\App\Support\PageSections::supports($page->key))
+            @php
+                $sectionConfig = \App\Support\PageSections::config($page->key);
+                $activeSections = array_values(array_filter($sectionConfig['order'], fn ($key) => $key !== 'main' && in_array($key, $sectionConfig['on'], true)));
+            @endphp
+            <a href="{{ route('pages.sections', $page) }}" class="group relative block focus-visible:outline-none" data-card="sections">
+                <x-admin.card class="flex h-full flex-col overflow-hidden transition group-hover:-translate-y-1 group-hover:shadow-xl">
+                    {!! $handle !!}
+                    <div class="flex aspect-[16/8] flex-col justify-center gap-1.5 bg-slate-100 px-8 pl-12">
+                        @forelse (array_slice($activeSections, 0, 4) as $key)
+                            <div class="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm ring-1 ring-slate-200/70">
+                                <span class="text-slate-300">⋮⋮</span>{{ __($key === 'main' ? '' : \App\Support\PageSections::labels($page->key)[$key][0]) }}
+                                <span class="ml-auto h-3 w-6 rounded-full bg-emerald-500"></span>
                             </div>
-                        </div>
-                    @endforeach
-                </div>
-
-            </div>
-        </div>
-
-        @if ($page->slug === 'cities')
-            <div class="card mt-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Deneyim Kategorileri</h5>
-                </div>
-
-                <div class="card-body">
-
-                    {{-- Yeni kategori --}}
-                    <form id="categoryForm" class="row g-2 mb-3">
-                        @csrf
-
-                        <div class="col-md-5">
-                            <select id="category_name" class="form-select" required>
-                                <option value="">Kategori seç</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-2">
-                            <input type="number" id="category_sort_order" class="form-control" placeholder="Sıra">
-                        </div>
-
-                        <div class="col-md-2 d-flex align-items-center">
-                            <div class="form-check mt-2">
-                                <input type="checkbox" id="category_status" class="form-check-input" checked>
-                                <label class="form-check-label">Aktif</label>
-                            </div>
-                        </div>
-
-                        <div class="col-md-3">
-                            <button class="btn btn-success w-100">
-                                + Yeni Kategori
-                            </button>
-                        </div>
-                    </form>
-
-                    {{-- Liste --}}
-                    <div class="table-responsive">
-                        <table class="table mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>#</th>
-                                    <th>Ad</th>
-                                    <th>Sıra</th>
-                                    <th>Status</th>
-                                    <th class="text-end">İşlem</th>
-                                </tr>
-                            </thead>
-                            <tbody id="categoryTableBody">
-                                <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">
-                                        Şehir seçildiğinde kategoriler burada listelenecek.
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        @empty
+                            <p class="text-center text-sm text-slate-500">{{ __('Açık bölüm yok') }}</p>
+                        @endforelse
                     </div>
-
-                </div>
-            </div>
+                    <div class="flex flex-1 flex-col p-6">
+                        <div class="flex items-center justify-between gap-3">
+                            <p class="text-lg font-semibold text-slate-900">{{ __('Bölümler') }}</p>
+                            <span class="text-sm font-semibold text-brand-900 transition group-hover:translate-x-1">{{ __('Düzenle') }} →</span>
+                        </div>
+                        <p class="mt-1.5 flex-1 text-sm leading-relaxed text-slate-600">{{ __('Sayfanın altındaki bölümler: sürükleyerek sırala, istemediğini kapat.') }}</p>
+                        <p class="mt-3 text-xs font-medium text-slate-500">{{ __(':n bölüm açık', ['n' => count($activeSections)]) }}</p>
+                    </div>
+                </x-admin.card>
+            </a>
         @endif
 
+        {{-- SAYFA İÇERİĞİ (hakkımızda) --}}
+        @if (isset(\App\Http\Controllers\PageContentController::BLOCKS[$page->key]))
+            @php
+                $contentBlocks = \App\Http\Controllers\PageContentController::BLOCKS[$page->key];
+                $written = \App\Models\SectionText::whereIn('key', array_keys($contentBlocks))->get()->filter(fn ($r) => filled($r->title))->count();
+            @endphp
+            <a href="{{ route('pages.content', $page) }}" class="group relative block focus-visible:outline-none" data-card="content">
+                <x-admin.card class="flex h-full flex-col overflow-hidden transition group-hover:-translate-y-1 group-hover:shadow-xl">
+                    {!! $handle !!}
+                    <div class="flex aspect-[16/8] flex-col justify-center gap-2 bg-violet-50 px-8 pl-12">
+                        <div class="h-3 w-1/2 rounded bg-violet-300"></div>
+                        <div class="h-2 w-full rounded bg-violet-200"></div>
+                        <div class="h-2 w-5/6 rounded bg-violet-200"></div>
+                        <div class="mt-2 grid grid-cols-3 gap-2"><div class="h-8 rounded-lg bg-white"></div><div class="h-8 rounded-lg bg-white"></div><div class="h-8 rounded-lg bg-white"></div></div>
+                    </div>
+                    <div class="flex flex-1 flex-col p-6">
+                        <div class="flex items-center justify-between gap-3">
+                            <p class="text-lg font-semibold text-slate-900">{{ __('Sayfa içeriği') }}</p>
+                            <span class="text-sm font-semibold text-brand-900 transition group-hover:translate-x-1">{{ __('Düzenle') }} →</span>
+                        </div>
+                        <p class="mt-1.5 flex-1 text-sm leading-relaxed text-slate-600">{{ $page->key === 'privacy' ? __('Gizlilik metninin sekiz bölümü (12 dil).') : ($page->key === 'reviews' ? __('Liste başlığı ve “Yorum yaz” kutusunun yazıları (12 dil).') : __('Sayfadaki bütün yazılar: hikâye, adımlar, ilkeler ve kapanış (12 dil).')) }}</p>
+                        <p class="mt-3 text-xs font-medium text-slate-500">{{ __(':n / :t blok yazıldı', ['n' => $written, 't' => count($contentBlocks)]) }}</p>
+                    </div>
+                </x-admin.card>
+            </a>
+        @endif
+
+        {{-- HERO YAZILARI (aktiviteler, şehirler, blog) --}}
+        @if (isset(\App\Http\Controllers\PageHeroTextController::FIELDS[$page->key]))
+            @php
+                $heroText = \App\Models\SectionText::for('hero_' . $page->key);
+                $heroPending = count(array_filter(app(\App\Services\Translation\ModelTranslator::class)->status($heroText), fn ($s) => $s !== 'ok'));
+            @endphp
+            <a href="{{ route('pages.hero-text', $page) }}" class="group relative block focus-visible:outline-none" data-card="hero-text">
+                <x-admin.card class="flex h-full flex-col overflow-hidden transition group-hover:-translate-y-1 group-hover:shadow-xl">
+                    {!! $handle !!}
+                    @php
+                        $heroImage = isset(\App\Http\Controllers\PageHeroController::SPECS[$page->key])
+                            ? (\App\Models\PageBanner::where('page_key', $page->key)->whereNull('city_id')->value('image') ?: \App\Models\Setting::get('hero_image'))
+                            : null;
+                    @endphp
+                    <div class="relative flex aspect-[16/8] flex-col justify-center gap-2 overflow-hidden bg-[#0F1420] px-8 pl-12">
+                        @if ($heroImage)
+                            <img src="{{ \App\Services\ImageUploader::url($heroImage, 'md') }}" alt="" class="absolute inset-0 size-full object-cover opacity-50 transition duration-700 group-hover:scale-105">
+                            <div class="absolute inset-0 bg-gradient-to-r from-[#0F1420] via-[#0F1420]/60 to-transparent"></div>
+                        @endif
+                        <div class="relative h-2 w-16 rounded bg-red-400"></div>
+                        <div class="relative h-4 w-3/4 rounded bg-white/90"></div>
+                        <div class="relative h-2.5 w-1/2 rounded bg-white/40"></div>
+                        <div class="relative mt-2 flex gap-2"><div class="h-5 w-16 rounded-full bg-red-500"></div><div class="h-5 w-16 rounded-full ring-1 ring-white/30"></div></div>
+                    </div>
+                    <div class="flex flex-1 flex-col p-6">
+                        <div class="flex items-center justify-between gap-3">
+                            <p class="text-lg font-semibold text-slate-900">{{ __('Hero alanı') }}</p>
+                            <span class="text-sm font-semibold text-brand-900 transition group-hover:translate-x-1">{{ __('Düzenle') }} →</span>
+                        </div>
+                        <p class="mt-1.5 flex-1 text-sm leading-relaxed text-slate-600">{{ match ($page->key) { 'blog' => __('Sayfanın üstü: yazılar (12 dil) ve her şehir için kemerlerdeki yazılar.'), 'cities' => __('Sayfanın üstü: yazılar (12 dil), resimler (şehir şehir, telefon dahil), görünüm ve fotoğraf üstü kartlar.'), 'contact', 'privacy' => __('Sayfanın üstündeki başlık ve açıklama (12 dil).'), 'reviews' => __('Sayfanın üstü: fotoğraf (telefon dahil), başlık, açıklama (12 dil), görünüm ve yorum kartları.'), 'about' => __('Sayfanın üstü: fotoğraf (telefon dahil), başlık ve açıklama (12 dil), görünüm.'), default => __('Sayfanın üstü: yazılar (12 dil), resimler (şehir şehir, telefon dahil) ve görünüm.') } }}</p>
+                        <p class="mt-3 text-xs font-medium {{ filled($heroText->title) ? ($heroPending ? 'text-amber-700' : 'text-emerald-700') : 'text-slate-500' }}">
+                            {{ !filled($heroText->title) ? __('Varsayılan yazılar kullanılıyor') : ($heroPending ? __(':count dil çeviri bekliyor', ['count' => $heroPending]) : __('✓ Tamam, tüm diller güncel')) }}
+                        </p>
+                    </div>
+                </x-admin.card>
+            </a>
+        @endif
     </div>
-@endsection
-@section('scripts')
-    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
-    <script>
-        const languages = ['en', ...@json($languages)];
-
-        const translations = {
-            meta_title: {},
-            meta_description: {},
-            content: {}
-        };
-    </script>
-
-    <script>
-        /* ---------------- CONFIG ---------------- */
-        const LOCALE = "{{ app()->getLocale() }}";
-        const DEFAULT_CITY_ID = {{ (int) $defaultCityId }};
-        const PAGE_ID = {{ $page->id }};
-
-        /* ---------------- ELEMENTS ---------------- */
-        const citySelect = document.getElementById('citySelect');
-        const form = document.getElementById('pageContentForm');
-        const cityInput = document.getElementById('city_id');
-        const pageContentIdInput = document.getElementById('page_content_id');
-        const saveBtn = document.getElementById('saveBtn');
-        const metaTitleInput = document.getElementById('meta_title');
-        const metaDescriptionInput = document.getElementById('meta_description');
-
-        let activeCityId = null;
-
-        /* ---------------- QUILL ---------------- */
-        const quill = new Quill('#editor', {
-            theme: 'snow',
-            placeholder: 'İçeriği buraya yaz...',
-            modules: {
-                toolbar: [
-                    ['bold', 'italic', 'underline'],
-                    [{
-                        list: 'ordered'
-                    }, {
-                        list: 'bullet'
-                    }],
-                    ['link', 'image'],
-                    ['clean']
-                ]
-            }
-        });
-
-        /* ---------------- INIT ---------------- */
-        document.addEventListener('DOMContentLoaded', () => {
-            citySelect.value = DEFAULT_CITY_ID;
-            loadCity(DEFAULT_CITY_ID);
-        });
-
-        citySelect.addEventListener('change', () => {
-            loadCity(citySelect.value);
-        });
-
-        /* ---------------- LOAD CITY ---------------- */
-        function loadCity(cityId) {
-            if (!cityId) {
-                hideForm();
-                return;
-            }
-
-            activeCityId = String(cityId);
-            cityInput.value = cityId;
-
-            form.classList.remove('d-none');
-            clearEditor();
-
-            fetch(`/pages/${PAGE_ID}/contents/${cityId}`, {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(res => res.ok ? res.json() : null)
-                .then(data => {
-                    if (!data || activeCityId !== String(cityId)) return;
-
-                    pageContentIdInput.value = data.id ?? '';
-                    setEditorContent(data.content);
-                    setMetaFields(data);
-                    translations.meta_title = data?.meta_title ?? {};
-                    translations.meta_description = data?.meta_description ?? {};
-                    translations.content = data?.content ?? {};
-
-                    if (data?.id) {
-                        loadCategories(data.id);
-                    } else {
-                        loadCategories(null);
-                    }
-                });
-        }
-
-        /* ---------------- SAVE ---------------- */
-        saveBtn.addEventListener('click', () => {
-            const html = quill.root.innerHTML.trim();
-            document.getElementById('contentInput').value = html;
-            form.submit();
-        });
-
-        /* ---------------- HELPERS ---------------- */
-        function setEditorContent(value) {
-            if (typeof value === 'object' && value !== null) {
-                value = value[LOCALE] ?? '';
-            }
-            quill.root.innerHTML = value || '';
-        }
-
-        function clearEditor() {
-            quill.root.innerHTML = '';
-            metaTitleInput.value = '';
-            metaDescriptionInput.value = '';
-
-            translations.meta_title = {};
-            translations.meta_description = {};
-            translations.content = {};
-        }
-
-        function hideForm() {
-            form.classList.add('d-none');
-            clearEditor();
-        }
-
-        function setMetaFields(data) {
-            if (!data) return;
-
-            // meta_title
-            if (typeof data.meta_title === 'object' && data.meta_title !== null) {
-                metaTitleInput.value = data.meta_title[LOCALE] ?? '';
-            } else {
-                metaTitleInput.value = '';
-            }
-
-            // meta_description
-            if (typeof data.meta_description === 'object' && data.meta_description !== null) {
-                metaDescriptionInput.value = data.meta_description[LOCALE] ?? '';
-            } else {
-                metaDescriptionInput.value = '';
-            }
-        }
-    </script>
-    <script>
-        Dropzone.autoDiscover = false;
-
-        new Dropzone("#page-dropzone", {
-            maxFilesize: 2,
-            acceptedFiles: 'image/*',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json',
-            },
-            success: function() {
-                location.reload();
-            },
-            error: function(file, msg) {
-                console.error(msg);
-                alert('Upload hatası');
-            }
-        });
-
-        // Sortable
-        const pageGrid = document.getElementById('sortable-page-images');
-
-        if (pageGrid) {
-            new Sortable(pageGrid, {
-                animation: 150,
-                onEnd: function() {
-                    const order = [];
-                    pageGrid.querySelectorAll('[data-id]').forEach(el => order.push(el.dataset.id));
-
-                    fetch("{{ route('images.sort') }}", {
-                        method: "POST",
-                        headers: {
-                            "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                            "Accept": "application/json",
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            order
-                        })
-                    });
-                }
-            });
-        }
-
-        // Delete
-        document.querySelectorAll('.delete-page-image').forEach(btn => {
-            btn.addEventListener('click', function() {
-                if (!confirm('Silinsin mi?')) return;
-
-                fetch(this.dataset.deleteUrl, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
-                        }
-                    })
-                    .then(res => {
-                        if (!res.ok) throw new Error();
-                        location.reload();
-                    })
-                    .catch(() => alert('Silme hatası'));
-            });
-        });
-    </script>
-
-    @if ($page->slug === 'cities')
-        <script>
-            const FIXED_CITY_CATEGORIES = [
-                "City Overview",
-                "History & Identity",
-                "Iconic Landmarks",
-                "Neighborhood Guide",
-                "Scenic Views",
-                "Food & Local Culture",
-                "Travel Tips",
-                "Why Visit"
-            ];
-
-            let activePageContentIdForCategories = null;
-
-            const categoryForm = document.getElementById('categoryForm');
-            const categoryTableBody = document.getElementById('categoryTableBody');
-            const categoryNameInput = document.getElementById('category_name');
-            const categorySortInput = document.getElementById('category_sort_order');
-            const categoryStatusInput = document.getElementById('category_status');
-
-            function renderCategoryName(name) {
-                if (typeof name === 'object' && name !== null) {
-                    return name[LOCALE] ?? '';
-                }
-                return name ?? '';
-            }
-
-            function renderCategories(items) {
-
-                categoryTableBody.innerHTML = '';
-
-                if (!items || items.length === 0) {
-                    categoryTableBody.innerHTML = `
-                        <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">
-                                Henüz kategori eklenmedi.
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
-
-                items.forEach(cat => {
-                    categoryTableBody.innerHTML += `
-                        <tr>
-                            <td>${cat.id}</td>
-                            <td>${renderCategoryName(cat.name)}</td>
-                            <td>${cat.sort_order ?? 0}</td>
-                            <td>
-                                <span class="badge ${cat.status ? 'bg-success' : 'bg-secondary'} toggleStatus"
-                                    style="cursor:pointer"
-                                    data-id="${cat.id}">
-                                    ${cat.status ? 'Aktif' : 'Pasif'}
-                                </span>
-                            </td>
-                            <td class="text-end">
-                                <a href="/experience-categories/${cat.id}/edit"
-                                class="btn btn-sm btn-outline-primary me-1">
-                                    Düzenle
-                                </a>
-
-                                <button type="button"
-                                        class="btn btn-sm btn-outline-danger deleteCategory"
-                                        data-id="${cat.id}">
-                                    Sil
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            }
-
-            function loadCategories(pageContentId) {
-
-                if (!pageContentId) {
-                    activePageContentIdForCategories = null;
-                    renderCategories([]);
-                    return;
-                }
-
-                activePageContentIdForCategories = pageContentId;
-
-                fetch(`/page-contents/${pageContentId}/experience-categories`)
-                    .then(res => res.json())
-                    .then(data => renderCategories(data));
-            }
-
-            categoryForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-
-                const selectedCategory = categoryNameInput.value;
-
-                if (!selectedCategory) {
-                    alert("Kategori seç.");
-                    return;
-                }
-
-                const existingNames = Array.from(categoryTableBody.querySelectorAll('tr td:nth-child(2)'))
-                    .map(td => td.innerText.trim());
-
-                if (existingNames.includes(selectedCategory)) {
-                    alert("Bu kategori zaten eklendi.");
-                    return;
-                }
-
-                if (!activePageContentIdForCategories) {
-                    alert('Önce şehir seç.');
-                    return;
-                }
-
-                fetch(`/page-contents/${activePageContentIdForCategories}/experience-categories`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            name: categoryNameInput.value,
-                            sort_order: categorySortInput.value ?
-                                parseInt(categorySortInput.value) : 0,
-                            status: categoryStatusInput.checked
-                        })
-                    })
-                    .then(res => res.json())
-                    .then(() => {
-                        categoryNameInput.value = '';
-                        categorySortInput.value = '';
-                        categoryStatusInput.checked = true;
-
-                        loadCategories(activePageContentIdForCategories);
-                    });
-            });
-
-            document.addEventListener('click', function(e) {
-
-                if (!e.target.classList.contains('deleteCategory')) return;
-
-                if (!confirm('Silinsin mi?')) return;
-
-                fetch(`/experience-categories/${e.target.dataset.id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
-                        }
-                    })
-                    .then(() => {
-                        loadCategories(activePageContentIdForCategories);
-                    });
-            });
-
-            document.addEventListener('click', function(e) {
-
-                if (!e.target.classList.contains('toggleStatus')) return;
-
-                fetch(`/experience-categories/${e.target.dataset.id}/toggle-status`, {
-                        method: 'PATCH',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
-                        }
-                    })
-                    .then(res => res.json())
-                    .then(() => {
-                        loadCategories(activePageContentIdForCategories);
-                    });
-
-            });
-
-            function populateCategorySelect() {
-                const select = document.getElementById('category_name');
-                select.innerHTML = '<option value="">Kategori seç</option>';
-
-                FIXED_CITY_CATEGORIES.forEach(cat => {
-                    select.innerHTML += `<option value="${cat}">${cat}</option>`;
-                });
-            }
-
-            if (categoryNameInput) {
-                populateCategorySelect();
-            }
-        </script>
-        <script>
-            function saveTranslation(field, lang, text) {
-
-                fetch("{{ route('admin.savePageContentTranslation') }}", {
-
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                        },
-
-                        body: JSON.stringify({
-                            page_content_id: pageContentIdInput.value,
-                            field: field,
-                            lang: lang,
-                            text: text
-                        })
-
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-
-                        if (data.success) {
-
-                            if (!translations[field]) {
-                                translations[field] = {};
-                            }
-
-                            translations[field][lang] = text;
-
-                            renderTranslationStatus(field);
-
-                            const msg = document.createElement("div");
-                            msg.innerText = "Saved ✓";
-                            msg.style.color = "green";
-                            msg.style.marginTop = "10px";
-
-                            document.querySelector('.swal2-html-container').appendChild(msg);
-
-                            setTimeout(() => msg.remove(), 1500);
-
-                        }
-
-                    });
-
-            }
-
-            function openTranslationModal(field, sourceInputId, existingTranslations) {
-
-                if (!pageContentIdInput.value) {
-
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Önce kaydet',
-                        text: 'Bu şehir için önce içerik kaydet.'
-                    });
-
-                    return;
-                }
-
-                let targetOptions = '';
-
-                languages.forEach(lang => {
-
-                    if (lang !== 'en') {
-                        targetOptions += `<option value="${lang}">${lang.toUpperCase()}</option>`;
-                    }
-
-                });
-
-                let sourceText = '';
-
-                if (sourceInputId === 'contentInput') {
-
-                    sourceText = document.querySelector('#editor .ql-editor').innerHTML;
-
-                } else {
-
-                    sourceText = document.getElementById(sourceInputId).value ?? '';
-
-                }
-
-                Swal.fire({
-
-                    title: "Çeviri " + field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                    width: 700,
-                    showConfirmButton: false,
-
-                    html: `
-                        <div>
-
-                            <label>Source</label>
-                            <textarea id="source_text" class="form-control" disabled></textarea>
-
-                            <label class="mt-3">Hedef Dil</label>
-                            <select id="translation_lang" class="form-select">
-                                ${targetOptions}
-                            </select>
-
-                            <label class="mt-3">Çeviri</label>
-                            <textarea id="translation_text" class="form-control"></textarea>
-
-                            <div id="translation_status" class="mt-2 small text-muted"></div>
-
-                            <div class="mt-3 d-flex justify-content-between">
-
-                                <div>
-
-                                    <button id="translate_btn" class="btn btn-primary">
-                                        Çevir
-                                    </button>
-
-                                    <button id="translate_all_btn" class="btn btn-dark ms-2">
-                                        Tümünü Çevir
-                                    </button>
-
-                                </div>
-
-                                <div>
-
-                                    <button id="cancel_btn" class="btn btn-danger me-2">
-                                        İptal
-                                    </button>
-
-                                    <button id="save_btn" class="btn btn-success">
-                                        Kaydet
-                                    </button>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-                    `,
-
-                    didOpen: () => {
-
-                        document.getElementById('source_text').value = sourceText;
-
-                        const langSelect = document.getElementById('translation_lang');
-                        const textInput = document.getElementById('translation_text');
-                        const translateBtn = document.getElementById('translate_btn');
-
-                        function loadExisting() {
-
-                            const lang = langSelect.value;
-
-                            textInput.value = translations[field]?.[lang] ??
-                                existingTranslations?.[lang] ??
-                                '';
-
-                        }
-
-                        loadExisting();
-
-                        langSelect.addEventListener('change', loadExisting);
-
-                        renderTranslationStatus(field);
-
-
-                        translateBtn.onclick = async () => {
-
-                            const lang = langSelect.value;
-
-                            translateBtn.disabled = true;
-                            translateBtn.innerText = "Çeviriliyor...";
-
-                            const res = await fetch("/admin/translate", {
-
-                                method: "POST",
-
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                                },
-
-                                body: JSON.stringify({
-                                    text: sourceText,
-                                    lang: lang
-                                })
-
-                            });
-
-                            const data = await res.json();
-
-                            const result = data.translation ?? '';
-
-                            textInput.value = result;
-
-                            translateBtn.disabled = false;
-                            translateBtn.innerText = "Çevir";
-
-                        };
-
-
-                        document.getElementById('save_btn').onclick = () => {
-
-                            const lang = langSelect.value;
-                            const text = textInput.value;
-
-                            saveTranslation(field, lang, text);
-
-                        };
-
-
-                        document.getElementById('cancel_btn').onclick = () => Swal.close();
-
-
-                        document.getElementById('translate_all_btn').onclick = async () => {
-
-                            const btn = document.getElementById('translate_all_btn');
-
-                            btn.disabled = true;
-                            btn.innerText = "Çevriliyor...";
-
-                            Swal.showLoading();
-
-                            await Promise.all(
-
-                                languages
-                                .filter(lang => lang !== 'en')
-                                .map(async (lang) => {
-
-                                    const res = await fetch("/admin/translate", {
-
-                                        method: "POST",
-
-                                        headers: {
-                                            "Content-Type": "application/json",
-                                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                                        },
-
-                                        body: JSON.stringify({
-                                            text: sourceText,
-                                            lang: lang
-                                        })
-
-                                    });
-
-                                    const data = await res.json();
-
-                                    const result = data.translation ?? '';
-
-                                    saveTranslation(field, lang, result);
-
-                                    if (!translations[field]) {
-                                        translations[field] = {};
-                                    }
-
-                                    translations[field][lang] = result;
-
-                                })
-
-                            );
-
-                            Swal.hideLoading();
-
-                            renderTranslationStatus(field);
-
-                            const msg = document.createElement("div");
-                            msg.innerText = "All translations saved ✓";
-                            msg.style.color = "green";
-                            msg.style.marginTop = "10px";
-
-                            document.querySelector('.swal2-html-container').appendChild(msg);
-
-                            setTimeout(() => msg.remove(), 2000);
-
-                            const currentLang = langSelect.value;
-
-                            textInput.value = translations[field]?.[currentLang] ?? '';
-
-                            btn.disabled = false;
-                            btn.innerText = "Tümünü Çevir";
-
-                        };
-
-                    }
-
-                });
-
-            }
-
-            function renderTranslationStatus(field) {
-
-                const container = document.getElementById('translation_status');
-
-                let html = '<strong>Languages:</strong> ';
-
-                languages.forEach(lang => {
-
-                    if (lang === 'en') return;
-
-                    const exists = translations[field]?.[lang];
-
-                    if (Array.isArray(exists)) {
-                        if (exists.length > 0) {
-                            html += `<span style="color:green;margin-right:8px;">${lang.toUpperCase()} ✓</span>`;
-                        } else {
-                            html += `<span style="color:#999;margin-right:8px;">${lang.toUpperCase()} -</span>`;
-                        }
-                    } else if (exists && exists.trim() !== '') {
-                        html += `<span style="color:green;margin-right:8px;">${lang.toUpperCase()} ✓</span>`;
-                    } else {
-                        html += `<span style="color:#999;margin-right:8px;">${lang.toUpperCase()} -</span>`;
-                    }
-
-                });
-
-                container.innerHTML = html;
-
-            }
-        </script>
-    @endif
 @endsection

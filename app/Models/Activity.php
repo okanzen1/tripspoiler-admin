@@ -2,102 +2,102 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasSlugRedirects;
+use App\Enums\ActivityType;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Sluggable\HasTranslatableSlug;
-use Spatie\Sluggable\SlugOptions;
-use App\Models\Traits\HasImages;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\Translatable\HasTranslations;
-
 
 class Activity extends Model
 {
-    use HasTranslations;
-    use HasTranslatableSlug;
-    use HasImages;
+    use HasSlugRedirects, HasTranslations;
+
+    /** Front'taki adres kalıbı (config/site.php) */
+    public const SITE_PATH = 'activity';
 
     protected $fillable = [
-        'name',
-        'slug',
-        'meta_title',
-        'meta_description',
-        'activity_type',
-        'city_id',
-        'sort_order',
-        'affiliate_link',
-        'affiliate_id',
-        'most_popular',
-        'status',
-        'duration',
-        'audio_guide',
-        'description',
-        'source_product_id',
+        'city_id', 'partner_id', 'name', 'slug', 'type', 'affiliate_url', 'partner_product_id',
+        'duration', 'audio_guide', 'description', 'meta_title', 'meta_description',
+        'is_popular', 'active', 'sort_order',
     ];
 
-    public $translatable = [
-        'name',
-        'slug',
-        'meta_title',
-        'meta_description',
-        'duration',
-        'description',
-    ];
+    /** Çok dilli alanlar; panel İngilizce (en) düzenler, diğer diller korunur */
+    public array $translatable = ['name', 'description', 'meta_title', 'meta_description'];
 
-    protected $casts = [
-        'status' => 'boolean',
-        'audio_guide' => 'boolean',
-    ];
-
-    public function getSlugOptions(): SlugOptions
+    /**
+     * Panelin dili Türkçe olsa da aktivite metinleri İngilizce (en) okunur ve yazılır.
+     */
+    public function getLocale(): string
     {
-        return SlugOptions::create()
-            ->generateSlugsFrom('name')
-            ->saveSlugsTo('slug')
-            ->doNotGenerateSlugsOnUpdate();
+        return 'en';
     }
 
-    public function city()
+    protected function casts(): array
+    {
+        return [
+            'type' => ActivityType::class,
+            'audio_guide' => 'boolean',
+            'is_popular' => 'boolean',
+            'active' => 'boolean',
+        ];
+    }
+
+    public function city(): BelongsTo
     {
         return $this->belongsTo(City::class);
     }
 
-    public function country()
+    public function partner(): BelongsTo
     {
-        return $this->belongsTo(Country::class);
+        return $this->belongsTo(Partner::class);
     }
 
-    public function images()
+    public function images(): HasMany
     {
-        return $this->hasMany(Image::class, 'source_id')
-            ->where('source', 'activity')
-            ->orderBy('sort_order');
+        return $this->hasMany(ActivityImage::class)->orderBy('sort_order')->orderBy('id');
     }
 
-    public function affiliatePartner()
+    public function cover(): HasOne
     {
-        return $this->belongsTo(AffiliatePartner::class, 'affiliate_id');
+        return $this->hasOne(ActivityImage::class)->orderBy('sort_order')->orderBy('id');
     }
 
-    public function getImageSource(): string
+    public function faqs(): HasMany
     {
-        return 'activity';
+        return $this->hasMany(Faq::class)->orderBy('sort_order')->orderBy('id');
     }
 
-    public function blogs()
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class)->latest();
+    }
+
+    public function blogs(): BelongsToMany
     {
         return $this->belongsToMany(Blog::class);
     }
 
-    public function activityShowFaqs()
+    public function clicks(): HasMany
     {
-        return $this->hasMany(Faq::class, 'source_id')
-            ->where('source', 'activity-show')
-            ->orderBy('sort_order');
+        return $this->hasMany(AffiliateClick::class);
     }
 
-    public function activityShowReviews()
+    public function scopeActive(Builder $query): void
     {
-        return $this->hasMany(Review::class, 'source_id')
-            ->where('source', 'activity-show')
-            ->latest();
+        $query->where('active', true);
+    }
+
+    /**
+     * Çevirisi olan diller (en hariç), ör. ["de", "es", "tr"].
+     *
+     * @return list<string>
+     */
+    public function otherLocales(): array
+    {
+        return array_values(array_diff($this->getTranslatedLocales('name'), ['en']));
     }
 }

@@ -2,149 +2,106 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Review;
+use App\Http\Requests\ReviewRequest;
 use App\Models\Activity;
-use App\Models\Blog;
+use App\Models\Review;
 use Illuminate\Http\Request;
 
+/**
+ * Ziyaretçi yorumları: onay bekleyenler, onaylılar; genel ve aktivite yorumları.
+ */
 class ReviewController extends Controller
 {
-
-    public const SOURCES = [
-
-        'activity-show' => 'Activity Ürün Sayfası',
-        'blog-show' => 'Blog Ürün Sayfası',
-        'home' => 'Home Sayfası',
-        'activity' => 'Activity Sayfası',
-        'cities' => 'Cities Sayfası',
-        'blog' => 'Blog Sayfası',
-
-    ];
-
-
-    public function index()
+    public function index(Request $request)
     {
+        $search = trim((string) $request->get('search'));
+        $status = in_array($request->get('status'), ['pending', 'approved'], true) ? $request->get('status') : null;
+        $activityId = $request->get('activity');
+        $rating = in_array((int) $request->get('rating'), [1, 2, 3, 4, 5], true) ? (int) $request->get('rating') : null;
 
-        $reviews = Review::latest()->paginate(20);
+        $reviews = Review::with('activity')
+            ->when($search, fn ($q) => $q->where(fn ($q) => $q->where('name', 'like', "%{$search}%")->orWhere('comment', 'like', "%{$search}%")))
+            ->when($status === 'pending', fn ($q) => $q->pending())
+            ->when($status === 'approved', fn ($q) => $q->approved())
+            ->when($activityId === 'general', fn ($q) => $q->whereNull('activity_id'))
+            ->when(is_numeric($activityId), fn ($q) => $q->where('activity_id', (int) $activityId))
+            ->when($rating, fn ($q) => $q->where('rating', $rating))
+            ->orderBy('approved') // önce onay bekleyenler
+            ->latest()
+            ->paginate(25)
+            ->withQueryString();
 
-        return view('admin.reviews.index', compact('reviews'));
+        return view('admin.reviews.index', [
+            'reviews' => $reviews,
+            'search' => $search,
+            'status' => $status,
+            'activityId' => $activityId,
+            'rating' => $rating,
+            'activities' => Activity::whereHas('reviews')->orderBy('sort_order')->get(),
+            'counts' => [
+                'pending' => Review::pending()->count(),
+                'approved' => Review::approved()->count(),
+            ],
+            'average' => round((float) Review::approved()->avg('rating'), 1),
+            'distribution' => Review::approved()->selectRaw('rating, count(*) as n')->groupBy('rating')->pluck('n', 'rating'),
+            'pageId' => \App\Models\Page::where('key', 'reviews')->value('id'),
+        ]);
     }
-
 
     public function create(Request $request)
     {
-        return view('admin.reviews.create', [
-            'sources' => self::SOURCES,
-            'defaultSource' => $request->get('source'),
-            'defaultSourceId' => $request->get('source_id'),
-        ]);
-    }
-
-
-    public function store(Request $request)
-    {
-
-        $data = $request->validate([
-
-            'name' => 'required|string|max:255',
-            'source' => 'required|string',
-            'source_id' => 'nullable|integer',
-
-        ]);
-
-
-        $review = Review::create([
-
-            'name' => $data['name'],
-            'email' => $data['email'] ?? null,
-
-            'source' => $data['source'],
-            'source_id' => $data['source_id'] ?? null,
-
+        return view('admin.reviews.form', $this->formData(new Review([
             'rating' => 5,
-            'comment' => null,
-            'approved' => false,
-        ]);
-
-        if ($request->filled('return_to')) {
-            return redirect($request->return_to);
-        }
-
-        return redirect()->route('reviews.edit', $review);
+            'approved' => true,
+            'activity_id' => $request->integer('activity') ?: null,
+        ])));
     }
 
+    public function store(ReviewRequest $request)
+    {
+        Review::create($request->validated());
+
+        return redirect()->route('reviews.index')->with('success', __('Yorum eklendi.'));
+    }
 
     public function edit(Review $review)
     {
-        $activities = collect();
-        $blogs = collect();
-
-        if ($review->source === 'activity-show') {
-            $activities = Activity::select('id', 'name')
-                ->orderBy('id', 'desc')
-                ->get();
-        }
-
-        if ($review->source === 'blog-show') {
-            $blogs = Blog::select('id', 'title')
-                ->orderBy('id', 'desc')
-                ->get();
-        }
-
-        return view('admin.reviews.edit', [
-
-            'review' => $review,
-            'sources' => self::SOURCES,
-            'activities' => $activities,
-            'blogs' => $blogs
-
-        ]);
+        return view('admin.reviews.form', $this->formData($review));
     }
 
-
-    public function update(Request $request, Review $review)
+    public function update(ReviewRequest $request, Review $review)
     {
+        $review->update($request->validated());
 
-        $data = $request->validate([
-
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email',
-
-            'rating' => 'required|integer|min:1|max:5',
-            'comment' => 'required|string',
-
-            'source' => 'required|string',
-            'source_id' => 'nullable|integer',
-
-            'approved' => 'nullable|boolean'
-
-        ]);
-
-        if (isset($data['email'])) {
-            $data['email_hash'] = hash('sha256', $data['email']);
-        }
-
-        $review->update($data);
-
-        if ($request->filled('return_to')) {
-            return redirect($request->return_to);
-        }
-    
-        return redirect()
-            ->route('reviews.edit', $review)
-            ->with('success', 'Yorum güncellendi');
+        return redirect()->route('reviews.index')->with('success', __('Yorum güncellendi.'));
     }
 
-
-    public function destroy(Request $request, Review $review)
+    public function destroy(Review $review)
     {
-
         $review->delete();
 
-        if ($request->filled('return_to')) {
-            return redirect($request->return_to);
-        }
+        return back()->with('success', __('Yorum silindi.'));
+    }
 
-        return redirect()->route('reviews.index');
+    /**
+     * Onayla / onayı kaldır (anahtar).
+     */
+    public function toggle(Request $request, Review $review)
+    {
+        $review->update(['approved' => !$review->approved]);
+        $message = __($review->approved ? ':name adlı kişinin yorumu onaylandı, sitede görünür.' : ':name adlı kişinin yorumu yayından kaldırıldı.', ['name' => $review->name]);
+
+        return $request->expectsJson()
+            ? response()->json(['active' => $review->approved, 'message' => $message])
+            : back()->with('success', $message);
+    }
+
+    private function formData(Review $review): array
+    {
+        return [
+            'review' => $review,
+            'activities' => Activity::with('city')->orderBy('city_id')->orderBy('sort_order')->get()
+                ->groupBy(fn (Activity $activity) => $activity->city->name),
+        ];
     }
 }

@@ -2,108 +2,91 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Role;
+use App\Http\Requests\UserRequest;
 use App\Models\User;
+use App\Services\ImageUploader;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        $users = User::oldest('id')->paginate(10);
+    public function __construct(private ImageUploader $uploader) {}
 
-        return view('admin.users.index', compact('users'));
+    public function index(Request $request)
+    {
+        $search = trim((string) $request->get('search'));
+        $role = Role::tryFrom((string) $request->get('role'));
+
+        $users = User::query()
+            ->when($search, fn ($q) => $q->where(fn ($q) => $q
+                ->where('first_name', 'like', "%{$search}%")
+                ->orWhere('last_name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")))
+            ->when($role, fn ($q) => $q->where('role', $role))
+            ->orderBy('first_name')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.users.index', compact('users', 'search', 'role'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        $roles = ['super_admin', 'admin', 'user'];
-
-        return view('admin.users.create', compact('roles'));
+        return view('admin.users.create', ['user' => new User(['role' => Role::Editor])]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(UserRequest $request)
     {
-        $roles = ['super_admin', 'admin', 'user'];
+        $data = $request->safe()->except(['avatar', 'remove_avatar']);
 
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:users,username'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:6'],
-            'role' => ['required', Rule::in($roles)],
-        ]);
-
-        $data['password'] = Hash::make($data['password']);
+        if ($request->hasFile('avatar')) {
+            $data['avatar_path'] = $this->uploader->avatar($request->file('avatar'));
+        }
 
         User::create($data);
 
-        return redirect()->route('users.index')
-            ->with('success', 'Kullanıcı oluşturuldu');
+        return redirect()->route('users.index')->with('success', __('Kullanıcı oluşturuldu.'));
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(User $user)
     {
-        $roles = ['super_admin', 'admin', 'user'];
-
-        return view('admin.users.edit', compact('user', 'roles'));
+        return view('admin.users.edit', compact('user'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, User $user)
+    public function update(UserRequest $request, User $user)
     {
-        $roles = ['super_admin', 'admin', 'user'];
+        $data = $request->safe()->except(['avatar', 'remove_avatar']);
 
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($user->id)],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'password' => ['nullable', 'string', 'min:6'],
-            'role' => ['required', Rule::in($roles)],
-        ]);
-
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
-        } else {
+        if (blank($data['password'] ?? null)) {
             unset($data['password']);
+        }
+
+        if ($request->hasFile('avatar')) {
+            $data['avatar_path'] = $this->uploader->avatar($request->file('avatar'), replace: $user->avatar_path);
+        } elseif ($request->boolean('remove_avatar')) {
+            $this->uploader->delete($user->avatar_path);
+            $data['avatar_path'] = null;
+        }
+
+        // Kendi rolünü düşürüp panelden kilitlenmesin
+        if ($user->is($request->user()) && Role::from($data['role']) !== $user->role) {
+            return back()->withInput()->with('error', __('Kendi rolünü değiştiremezsin.'));
         }
 
         $user->update($data);
 
-        return redirect()->route('users.edit', $user)
-            ->with('success', 'Kullanıcı güncellendi');
+        return redirect()->route('users.index')->with('success', __('Kullanıcı güncellendi.'));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(User $user)
+    public function destroy(Request $request, User $user)
     {
+        if ($user->is($request->user())) {
+            return back()->with('error', __('Kendi hesabını silemezsin.'));
+        }
+
+        $this->uploader->delete($user->avatar_path);
         $user->delete();
 
-        return redirect()->route('users.index')
-            ->with('success', 'Kullanıcı silindi');
+        return redirect()->route('users.index')->with('success', __('Kullanıcı silindi.'));
     }
 }

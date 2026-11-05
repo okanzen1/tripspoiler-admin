@@ -3,71 +3,95 @@
 namespace App\Http\Controllers;
 
 use App\Models\BlogSubscriber;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
+/**
+ * Blog aboneleri: liste, CSV indirme, silme ve e-postadaki "abonelikten çık" bağlantısı.
+ * E-postalar şifreli olduğu için arama tam adresle (hash) yapılır.
+ */
 class BlogSubscriberController extends Controller
 {
-    /**
-     * Subscriber listesi
-     */
-    public function index()
+    public function index(Request $request): View
     {
-        $subscribers = BlogSubscriber::latest()->paginate(20);
+        $search = trim((string) $request->get('search'));
+        $status = in_array($request->get('status'), ['active', 'passive'], true) ? $request->get('status') : null;
 
-        return view('admin.blog-subscribers.index', compact('subscribers'));
+        $subscribers = BlogSubscriber::query()
+            ->when($search, fn ($q) => $q->where('email_hash', BlogSubscriber::hash($search)))
+            ->when($status === 'active', fn ($q) => $q->whereNull('unsubscribed_at'))
+            ->when($status === 'passive', fn ($q) => $q->whereNotNull('unsubscribed_at'))
+            ->latest('id')
+            ->paginate(25)
+            ->withQueryString();
+
+        return view('admin.subscribers.index', [
+            'subscribers' => $subscribers,
+            'search' => $search,
+            'status' => $status,
+            'activeCount' => BlogSubscriber::active()->count(),
+            'totalCount' => BlogSubscriber::count(),
+            'newThisMonth' => BlogSubscriber::where('created_at', '>=', now()->startOfMonth())->count(),
+        ]);
     }
 
     /**
-     * Yeni subscriber ekleme (ADMIN)
+     * Tüm aboneleri CSV olarak indirir (Excel uyumlu: UTF-8 BOM ve noktalı virgül).
      */
-    public function store(Request $request)
+    public function export(): StreamedResponse
     {
-        $validated = $request->validate([
-            'email' => 'required|email|max:255',
-        ]);
+        return response()->streamDownload(function () {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, ['E-posta', 'Abone olma tarihi', 'Durum', 'Sayfa'], ';', escape: '');
 
-        // 2️⃣ Normalize + hash
-        $normalizedEmail = mb_strtolower(trim($validated['email']));
-        $emailHash = hash('sha256', $normalizedEmail);
+            foreach (BlogSubscriber::query()->lazyByIdDesc(500) as $subscriber) {
+                fputcsv($handle, array_map($this->csvSafe(...), [
+                    $subscriber->email,
+                    $subscriber->created_at->format('d.m.Y H:i'),
+                    $subscriber->isActive() ? 'Aktif' : 'Ayrıldı',
+                    $subscriber->source_path,
+                ]), ';', escape: '');
+            }
 
-        if (BlogSubscriber::where('email_hash', $emailHash)->exists()) {
-            return back()
-                ->withErrors([
-                    'email' => 'This email is already subscribed.',
-                ])
-                ->withInput();
+            fclose($handle);
+        }, 'blog-aboneleri-' . now()->format('Y-m-d-His') . '.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    public function destroy(BlogSubscriber $subscriber): RedirectResponse
+    {
+        $subscriber->delete();
+
+        return back()->with('success', __('Abone listeden silindi.'));
+    }
+
+    /**
+     * E-postadaki "abonelikten çık" bağlantısı (imzalı). GET onay sayfasını gösterir, POST çıkarır;
+     * böylece e-posta tarayıcılarının bağlantıyı önceden açması aboneliği iptal etmez.
+     */
+    public function unsubscribe(BlogSubscriber $subscriber): View
+    {
+        return view('subscribers.unsubscribe', ['subscriber' => $subscriber, 'done' => !$subscriber->isActive()]);
+    }
+
+    public function confirmUnsubscribe(BlogSubscriber $subscriber): View
+    {
+        if ($subscriber->isActive()) {
+            $subscriber->update(['unsubscribed_at' => now()]);
         }
 
-        BlogSubscriber::create([
-            'email' => $validated['email'],
-        ]);
-
-        return back()->with('success', 'Subscriber added successfully.');
+        return view('subscribers.unsubscribe', ['subscriber' => $subscriber, 'done' => true]);
     }
 
     /**
-     * Aktif / Pasif toggle
+     * Excel'in hücreyi formül olarak çalıştırmasını önler (CSV enjeksiyonu).
      */
-    public function update(Request $request, BlogSubscriber $blogSubscriber)
+    private function csvSafe(mixed $value): string
     {
-        $validated = $request->validate([
-            'status' => 'required|boolean',
-        ]);
+        $value = (string) $value;
 
-        $blogSubscriber->update([
-            'status' => $validated['status'],
-        ]);
-
-        return back()->with('success', 'Subscriber status updated.');
-    }
-
-    /**
-     * Subscriber silme
-     */
-    public function destroy(BlogSubscriber $blogSubscriber)
-    {
-        $blogSubscriber->delete();
-
-        return back()->with('success', 'Subscriber deleted successfully.');
+        return preg_match('/^[=+\-@\t\r]/', $value) ? "'" . $value : $value;
     }
 }

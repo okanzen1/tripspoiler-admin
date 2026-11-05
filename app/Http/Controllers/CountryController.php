@@ -7,69 +7,14 @@ use Illuminate\Http\Request;
 
 class CountryController extends Controller
 {
-    public function index()
+    public function toggle(Request $request, Country $country)
     {
-        $countries = Country::orderBy('id')->paginate(10);
+        $country->update(['active' => !$country->active]);
 
-        return view('admin.countries.index', compact('countries'));
-    }
+        $message = __($country->active ? ':name aktif edildi.' : ':name pasif yapıldı.', ['name' => $country->name_tr]);
 
-    public function create()
-    {
-        return view('admin.countries.create');
-    }
-
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'name'   => ['required', 'string', 'max:255'],
-            'slug'   => ['required', 'string', 'max:255'],
-            'active' => ['required', 'in:0,1'],
-        ]);
-
-        Country::create([
-            'name'   => $data['name'],
-            'slug'   => $data['slug'],
-            'active' => (bool) $data['active'],
-        ]);
-
-        return redirect()
-            ->route('countries.index')
-            ->with('success', 'Ülke eklendi');
-    }
-
-
-    public function edit(Country $country)
-    {
-        return view('admin.countries.edit', compact('country'));
-    }
-
-    public function update(Request $request, Country $country)
-    {
-        $data = $request->validate([
-            'name'   => ['required', 'string', 'max:255'],
-            'slug'   => ['required', 'string', 'max:255'],
-            'active' => ['required', 'in:0,1'],
-        ]);
-
-        $country->update([
-            'name'   => $data['name'],
-            'slug'   => $data['slug'],
-            'active' => (bool) $data['active'],
-        ]);
-
-        return redirect()
-            ->route('countries.edit', $country)
-            ->with('success', 'Ülke güncellendi');
-    }
-
-
-    public function destroy(Country $country)
-    {
-        $country->delete();
-
-        return redirect()
-            ->route('countries.index')
-            ->with('success', 'Ülke silindi');
+        return $request->expectsJson()
+            ? response()->json(['active' => $country->active, 'message' => $message])
+            : back()->with('success', $message);
     }
 }

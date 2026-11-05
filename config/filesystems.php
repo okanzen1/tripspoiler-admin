@@ -36,10 +36,14 @@ return [
             'throw' => false,
         ],
 
-        'private' => [
+        // Logolar, profil resimleri vb. Canlıda front ile paylaşılan klasöre yönlendirilir
+        // (MEDIA_ROOT = klasör yolu, MEDIA_URL = o klasörün herkese açık adresi).
+        'media' => [
             'driver' => 'local',
-            'root' => base_path('../tripspoiler/storage/app/private'),
-            'throw' => false,
+            'root' => env('MEDIA_ROOT') ?: storage_path('app/public/media'),
+            'url' => env('MEDIA_URL') ?: rtrim(env('APP_URL'), '/') . '/storage/media',
+            'visibility' => 'public',
+            'throw' => true,
         ],
 
         'public' => [

@@ -12,8 +12,16 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'admin' => App\Http\Middleware\AdminMiddleware::class,
+            'role' => App\Http\Middleware\EnsureUserHasRole::class,
         ]);
+        $middleware->web(append: [App\Http\Middleware\SetPanelLocale::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Sayfa çok uzun açık kaldıysa form güvenlik anahtarı (CSRF) eskir: hata sayfası yerine geri dön, yazılanlar kaybolmasın
+        $exceptions->render(function (Symfony\Component\HttpKernel\Exception\HttpException $e, Illuminate\Http\Request $request) {
+            if ($e->getStatusCode() === 419 && !$request->expectsJson()) {
+                return back()->withInput($request->except(['_token', 'password', 'password_confirmation']))
+                    ->with('error', __('Sayfa uzun süre açık kaldığı için işlem yapılamadı. Bilgilerin korundu, tekrar kaydet.'));
+            }
+        });
     })->create();

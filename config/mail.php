@@ -49,6 +49,18 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
+        // Panelin E-posta sayfası ve toplu e-posta: kurum hesabının SMTP sunucusundan gönderilir
+        'mailbox' => [
+            'transport' => 'smtp',
+            'scheme' => env('MAILBOX_SMTP_SCHEME', 'smtps'),
+            'host' => env('MAILBOX_SMTP_HOST', 'smtp.hostinger.com'),
+            'port' => env('MAILBOX_SMTP_PORT', 465),
+            'username' => env('MAILBOX_USERNAME'),
+            'password' => env('MAILBOX_PASSWORD'),
+            'timeout' => 30,
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],

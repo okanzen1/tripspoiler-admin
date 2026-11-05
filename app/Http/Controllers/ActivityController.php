@@ -2,238 +2,205 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ActivityType;
+use App\Http\Requests\ActivityRequest;
 use App\Models\Activity;
+use App\Models\AffiliateClick;
 use App\Models\City;
-use App\Models\AffiliatePartner;
+use App\Models\Country;
+use App\Support\FaqSync;
+use App\Support\ReviewSync;
+use App\Models\Partner;
+use App\Services\ImageUploader;
+use App\Support\HtmlSanitizer;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use App\Models\Translator;
-use App\Services\TranslatorService;
+use Illuminate\Support\Facades\DB;
 
 class ActivityController extends Controller
 {
-    public function autoTranslate(Request $request, TranslatorService $translator)
-    {
-        $translation = $translator->translateSingle(
-            $request->text,
-            $request->lang
-        );
-
-        return response()->json([
-            'translation' => $translation
-        ]);
-    }
-
-    public function saveTranslation(Request $request)
-    {
-        $activity = Activity::findOrFail($request->activity_id);
-
-        $activity->setTranslation(
-            $request->field,
-            $request->lang,
-            $request->text
-        );
-
-        $activity->save();
-
-        return response()->json([
-            'success' => true
-        ]);
-    }
-
-    protected array $productTypes = [
-        'product' => 'Product',
-        'pass' => 'Pass',
-        'package' => 'Package',
-    ];
+    public function __construct(private ImageUploader $uploader) {}
 
     public function index(Request $request)
     {
-        $cities = City::where('active', true)->orderBy('name')->get();
+        $search = trim((string) $request->get('search'));
+        $status = in_array($request->get('status'), ['active', 'passive'], true) ? $request->get('status') : null;
+        $cityId = $request->integer('city') ?: null;
+        $partnerId = $request->integer('partner') ?: null;
+        $type = ActivityType::tryFrom((string) $request->get('type'));
+        $popular = in_array($request->get('popular'), ['yes', 'no'], true) ? $request->get('popular') : null;
 
-        $query = Activity::query()->orderBy('sort_order');
-
-        // Varsayılan şehir = 1
-        $cityId = (int) $request->get('city_id', 1);
-        $query->where('city_id', $cityId);
-
-        // Varsayılan durum = AKTİF (1)
-        $status = (int) $request->get('status', 1);
-        $query->where('status', $status);
-
-        $search = $request->get('search');
-
-        if ($search) {
-            $query->where('name->en', 'like', "%{$search}%");
-        }
-
-        // MOST POPULAR FİLTRESİ
-        $mostPopular = $request->get('most_popular');
-        if ($mostPopular !== null && $mostPopular !== '') {
-            $query->where('most_popular', (int) $mostPopular);
-        }
-
-        // ACTIVITY TYPE FİLTRESİ
-        $activityType = $request->get('activity_type');
-        if ($activityType !== null && $activityType !== '') {
-            $query->where('activity_type', $activityType);
-        }
-
-        $activities = $query
-            ->paginate(10)
+        $activities = Activity::with(['city.country', 'partner', 'cover'])
+            ->when($search, fn ($q) => $q->where(fn ($q) => $q->where('name->en', 'like', "%{$search}%")->orWhere('slug', 'like', "%{$search}%")))
+            ->when($status, fn ($q) => $q->where('active', $status === 'active'))
+            ->when($cityId, fn ($q) => $q->where('city_id', $cityId))
+            ->when($partnerId, fn ($q) => $q->where('partner_id', $partnerId))
+            ->when($type, fn ($q) => $q->where('type', $type))
+            ->when($popular, fn ($q) => $q->where('is_popular', $popular === 'yes'))
+            ->orderBy('city_id')
+            ->orderBy('sort_order')
+            ->paginate(25)
             ->withQueryString();
 
-        return view('admin.activities.index', compact(
-            'activities',
-            'cities',
-            'cityId',
-            'status',
-            'mostPopular'
-        ))->with('productTypes', $this->productTypes);
+        $clicks = AffiliateClick::whereIn('activity_id', $activities->pluck('id'))
+            ->where('created_at', '>=', now()->subDays(30)->startOfDay())
+            ->selectRaw('activity_id, COUNT(*) as total')->groupBy('activity_id')->pluck('total', 'activity_id');
+
+        return view('admin.activities.index', [
+            'activities' => $activities,
+            'clicks' => $clicks,
+            'search' => $search,
+            'status' => $status,
+            'cityId' => $cityId,
+            'partnerId' => $partnerId,
+            'type' => $type,
+            'popular' => $popular,
+            'filterPartners' => Partner::whereHas('activities')->orderBy('name')->pluck('name', 'id'),
+            'filterCities' => City::with('country')->whereHas('activities')->orderBy('name')->get(),
+            'activeCount' => Activity::active()->count(),
+            'totalCount' => Activity::count(),
+        ]);
     }
 
     public function create()
     {
-        $cities = City::orderBy('id')->where('active', true)->get();
-
-        return view('admin.activities.create', compact('cities'));
+        return view('admin.activities.form', $this->formData(new Activity(['type' => 'product', 'active' => false])));
     }
 
-    public function store(Request $request)
+    public function store(ActivityRequest $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'city_id' => 'required|exists:cities,id',
-        ]);
+        $activity = DB::transaction(function () use ($request) {
+            $activity = new Activity();
+            $this->fill($activity, $request);
+            $activity->sort_order = (int) Activity::where('city_id', $activity->city_id)->max('sort_order') + 1;
+            $activity->save();
+            $this->syncImages($activity, $request);
+            $this->syncFaqs($activity, $request);
+            ReviewSync::sync($activity, $request->validated('reviews') ?? []);
 
-        // Aynı şehirde son sırayı bul
-        $maxOrder = Activity::where('city_id', $data['city_id'])->max('sort_order');
+            return $activity;
+        });
 
-        $activity = Activity::create([
-            'name' => $data['name'],
-            'city_id' => $data['city_id'],
-            'status' => $data['status'] ?? false,
-            'sort_order' => ($maxOrder ?? 0) + 1,
-        ]);
-
-        return redirect()
-            ->route('activities.edit', $activity)
-            ->with('success', 'Activity created successfully.');
+        return redirect()->route('activities.index')->with('success', __('":name" eklendi.', ['name' => $activity->name]));
     }
 
-    public function edit(string $id)
+    public function edit(Activity $activity)
     {
-        $activity = Activity::with('activityShowFaqs')->findOrFail($id);
-
-        $affiliatePartners = AffiliatePartner::where('active', true)->orderBy('name')->get();
-        $cities = City::where('active', true)->orderBy('id')->get();
-        $languages = Translator::where('active',1)->where('code','!=','en')->pluck('code');
-
-        return view(
-            'admin.activities.edit',
-            compact('activity', 'cities', 'affiliatePartners', 'languages')
-        )->with('productTypes', $this->productTypes);
+        return view('admin.activities.form', $this->formData($activity->load(['images', 'faqs', 'reviews'])));
     }
 
-    public function update(Request $request, string $id)
+    public function update(ActivityRequest $request, Activity $activity)
     {
-        $activity = Activity::findOrFail($id);
+        DB::transaction(function () use ($request, $activity) {
+            $oldCity = $activity->city_id;
+            $this->fill($activity, $request);
 
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string|max:500',
-            'affiliate_id' => 'required|exists:affiliate_partners,id',
-            'source_product_id' => 'required|integer',
-            'affiliate_link' => 'nullable|url|max:255',
-            'city_id' => 'required|exists:cities,id',
-            'status' => 'required|boolean',
-            'most_popular' => 'required|boolean',
-            'sort_order' => 'nullable|integer',
-            'activity_type' => 'required|in:' . implode(',', array_keys($this->productTypes)),
-            'duration' => 'nullable|string|max:50',
-            'audio_guide' => 'required|boolean',
-            'description' => 'nullable|string',
-        ]);
-
-        $oldOrder = $activity->sort_order;
-        $oldCity = $activity->city_id;
-
-        $newOrder = $data['sort_order'] ?? $oldOrder;
-        $newCity = $data['city_id'];
-
-        // ŞEHİR DEĞİŞTİYSE
-        if ($oldCity != $newCity) {
-
-            // eski şehirde boşluk kapat
-            Activity::where('city_id', $oldCity)
-                ->where('sort_order', '>', $oldOrder)
-                ->decrement('sort_order');
-
-            // yeni şehirde sona ekle
-            $newOrder = (Activity::where('city_id', $newCity)->max('sort_order') ?? 0) + 1;
-        }
-
-        // AYNI ŞEHİRDE ORDER DEĞİŞTİYSE
-        elseif ($newOrder != $oldOrder) {
-
-            if ($newOrder > $oldOrder) {
-                // aşağı taşı
-                Activity::where('city_id', $oldCity)
-                    ->whereBetween('sort_order', [$oldOrder + 1, $newOrder])
-                    ->decrement('sort_order');
-            } else {
-                // yukarı taşı
-                Activity::where('city_id', $oldCity)
-                    ->whereBetween('sort_order', [$newOrder, $oldOrder - 1])
-                    ->increment('sort_order');
+            // Şehir değişirse yeni şehrin sonuna eklenir
+            if ($activity->city_id !== $oldCity) {
+                $activity->sort_order = (int) Activity::where('city_id', $activity->city_id)->max('sort_order') + 1;
             }
+
+            $activity->save();
+            $this->syncImages($activity, $request);
+            $this->syncFaqs($activity, $request);
+            ReviewSync::sync($activity, $request->validated('reviews') ?? []);
+        });
+
+        return redirect()->route('activities.edit', $activity)->with('success', __('Değişiklikler kaydedildi.'));
+    }
+
+    public function destroy(Activity $activity)
+    {
+        if ($activity->clicks()->exists()) {
+            return back()->with('error', __('Bu aktivitenin tıklama geçmişi var; silmek yerine pasif yap.'));
         }
 
-        $activity->update([
-            'name' => $data['name'],
-            'slug' => Str::slug($data['slug']),
-            'meta_title' => $data['meta_title'] ?? null,
-            'meta_description' => $data['meta_description'] ?? null,
-            'affiliate_id' => $data['affiliate_id'] ?? null,
-            'affiliate_link' => $data['affiliate_link'] ?? null,
-            'city_id' => $newCity,
-            'status' => $data['status'],
-            'most_popular' => $data['most_popular'],
-            'sort_order' => $newOrder,
-            'activity_type' => $data['activity_type'],
-            'duration' => $data['duration'] ?? null,
-            'audio_guide' => $data['audio_guide'],
-            'description' => $data['description'],
-            'source_product_id' => $data['source_product_id'],
-        ]);
+        // Görseller ActivityImage silinirken dosyalarıyla birlikte gider
+        DB::transaction(function () use ($activity) {
+            $activity->images->each->delete();
+            $activity->delete();
+        });
 
-        return redirect()
-            ->route('activities.edit', $activity)
-            ->with('success', 'Aktivite güncellendi.');
+        return redirect()->route('activities.index')->with('success', __('":name" silindi.', ['name' => $activity->name]));
     }
 
-    public function destroy(string $id)
+    /**
+     * Anasayfa ve şehir sayfasındaki "En popüler" bölümünde gösterilsin mi.
+     */
+    public function togglePopular(Request $request, Activity $activity)
     {
-        $activity = Activity::findOrFail($id);
+        $activity->update(['is_popular' => !$activity->is_popular]);
+        $message = __($activity->is_popular ? '":name" popülerlere eklendi.' : '":name" popülerlerden çıkarıldı.', ['name' => $activity->name]);
 
-        // silinince boşluk kapat
-        Activity::where('city_id', $activity->city_id)->where('sort_order', '>', $activity->sort_order)->decrement('sort_order');
-
-        $activity->delete();
-
-        return redirect()
-            ->route('activities.index')
-            ->with('success', 'Activity deleted successfully.');
+        return $request->expectsJson()
+            ? response()->json(['active' => $activity->is_popular, 'message' => $message])
+            : back()->with('success', $message);
     }
 
-    public function toggleStatus(Activity $activity)
+    public function toggle(Request $request, Activity $activity)
     {
-        $activity->update([
-            'status' => ! $activity->status,
-        ]);
+        $activity->update(['active' => !$activity->active]);
+        $message = __($activity->active ? '":name" yayına alındı.' : '":name" yayından kaldırıldı.', ['name' => $activity->name]);
 
-        return back()->with('success', 'Durum güncellendi.');
+        return $request->expectsJson()
+            ? response()->json(['active' => $activity->active, 'message' => $message])
+            : back()->with('success', $message);
+    }
+
+    private function fill(Activity $activity, ActivityRequest $request): void
+    {
+        $data = $request->validated();
+        $data['description'] = HtmlSanitizer::clean($data['description'] ?? null);
+
+        $activity->fill(collect($data)->except(['name', 'description', 'meta_title', 'meta_description', 'images', 'remove_images', 'cover_image_id', 'faqs', 'reviews'])->all());
+
+        // Çok dilli alanlar: sadece İngilizce yazılır, diğer diller korunur
+        foreach (['name', 'description', 'meta_title', 'meta_description'] as $field) {
+            filled($data[$field] ?? null)
+                ? $activity->setTranslation($field, 'en', $data[$field])
+                : $activity->forgetTranslation($field, 'en');
+        }
+    }
+
+    /**
+     * Görseller: işaretlenenler silinir, yeniler eklenir, seçilen kapak başa alınır (sort_order 0 = kapak).
+     */
+    private function syncImages(Activity $activity, ActivityRequest $request): void
+    {
+        $activity->images()->whereIn('id', (array) $request->input('remove_images', []))->get()->each->delete();
+
+        foreach ($request->file('images', []) as $file) {
+            $activity->images()->create([...$this->uploader->activity($file), 'sort_order' => 1000]);
+        }
+
+        $images = $activity->images()->get();
+        $cover = $images->firstWhere('id', (int) $request->input('cover_image_id')) ?? $images->first();
+
+        $images->sortBy(fn ($image) => [$image->isNot($cover), $image->sort_order, $image->id])->values()
+            ->each(fn ($image, $index) => $image->update(['sort_order' => $index]));
+    }
+
+    /**
+     * SSS'ler: formdaki sıra kaydedilir; formdan çıkarılanlar silinir. Soru/cevap İngilizce yazılır,
+     * mevcut soruların diğer dil çevirileri ve yayın durumu korunur. Boş satırlar atlanır.
+     */
+    private function syncFaqs(Activity $activity, ActivityRequest $request): void
+    {
+        FaqSync::sync($activity->faqs(), $request->validated('faqs') ?? []);
+    }
+
+    private function formData(Activity $activity): array
+    {
+        // Şehir seçimi: aktif ülkelerin şehirleri (+ aktivitenin mevcut şehri)
+        $cities = City::with('country')
+            ->where(fn ($q) => $q->whereHas('country', fn ($q) => $q->where('active', true))->orWhere('id', $activity->city_id))
+            ->orderByDesc('active')->orderBy('name')->get()
+            ->groupBy(fn (City $city) => $city->country->flag . ' ' . $city->country->name_tr);
+
+        return [
+            'activity' => $activity,
+            'cities' => $cities,
+            'partners' => Partner::where('active', true)->orWhere('id', $activity->partner_id)->orderBy('name')->get(),
+            'hasActiveCountry' => Country::active()->exists(),
+        ];
     }
 }

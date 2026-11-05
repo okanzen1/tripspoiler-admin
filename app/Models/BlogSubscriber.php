@@ -2,43 +2,55 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\URL;
 
+/**
+ * Blog abonesi. E-posta şifreli tutulur (front ile aynı APP_KEY); aynı adres email_hash ile tekrar eklenmez.
+ */
 class BlogSubscriber extends Model
 {
-    protected $fillable = [
-        'email',
-        'status',
-        'unsubscribe_token',
-    ];
+    protected $fillable = ['email', 'source_path', 'unsubscribed_at'];
 
-    protected $attributes = [
-        'status' => 1,
-    ];
-
-    protected static function booted()
+    protected function casts(): array
     {
-        static::creating(function ($subscriber) {
-            if (empty($subscriber->unsubscribe_token)) {
-                $subscriber->unsubscribe_token = Str::uuid();
-            }
-        });
+        return [
+            'email' => 'encrypted',
+            'unsubscribed_at' => 'datetime',
+        ];
     }
 
-    public function getEmailAttribute($value)
+    protected static function booted(): void
     {
-        return Crypt::decryptString($value);
+        static::saving(fn (self $subscriber) => $subscriber->email_hash = self::hash($subscriber->email));
     }
 
-    public function setEmailAttribute($value)
+    public static function hash(string $email): string
     {
-        $this->attributes['email'] = Crypt::encryptString($value);
+        return hash('sha256', mb_strtolower(trim($email)));
     }
 
-    public function scopeActive($query)
+    public static function findByEmail(string $email): ?self
     {
-        return $query->where('status', 1);
+        return self::where('email_hash', self::hash($email))->first();
+    }
+
+    public function scopeActive(Builder $query): void
+    {
+        $query->whereNull('unsubscribed_at');
+    }
+
+    public function isActive(): bool
+    {
+        return $this->unsubscribed_at === null;
+    }
+
+    /**
+     * Toplu e-postanın altındaki "abonelikten çık" bağlantısı (imzalı, tahmin edilemez).
+     */
+    public function unsubscribeUrl(): string
+    {
+        return URL::signedRoute('subscribers.unsubscribe', ['subscriber' => $this->id]);
     }
 }

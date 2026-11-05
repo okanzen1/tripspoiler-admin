@@ -2,77 +2,84 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasSlugRedirects;
+use App\Services\ImageUploader;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Traits\HasImages;
-use Spatie\Sluggable\HasTranslatableSlug;
-use Spatie\Sluggable\SlugOptions;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Translatable\HasTranslations;
 
 class Blog extends Model
 {
-    use HasTranslations;
-    use HasTranslatableSlug;
-    use HasImages;
+    use HasSlugRedirects, HasTranslations;
+
+    /** Front'taki adres kalıbı (config/site.php) */
+    public const SITE_PATH = 'blog';
 
     protected $fillable = [
-        'title',
-        'excerpt',
-        'slug',
-        'meta_title',
-        'meta_description',
-        'themes',
-        'city_id',
-        'sort_order',
-        'status',
-        'click_count',
+        'city_id', 'title', 'slug', 'excerpt', 'content', 'tags', 'cover_path',
+        'meta_title', 'meta_description', 'active', 'published_at',
     ];
 
-    public $translatable = [
-        'title',
-        'excerpt',
-        'themes',
-        'slug',
-        'meta_title',
-        'meta_description',
-    ];
+    /** Çok dilli alanlar; panel İngilizce (en) düzenler, diğer diller korunur */
+    public array $translatable = ['title', 'excerpt', 'content', 'tags', 'meta_title', 'meta_description'];
 
-    protected $casts = [
-        'status' => 'boolean',
-        'themes' => 'array',
-    ];
-
-    public function getSlugOptions(): SlugOptions
+    public function getLocale(): string
     {
-        return SlugOptions::create()
-            ->generateSlugsFrom('title')
-            ->saveSlugsTo('slug')
-            ->doNotGenerateSlugsOnUpdate();
+        return 'en';
     }
 
-    public function city()
+    protected function casts(): array
+    {
+        return [
+            'active' => 'boolean',
+            'published_at' => 'datetime',
+        ];
+    }
+
+    public function city(): BelongsTo
     {
         return $this->belongsTo(City::class);
     }
 
-    public function content()
+    public function activities(): BelongsToMany
     {
-        return $this->hasOne(BlogContent::class);
+        return $this->belongsToMany(Activity::class)->withPivot('sort_order')->orderByPivot('sort_order');
     }
 
-    public function getImageSource(): string
+    public function faqs(): HasMany
     {
-        return 'blog';
+        return $this->hasMany(Faq::class)->orderBy('sort_order')->orderBy('id');
     }
 
-    public function images()
+    public function scopeActive(Builder $query): void
     {
-        return $this->hasMany(Image::class, 'source_id')
-            ->where('source', 'blog')
-            ->orderBy('sort_order');
+        $query->where('active', true);
     }
 
-    public function activities()
+    /**
+     * @param  'sm'|null  $size  liste için küçük kopya
+     */
+    public function coverUrl(?string $size = null): ?string
     {
-        return $this->belongsToMany(Activity::class);
+        return ImageUploader::url($this->cover_path, $size);
+    }
+
+    /**
+     * Okuma süresi (dakika), İngilizce metne göre.
+     */
+    public function readingMinutes(): int
+    {
+        return max(1, (int) round(str_word_count(strip_tags((string) $this->content)) / 220));
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function otherLocales(): array
+    {
+        return array_values(array_diff($this->getTranslatedLocales('title'), ['en']));
     }
 }

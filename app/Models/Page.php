@@ -3,24 +3,47 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Translatable\HasTranslations;
 
+/**
+ * Sitenin sabit sayfası (anasayfa, iletişim…). Şimdilik SEO başlığı ve açıklaması tutulur.
+ */
 class Page extends Model
 {
-    protected $fillable = [
-        'slug',
-    ];
+    use HasTranslations;
 
-    public function images()
+    protected $fillable = ['key', 'name', 'path', 'meta_title', 'meta_description', 'sort_order'];
+
+    public array $translatable = ['meta_title', 'meta_description'];
+
+    public function getLocale(): string
     {
-        $source = $this->slug . '_page';
-
-        return $this->hasMany(Image::class, 'source_id')
-            ->where('source', $source)
-            ->orderBy('sort_order');
+        return 'en';
     }
 
-    public function getImageSource(): string
+    /** SEO bu sayfada değil, her aktivitenin kendi formunda (Aktivite detayı) */
+    public function hasOwnSeo(): bool
     {
-        return $this->slug . '_page';
+        return $this->key !== 'activity';
+    }
+
+    public function isSeoComplete(): bool
+    {
+        return !$this->hasOwnSeo() || (filled($this->meta_title) && filled($this->meta_description));
+    }
+
+    /**
+     * Sitedeki adresi ("Sayfayı aç"). Aktivite detayı için ilk yayındaki aktivite.
+     */
+    public function siteUrl(): string
+    {
+        $base = rtrim(config('site.url'), '/') . '/en';
+        if ($this->key === 'activity') {
+            $slug = Activity::where('active', true)->orderBy('sort_order')->orderBy('id')->value('slug');
+
+            return $base . '/activities' . ($slug ? '/' . $slug : '');
+        }
+
+        return $base . ($this->path === '/' ? '' : $this->path);
     }
 }

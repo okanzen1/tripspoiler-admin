@@ -2,68 +2,64 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\City;
 use App\Models\Page;
-use App\Models\Translator;
 use Illuminate\Http\Request;
 
+/**
+ * Sitenin sabit sayfaları: şimdilik SEO başlığı ve açıklaması.
+ */
 class PageController extends Controller
 {
     public function index()
     {
-        $pages = Page::orderBy('id')->get();
-        return view('admin.pages.index', compact('pages'));
-    }
-
-    public function create()
-    {
-        return view('admin.pages.create');
-    }
-
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'slug' => 'required|string|max:255|unique:pages,slug',
-        ]);
-
-        $page = Page::create($data);
-
-        return redirect()
-            ->route('pages.edit', $page)
-            ->with('success', 'Sayfa oluşturuldu.');
+        return view('admin.pages.index', ['pages' => Page::orderBy('sort_order')->get()]);
     }
 
     public function edit(Page $page)
     {
-        $cities = City::orderBy('name')->get();
+        return view('admin.pages.edit', compact('page'));
+    }
 
-        // İstanbul id sabit (senin dediğin)
-        $defaultCityId = 1;
+    public function seo(Page $page)
+    {
+        return view('admin.pages.seo', compact('page'));
+    }
 
-        $languages = Translator::where('active', 1)->where('code', '!=', 'en')->pluck('code');
+    /**
+     * Sayfanın bölümleri: sürükleyerek sıra, anahtarla aç/kapa (anasayfa hariç).
+     */
+    public function sections(Page $page)
+    {
+        abort_unless(\App\Support\PageSections::supports($page->key), 404);
 
-        return view('admin.pages.edit', compact('page', 'cities', 'defaultCityId', 'languages'));
+        return view('admin.pages.sections', ['page' => $page, 'config' => \App\Support\PageSections::config($page->key)]);
+    }
+
+    /**
+     * Her değişiklikte tüm durum gönderilir (sıra + açık olanlar); hemen kaydedilir.
+     */
+    public function updateSections(Request $request, Page $page)
+    {
+        abort_unless(\App\Support\PageSections::supports($page->key), 404);
+        $data = $request->validate(['order' => ['array'], 'order.*' => ['string'], 'on' => ['array'], 'on.*' => ['string']]);
+        \App\Support\PageSections::save($page->key, $data['order'] ?? [], $data['on'] ?? []);
+
+        return response()->json(['message' => __('Kaydedildi. Sitede hemen görünür.')]);
     }
 
     public function update(Request $request, Page $page)
     {
         $data = $request->validate([
-            'slug' => 'required|string|max:255|unique:pages,slug,' . $page->id,
-        ]);
+            'meta_title' => ['nullable', 'string', 'max:255'],
+            'meta_description' => ['nullable', 'string', 'max:500'],
+        ], attributes: ['meta_title' => __('SEO başlığı'), 'meta_description' => __('SEO açıklaması')]);
 
-        $page->update($data);
+        // Sadece İngilizce yazılır, diğer diller korunur
+        foreach ($data as $field => $value) {
+            filled($value) ? $page->setTranslation($field, 'en', $value) : $page->forgetTranslation($field, 'en');
+        }
+        $page->save();
 
-        return redirect()
-            ->route('pages.edit', $page)
-            ->with('success', 'Sayfa güncellendi.');
-    }
-
-    public function destroy(Page $page)
-    {
-        $page->delete();
-
-        return redirect()
-            ->route('pages.index')
-            ->with('success', 'Sayfa silindi.');
+        return redirect()->route('pages.edit', $page)->with('success', __(':name sayfasının SEO bilgileri kaydedildi.', ['name' => $page->name]));
     }
 }

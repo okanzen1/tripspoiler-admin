@@ -35,8 +35,5 @@ return [
         ],
     ],
 
-    'deepl' => [
-        'key' => env('DEEPL_API_KEY'),
-    ],
 
 ];

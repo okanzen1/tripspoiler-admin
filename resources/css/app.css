@@ -4,8 +4,67 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+@source '../../app/Support/SectionColor.php';
+
+/* Karanlık mod sistemden otomatik açılmasın; panel her zaman açık temada */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Sidebar daraltılmışken (html.sidebar-collapsed) */
+@custom-variant collapsed (&:where(.sidebar-collapsed, .sidebar-collapsed *));
 
 @theme {
+    /* Marka rengi: lacivert */
+    --color-brand-50: #f2f5fb;
+    --color-brand-100: #e3e9f5;
+    --color-brand-200: #c5d1ea;
+    --color-brand-300: #9bb0d8;
+    --color-brand-400: #6a87c1;
+    --color-brand-500: #4766a8;
+    --color-brand-600: #34508e;
+    --color-brand-700: #2a4074;
+    --color-brand-800: #1f3160;
+    --color-brand-900: #16244a;
+    --color-brand-950: #0e1833;
+
+    /* Grafik veri rengi: lacivert ailesinden, dataviz validatorından geçen ton */
+    --color-data: #2f56b0;
+
+    /* Okunabilirlik: simsiyah yerine yumuşak lacivert-antrasit metinler (beyaz/siyah kontrastı göz yormasın) */
+    --color-slate-900: #29344b;
+    --color-slate-800: #344058;
+    --color-slate-700: #434f67;
+    --color-slate-600: #56627a;
+    --color-slate-500: #69768e;
+
+    /* Kart ve başlık zemini: saf beyaz yerine kırık beyaz */
+    --color-surface: #fafbfd;
+
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* Zengin metin editörü (Quill): panel yazı tipi ve okunaklı satır aralığı */
+[data-rich-editor] .ql-toolbar.ql-snow {
+    border: 0;
+    border-bottom: 1px solid var(--color-slate-200);
+    background: var(--color-slate-50);
+    font-family: inherit;
+}
+[data-rich-editor] .ql-container.ql-snow {
+    border: 0;
+    font-family: inherit;
+    font-size: 15px;
+}
+[data-rich-editor] .ql-editor {
+    min-height: 20rem;
+    line-height: 1.7;
+    color: var(--color-slate-800);
+}
+[data-rich-editor] .ql-editor h2 { font-size: 1.35em; font-weight: 600; margin: 1em 0 0.4em; }
+[data-rich-editor] .ql-editor h3 { font-size: 1.15em; font-weight: 600; margin: 0.9em 0 0.3em; }
+[data-rich-editor] .ql-editor p { margin-bottom: 0.5em; }
+
+/* Tailwind v4 düğmelerde imleci varsayılana çekiyor: tıklanabilir her şeyde el işareti */
+button:not(:disabled), [role="button"]:not([aria-disabled="true"]), label[for], select, summary, input[type="checkbox"], input[type="radio"], input[type="file"] {
+  cursor: pointer;
 }
