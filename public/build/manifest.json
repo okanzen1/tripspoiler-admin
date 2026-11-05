@@ -1,0 +1,39 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-B2huOYjS.css",
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "name": "app",
+    "names": [
+      "app.css"
+    ]
+  },
+  "resources/js/analytics-chart.js": {
+    "file": "assets/analytics-chart-zluYIBog.js",
+    "name": "analytics-chart",
+    "src": "resources/js/analytics-chart.js",
+    "isDynamicEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-DdAFtwZY.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "dynamicImports": [
+      "resources/js/rich-editor.js",
+      "resources/js/analytics-chart.js"
+    ]
+  },
+  "resources/js/rich-editor.js": {
+    "file": "assets/rich-editor-Bx7KNaUR.js",
+    "name": "rich-editor",
+    "src": "resources/js/rich-editor.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js"
+    ],
+    "css": [
+      "assets/rich-editor-Bf4bJ6eu.css"
+    ]
+  }
+}
