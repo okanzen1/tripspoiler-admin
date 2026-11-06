@@ -125,9 +125,7 @@
                             <div class="h-3 w-4/5 rounded bg-white/90"></div>
                             <div class="h-3 w-3/5 rounded bg-red-500"></div>
                         </div>
-                        @unless ($hero['image_url'])
-                            <span class="absolute inset-0 grid place-items-center text-sm text-white/60">{{ __('Henüz resim yüklenmedi') }}</span>
-                        @endunless
+                        <span class="absolute inset-0 grid place-items-center text-sm text-white/60" data-preview-placeholder="desktop" @class(['hidden' => $hero['image_url']])>{{ __('Henüz resim yüklenmedi') }}</span>
                     </div>
                 </div>
 
@@ -547,6 +545,7 @@
                 if (kind === 'desktop') {
                     desktop.forEach(img => { img.src = url; img.classList.remove('hidden'); });
                     if (!hasMobile) { mobile.src = url; mobile.classList.remove('hidden'); }
+                    form.querySelector('[data-preview-placeholder="desktop"]')?.classList.add('hidden');
                     form.querySelector('[data-file-label=hero_image]').textContent = @json(__('Başka resim seç'));
                 } else {
                     hasMobile = true;
