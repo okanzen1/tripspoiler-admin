@@ -64,6 +64,7 @@
         </x-admin.card>
 
         {{-- Sağ: seçili ülke ve şehirleri --}}
+        @if ($selected)
         <div class="space-y-5">
             <x-admin.card class="overflow-hidden">
                 <div class="flex flex-wrap items-center gap-5 p-6">
@@ -190,9 +191,27 @@
                 @endif
             </x-admin.card>
         </div>
+        @else
+        <div class="space-y-5">
+            <x-admin.card class="overflow-hidden">
+                <div class="px-6 py-16 text-center">
+                    <div class="mx-auto grid size-12 place-items-center rounded-2xl bg-amber-50 text-amber-700">
+                        <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 8v4M12 16h.01" /></svg>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold text-slate-900">{{ __('Henüz ülke yok') }}</p>
+                    <p class="mt-1 text-sm text-slate-500">
+                        {{ __('Ülkeler yönetici panelinden eklenemez; veritabanı tohumlaması (seeder) ile yüklenir. Terminalde şu komutu çalıştırın:') }}
+                    </p>
+                    <pre class="mx-auto mt-4 max-w-md overflow-x-auto rounded-xl bg-slate-900 px-4 py-3 text-left text-xs text-slate-100">php artisan db:seed --class=CountrySeeder</pre>
+                    <p class="mt-3 text-xs text-slate-400">{{ __('Ardından şehirleri yüklemek için: php artisan db:seed --class=CitySeeder') }}</p>
+                </div>
+            </x-admin.card>
+        </div>
+        @endif
     </div>
 @endsection
 
+@if ($selected)
 @push('scripts')
     <script>
         (() => {
@@ -249,3 +268,4 @@
         })();
     </script>
 @endpush
+@endif

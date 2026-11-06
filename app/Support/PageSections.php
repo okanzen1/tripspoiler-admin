@@ -110,6 +110,16 @@ class PageSections
             'about_values' => ['İlkelerimiz', 'Başlık ve dört ilke kartı. Yazıları: Sayfa içeriği.', false],
             'about_cta' => ['Kapanış', 'Kırmızı kutu ve iki düğme. Yazıları: Sayfa içeriği.', false],
         ],
+        'privacy' => [
+            'privacy_who' => ['Biz kimiz', 'Gizlilik sayfasındaki bölüm. Yazıları: Sayfa içeriği.', false],
+            'privacy_collect' => ['Neleri topluyoruz', 'Gizlilik sayfasındaki bölüm. Yazıları: Sayfa içeriği.', false],
+            'privacy_use' => ['Nasıl kullanıyoruz', 'Gizlilik sayfasındaki bölüm. Yazıları: Sayfa içeriği.', false],
+            'privacy_cookies' => ['Çerezler', 'Gizlilik sayfasındaki bölüm. Yazıları: Sayfa içeriği.', false],
+            'privacy_partners' => ['Partner bağlantıları', 'Gizlilik sayfasındaki bölüm. Yazıları: Sayfa içeriği.', false],
+            'privacy_storage' => ['Saklama ve güvenlik', 'Gizlilik sayfasındaki bölüm. Yazıları: Sayfa içeriği.', false],
+            'privacy_rights' => ['Haklar', 'Gizlilik sayfasındaki bölüm. Yazıları: Sayfa içeriği.', false],
+            'privacy_changes' => ['Değişiklikler', 'Gizlilik sayfasındaki bölüm. Yazıları: Sayfa içeriği.', false],
+        ],
     ];
 
     public static function guideLabels(string $page): array
