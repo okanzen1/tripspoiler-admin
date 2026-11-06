@@ -1,5 +1,27 @@
 @import 'tailwindcss';
 
+/* Tıklanabilir satır/kart affordance (admin paneli) */
+main li:has(> a[href]),
+main tr:has(> td > a[href]),
+main a.group,
+main a.block {
+    cursor: pointer;
+    transition: background-color 160ms ease, box-shadow 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+main li:has(> a[href]):hover,
+main tr:has(> td > a[href]):hover {
+    background-color: rgb(226 232 240 / 0.55);
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+}
+main a.group:hover,
+main a.block:hover {
+    background-color: rgb(226 232 240 / 0.45);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.10);
+}
+main a[href] {
+    cursor: pointer;
+}
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';

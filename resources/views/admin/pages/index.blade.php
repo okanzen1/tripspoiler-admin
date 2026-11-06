@@ -65,7 +65,7 @@
                         $page->hasOwnSeo() ? [__('SEO'), route('pages.seo', $page)] : null,
                     ]));
                 @endphp
-                <li class="grid items-center gap-4 px-6 py-4 transition hover:bg-slate-50/60 md:grid-cols-12">
+                <li class="grid items-center gap-4 px-6 py-4 transition hover:bg-slate-200/50 hover:shadow-sm hover:ring-1 hover:ring-slate-300/70 md:grid-cols-12 cursor-pointer">
                     <a href="{{ route('pages.edit', $page) }}" class="flex min-w-0 items-center gap-4 md:col-span-5">
                         <span class="grid size-11 shrink-0 place-items-center rounded-xl {{ $colors[$page->key] ?? 'bg-brand-50 text-brand-900' }}">
                             <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">{!! $icons[$page->key] ?? $icons['about'] !!}</svg>
