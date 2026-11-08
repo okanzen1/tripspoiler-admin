@@ -1,4 +1,4 @@
-@props(['name', 'label', 'current' => null, 'placeholder' => '', 'shape' => 'square', 'accept' => 'image/jpeg,image/png,image/webp', 'hint' => 'JPG, PNG ya da WebP · büyükse otomatik küçültülür'])
+@props(['name', 'label', 'current' => null, 'focus' => 50, 'placeholder' => '', 'shape' => 'square', 'accept' => 'image/jpeg,image/png,image/webp', 'hint' => 'JPG, PNG ya da WebP · büyükse otomatik küçültülür'])
 
 {{-- Resim yükleme: seçilen dosya anında önizlenir (resources/js/image-upload.js). "Kaldır" → remove_{name}=1 --}}
 <div data-image-upload>
@@ -9,7 +9,7 @@
             'rounded-full' => $shape === 'circle',
             'rounded-2xl' => $shape !== 'circle',
         ])>
-            <img data-preview src="{{ $current }}" alt="" @class(['size-full', 'object-cover' => $shape === 'circle', 'object-contain p-2' => $shape !== 'circle', 'hidden' => !$current]) />
+            <img data-preview src="{{ $current }}" alt="" @class(['size-full', 'object-cover' => $shape === 'circle', 'object-contain p-2' => $shape !== 'circle', 'hidden' => !$current]) style="object-position: {{ $focus }}% center" />
             <span data-placeholder @class(['hidden' => $current])>{{ $placeholder }}</span>
         </div>
 
@@ -25,6 +25,11 @@
                     'hidden' => !$current,
                 ])>{{ __('Kaldır') }}</button>
                 <input type="hidden" name="remove_{{ $name }}" value="0" data-remove-flag />
+            </div>
+            <div class="mt-2 flex items-center gap-3" data-focus-box>
+                <span class="text-[11px] font-medium text-slate-500">Sol</span>
+                <input type="range" name="{{ $name }}_focus" min="0" max="100" step="5" value="{{ old($name . '_focus', $focus) }}" class="w-full accent-brand-900" data-image-focus>
+                <span class="text-[11px] font-medium text-slate-500">Sağ</span>
             </div>
             @error($name)
                 <p class="text-xs font-medium text-red-600">{{ $message }}</p>

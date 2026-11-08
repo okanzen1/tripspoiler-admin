@@ -7,7 +7,7 @@
             {{ __('Masaüstü') }}
         </p>
         <div class="relative {{ $spec['ratio'] }} {{ $spec['preview_width'] }} w-full overflow-hidden rounded-xl bg-slate-900">
-            <img src="{{ $desktopPreview }}" alt="" data-preview @class(['absolute inset-0 size-full object-cover', 'opacity-50' => !$desktop, 'hidden' => !$desktopPreview])>
+            <img src="{{ $desktopPreview }}" alt="" data-preview @class(['absolute inset-0 size-full object-cover', 'opacity-50' => !$desktop, 'hidden' => !$desktopPreview]) style="object-position: {{ $focus ?? 50 }}% center">
             @if (!empty($note))
                 <span data-note class="absolute bottom-2 right-2 rounded-md bg-slate-950/70 px-2 py-1 text-[11px] font-medium text-white/85">{{ $note }}</span>
             @endif
@@ -36,7 +36,7 @@
         </p>
         <div class="w-36 rounded-[1.4rem] border-4 border-slate-900 bg-slate-900 p-0.5">
             <div class="relative {{ $spec['mobile_ratio'] }} overflow-hidden rounded-[1rem] bg-slate-800">
-                <img src="{{ $mobilePreview }}" alt="" data-preview @class(['absolute inset-0 size-full object-cover', 'opacity-50' => !$mobile, 'hidden' => !$mobilePreview])>
+                <img src="{{ $mobilePreview }}" alt="" data-preview @class(['absolute inset-0 size-full object-cover', 'opacity-50' => !$mobile, 'hidden' => !$mobilePreview]) style="object-position: {{ $focus ?? 50 }}% center">
                 @if (!$mobile)
                     <span data-note class="absolute inset-x-1.5 bottom-1.5 rounded-md bg-slate-950/70 px-1.5 py-1 text-center text-[10px] font-medium leading-tight text-white/85">{{ __('Masaüstü resminden kesilir') }}</span>
                 @endif
@@ -56,5 +56,10 @@
             @endif
         </div>
         <span class="block text-xs font-medium text-emerald-700" data-file-name></span>
+        <div class="mt-2 flex items-center gap-2">
+            <span class="text-[11px] font-medium text-slate-500">Sol</span>
+            <input type="range" name="{{ $desktopName }}_focus" min="0" max="100" step="5" value="{{ old($desktopName . '_focus', $focus ?? 50) }}" class="w-full accent-brand-900" data-banner-focus>
+            <span class="text-[11px] font-medium text-slate-500">Sağ</span>
+        </div>
     </div>
 </div>

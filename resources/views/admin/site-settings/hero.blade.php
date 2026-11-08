@@ -466,7 +466,7 @@
                             data-filter-item data-name="{{ $blog->title }}" data-keywords="{{ $keywords($blog, 'title') }}" data-city="{{ $cityOf($blog) }}" @unless ($blog->active) data-unavailable @endunless>
                             <input type="radio" name="hero_guide_id" value="{{ $blog->id }}" class="size-4 border-slate-300 text-emerald-600 focus:ring-emerald-500" @checked($guideId === $blog->id) @disabled(!$blog->active) data-label="{{ $blog->title }}">
                             <span class="h-10 w-14 shrink-0 overflow-hidden rounded-lg bg-slate-100">
-                                @if ($blog->cover_path) <img src="{{ $blog->coverUrl('sm') }}" alt="" loading="lazy" class="size-full object-cover"> @endif
+                                @if ($blog->cover_path) <img src="{{ $blog->coverUrl('sm') }}" alt="" loading="lazy" class="size-full object-cover" style="object-position: {{ $blog->cover_focus ?? 50 }}% center"> @endif
                             </span>
                             <span class="min-w-0">
                                 <span class="block truncate text-sm font-medium text-slate-900" title="{{ $blog->title }}">{{ $blog->title }}</span>
@@ -499,11 +499,11 @@
 
             // AJAX kaydet: sayfa yenilenmeden kaydet
             const toast = document.createElement('div');
-            toast.className = 'hidden fixed right-6 top-6 z-50 rounded-2xl px-5 py-3 text-sm font-semibold shadow-lg ring-1';
+            toast.className = 'hidden fixed right-4 top-4 z-50 rounded-2xl px-5 py-3 text-sm font-semibold shadow-lg ring-1 max-w-[calc(100vw-2rem)]';
             document.body.appendChild(toast);
             const showToast = (msg, ok = true) => {
                 toast.textContent = msg;
-                toast.className = 'fixed right-6 top-6 z-50 rounded-2xl px-5 py-3 text-sm font-semibold shadow-lg ring-1 ' + (ok ? 'bg-emerald-50 text-emerald-800 ring-emerald-200' : 'bg-red-50 text-red-700 ring-red-200');
+                toast.className = 'fixed right-4 top-4 z-50 rounded-2xl px-5 py-3 text-sm font-semibold shadow-lg ring-1 max-w-[calc(100vw-2rem)] ' + (ok ? 'bg-emerald-50 text-emerald-800 ring-emerald-200' : 'bg-red-50 text-red-700 ring-red-200');
                 clearTimeout(toast._t);
                 toast._t = setTimeout(() => toast.classList.add('hidden'), 4000);
             };

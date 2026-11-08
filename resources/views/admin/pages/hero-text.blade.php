@@ -123,6 +123,7 @@
                     'desktop' => $general?->image, 'mobile' => $general?->image_mobile,
                     'desktopPreview' => $generalDesktop, 'mobilePreview' => $url($general?->image_mobile) ?: $generalDesktop,
                     'note' => $general?->image ? null : __('Şu an anasayfa resmi kullanılıyor'),
+                    'focus' => $general?->focus ?? 50,
                 ])
                 @error('general') <p class="mt-2 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
                 @error('general_mobile') <p class="mt-2 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
@@ -261,8 +262,9 @@
                                 {{-- masaüstü --}}
                                 <div class="flex items-center gap-3 md:col-span-4" data-banner-box>
                                     <div class="relative aspect-[16/9] w-32 shrink-0 overflow-hidden rounded-lg bg-slate-100 ring-1 ring-slate-200">
-                                        <img src="{{ $desk ?: $generalDesktop }}" alt="" data-preview @class(['absolute inset-0 size-full object-cover', 'opacity-40 grayscale' => !$desk])>
+                                        <img src="{{ $desk ?: $generalDesktop }}" alt="" data-preview @class(['absolute inset-0 size-full object-cover', 'opacity-40 grayscale' => !$desk]) style="object-position: {{ $cityBanners[$rowCity->id]?->focus ?? 50 }}% center">
                                     </div>
+                                    <input type="range" name="city_focus[{{ $rowCity->id }}]" min="0" max="100" step="5" value="{{ old('city_focus.' . $rowCity->id, $cityBanners[$rowCity->id]?->focus ?? 50) }}" class="w-32 accent-brand-900" data-banner-focus>
                                     <div class="space-y-1.5">
                                         <label class="{{ $thumbBtn }}">
                                             <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16" /></svg>
@@ -280,7 +282,7 @@
                                 {{-- telefon --}}
                                 <div class="flex items-center gap-3 md:col-span-2" data-banner-box>
                                     <div class="relative h-14 w-9 shrink-0 overflow-hidden rounded-md border-2 border-slate-800 bg-slate-800">
-                                        <img src="{{ $mob ?: ($desk ?: $generalDesktop) }}" alt="" data-preview @class(['absolute inset-0 size-full object-cover', 'opacity-40 grayscale' => !$mob])>
+                                        <img src="{{ $mob ?: ($desk ?: $generalDesktop) }}" alt="" data-preview @class(['absolute inset-0 size-full object-cover', 'opacity-40 grayscale' => !$mob]) style="object-position: {{ $cityBanners[$rowCity->id]?->focus ?? 50 }}% center">
                                     </div>
                                     <div class="space-y-1.5">
                                         <label class="{{ $thumbBtn }}">
@@ -359,7 +361,12 @@
             form.addEventListener('input', (event) => {
                 if (event.target.matches('[data-live]')) live();
                 if (event.target.matches('[data-hero-focus]')) {
-                    form.querySelectorAll('[data-hero-img], [data-live-img]').forEach((img) => img.style.objectPosition = event.target.value + '% center');
+                    form.querySelectorAll('[data-hero-img], [data-live-img], [data-preview]').forEach((img) => img.style.objectPosition = event.target.value + '% center');
+                }
+                if (event.target.matches('[data-banner-focus]')) {
+                    let node = event.target.parentElement;
+                    while (node && !node.querySelector('[data-preview]')) node = node.parentElement;
+                    node?.querySelectorAll('[data-preview]').forEach((img) => img.style.objectPosition = event.target.value + '% center');
                 }
                 if (event.target.name === 'overlay') form.querySelector('[data-hero-overlay]').className = 'absolute inset-0 bg-gradient-to-r ' + event.target.dataset.classes + ' to-transparent';
             });

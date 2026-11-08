@@ -6,7 +6,7 @@ export function toast(message, warning = false) {
         box = document.createElement('div');
         box.id = 'toast';
         box.setAttribute('role', 'status');
-        box.className = 'pointer-events-none fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl px-4 py-2.5 text-sm font-medium text-white shadow-lg transition-opacity duration-300';
+        box.className = 'pointer-events-none fixed bottom-6 left-4 right-4 z-50 mx-auto w-fit max-w-[calc(100vw-2rem)] rounded-xl px-4 py-2.5 text-sm font-medium text-white shadow-lg transition-opacity duration-300 break-words text-center';
         document.body.append(box);
     }
     box.textContent = message;

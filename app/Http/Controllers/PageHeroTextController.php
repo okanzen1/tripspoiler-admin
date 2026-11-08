@@ -55,7 +55,7 @@ class PageHeroTextController extends Controller
     ];
 
     /** Fotoğraflı hero'su olan sayfalar (kadraj + karartma) */
-    public const VISUAL = ['activities', 'cities', 'about', 'reviews'];
+    public const VISUAL = ['activities', 'cities', 'about', 'reviews', 'blog', 'privacy', 'contact'];
 
     public const OVERLAYS = ['soft', 'medium', 'strong'];
 

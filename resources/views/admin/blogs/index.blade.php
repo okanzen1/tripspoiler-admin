@@ -50,7 +50,7 @@
                                 <td class="px-6 py-3">
                                     <div class="flex items-center gap-3.5">
                                         @if ($url = $blog->coverUrl('sm'))
-                                            <img src="{{ $url }}" alt="" loading="lazy" class="h-12 w-16 shrink-0 rounded-lg object-cover ring-1 ring-slate-200" />
+                                            <img src="{{ $url }}" alt="" loading="lazy" class="h-12 w-16 shrink-0 rounded-lg object-cover ring-1 ring-slate-200" style="object-position: {{ $blog->cover_focus ?? 50 }}% center" />
                                         @else
                                             <span class="grid h-12 w-16 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-400 ring-1 ring-slate-200" title="{{ __('Kapak görseli yok') }}">
                                                 <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="m21 16-5-5L5 20" /></svg>

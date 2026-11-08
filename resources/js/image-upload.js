@@ -8,6 +8,13 @@ document.querySelectorAll('[data-image-upload]').forEach((box) => {
     const remove = box.querySelector('[data-remove]');
     const flag = box.querySelector('[data-remove-flag]');
     const chooseLabel = box.querySelector('[data-choose-label]');
+    const focusInput = box.querySelector('[data-image-focus]');
+
+    const applyFocus = () => {
+        if (focusInput) preview.style.objectPosition = focusInput.value + '% center';
+    };
+    if (focusInput) focusInput.addEventListener('input', applyFocus);
+    applyFocus();
 
     const show = (src) => {
         preview.src = src ?? '';
@@ -15,6 +22,7 @@ document.querySelectorAll('[data-image-upload]').forEach((box) => {
         placeholder.classList.toggle('hidden', !!src);
         remove.classList.toggle('hidden', !src);
         chooseLabel.textContent = t(src ? 'Değiştir' : 'Resim seç');
+        applyFocus();
     };
 
     input.addEventListener('change', () => {

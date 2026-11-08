@@ -164,6 +164,10 @@ class BlogController extends Controller
             $this->uploader->delete($blog->cover_path);
             $blog->cover_path = null;
         }
+
+        if ($request->has('cover_focus')) {
+            $blog->cover_focus = (int) $request->input('cover_focus');
+        }
     }
 
     private function syncActivities(Blog $blog, BlogRequest $request): void

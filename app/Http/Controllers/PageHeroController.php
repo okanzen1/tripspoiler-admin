@@ -75,10 +75,13 @@ class PageHeroController extends Controller
         $request->validate([
             'general' => $desktop,
             'general_mobile' => $mobile,
+            'general_focus' => ['nullable', 'integer', 'between:0,100'],
             'city' => ['array'],
             'city.*' => $desktop,
             'city_mobile' => ['array'],
             'city_mobile.*' => $mobile,
+            'city_focus' => ['array'],
+            'city_focus.*' => ['nullable', 'integer', 'between:0,100'],
             'remove' => ['array'],
         ], [
             'general.dimensions' => $desktopMessage,
@@ -91,26 +94,29 @@ class PageHeroController extends Controller
         ini_set('memory_limit', '512M');
 
         $this->save($page->key, null, $request->file('general'), $request->file('general_mobile'),
-            $request->boolean('remove.general'), $request->boolean('remove.general_mobile'));
+            $request->boolean('remove.general'), $request->boolean('remove.general_mobile'),
+            $request->filled('general_focus') ? (int) $request->input('general_focus') : null);
 
         $ids = array_unique([
             ...array_keys($request->file('city', [])),
             ...array_keys($request->file('city_mobile', [])),
             ...array_keys((array) $request->input('remove.city', [])),
             ...array_keys((array) $request->input('remove.city_mobile', [])),
+            ...array_keys((array) $request->input('city_focus', [])),
         ]);
         foreach (City::whereIn('id', $ids)->pluck('id') as $id) {
             $this->save($page->key, $id, $request->file("city.{$id}"), $request->file("city_mobile.{$id}"),
-                $request->boolean("remove.city.{$id}"), $request->boolean("remove.city_mobile.{$id}"));
+                $request->boolean("remove.city.{$id}"), $request->boolean("remove.city_mobile.{$id}"),
+                $request->filled("city_focus.{$id}") ? (int) $request->input("city_focus.{$id}") : null);
         }
     }
 
     /**
      * Tek resim alanı (genel ya da bir şehir): yeni dosya yüklenir ya da kaldırılır; ikisi de boşalırsa kayıt silinir.
      */
-    private function save(string $pageKey, ?int $cityId, $desktop, $mobile, bool $removeDesktop, bool $removeMobile): void
+    private function save(string $pageKey, ?int $cityId, $desktop, $mobile, bool $removeDesktop, bool $removeMobile, ?int $focus = null): void
     {
-        if (!$desktop && !$mobile && !$removeDesktop && !$removeMobile) {
+        if (!$desktop && !$mobile && !$removeDesktop && !$removeMobile && $focus === null) {
             return;
         }
 
@@ -128,6 +134,12 @@ class PageHeroController extends Controller
         } elseif ($removeMobile && $banner->image_mobile) {
             $this->uploader->delete($banner->image_mobile);
             $banner->image_mobile = null;
+        }
+
+        if ($focus !== null) {
+            $banner->focus = $focus;
+        } elseif (!$banner->focus) {
+            $banner->focus = 50;
         }
 
         if ($banner->image || $banner->image_mobile) {

@@ -45,7 +45,7 @@
                         </span>
                         <span data-position class="w-5 shrink-0 text-center text-sm font-semibold text-slate-400">{{ $loop->iteration }}</span>
                         <span class="h-12 w-16 shrink-0 overflow-hidden rounded-lg bg-slate-100">
-                            @if ($blog->cover_path)<img src="{{ \App\Services\ImageUploader::url($blog->cover_path, 'sm') }}" alt="" class="size-full object-cover">@endif
+                            @if ($blog->cover_path)<img src="{{ \App\Services\ImageUploader::url($blog->cover_path, 'sm') }}" alt="" class="size-full object-cover" style="object-position: {{ $blog->cover_focus ?? 50 }}% center">@endif
                         </span>
                         <div class="min-w-0 flex-1">
                             <p class="flex items-center gap-2"><span class="truncate font-semibold text-slate-900">{{ $blog->title }}</span><span data-hero-badge class="hidden shrink-0 rounded-md bg-red-50 px-1.5 py-0.5 text-[11px] font-semibold text-red-700 ring-1 ring-red-200"></span></p>

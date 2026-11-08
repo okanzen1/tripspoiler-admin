@@ -1,5 +1,12 @@
 @import 'tailwindcss';
 
+/* Toast/modallarda sayfa kaymasın: kaydırma çubuğu alanı sabit kalsın */
+html {
+    scrollbar-gutter: stable;
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
+}
+
 /* Tıklanabilir satır/kart affordance (admin paneli) */
 main li:has(> a[href]),
 main tr:has(> td > a[href]),

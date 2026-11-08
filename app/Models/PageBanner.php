@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class PageBanner extends Model
 {
-    protected $fillable = ['page_key', 'city_id', 'image', 'image_mobile'];
+    protected $fillable = ['page_key', 'city_id', 'image', 'image_mobile', 'focus'];
 
     public function city(): BelongsTo
     {

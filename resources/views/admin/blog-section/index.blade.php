@@ -105,7 +105,7 @@
                     <div class="flex items-center gap-3 px-3 py-2.5" data-picker-row="{{ $blog->id }}" data-name="{{ $blog->title }}" data-thumb="{{ $blog->coverUrl('sm') }}"
                         data-search="{{ mb_strtolower(implode(' ', array_filter((array) $blog->getTranslations('title')))) }}">
                         <span class="h-10 w-14 shrink-0 overflow-hidden rounded-lg bg-slate-100">
-                            @if ($blog->cover_path) <img src="{{ $blog->coverUrl('sm') }}" alt="" loading="lazy" class="size-full object-cover"> @endif
+                            @if ($blog->cover_path) <img src="{{ $blog->coverUrl('sm') }}" alt="" loading="lazy" class="size-full object-cover" style="object-position: {{ $blog->cover_focus ?? 50 }}% center"> @endif
                         </span>
                         <span class="min-w-0 flex-1">
                             <span class="block truncate text-sm font-medium text-slate-900">{{ $blog->title }}</span>

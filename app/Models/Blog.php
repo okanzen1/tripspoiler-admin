@@ -19,7 +19,7 @@ class Blog extends Model
     public const SITE_PATH = 'blog';
 
     protected $fillable = [
-        'city_id', 'title', 'slug', 'excerpt', 'content', 'tags', 'cover_path',
+        'city_id', 'title', 'slug', 'excerpt', 'content', 'tags', 'cover_path', 'cover_focus',
         'meta_title', 'meta_description', 'active', 'published_at',
     ];
 

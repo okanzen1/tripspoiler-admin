@@ -198,12 +198,12 @@
     <script>
         (() => {
             const toast = document.createElement('div');
-            toast.className = 'hidden fixed right-6 top-6 z-[9999] max-w-sm rounded-2xl px-5 py-3 text-sm font-semibold shadow-lg ring-1';
+            toast.className = 'hidden fixed right-4 top-4 z-[9999] max-w-[calc(100vw-2rem)] rounded-2xl px-5 py-3 text-sm font-semibold shadow-lg ring-1';
             document.body.appendChild(toast);
             let toastTimer;
             const showToast = (msg, ok = true) => {
                 toast.textContent = msg;
-                toast.className = 'fixed right-6 top-6 z-[9999] max-w-sm rounded-2xl px-5 py-3 text-sm font-semibold shadow-lg ring-1 ' + (ok ? 'bg-emerald-50 text-emerald-800 ring-emerald-200' : 'bg-red-50 text-red-700 ring-red-200');
+                toast.className = 'fixed right-4 top-4 z-[9999] max-w-[calc(100vw-2rem)] rounded-2xl px-5 py-3 text-sm font-semibold shadow-lg ring-1 ' + (ok ? 'bg-emerald-50 text-emerald-800 ring-emerald-200' : 'bg-red-50 text-red-700 ring-red-200');
                 clearTimeout(toastTimer);
                 toastTimer = setTimeout(() => toast.classList.add('hidden'), 4000);
             };

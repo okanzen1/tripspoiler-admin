@@ -83,7 +83,7 @@
         {{-- 3. Kapak görseli --}}
         <section data-step hidden class="space-y-5">
             <x-admin.step-heading :title="__('Kapak görseli')" :description="__('Blog listesinde ve yazının en üstünde görünür. Yatay (ör. 1600x900) bir görsel en iyisi.')" />
-            <x-admin.image-upload name="cover" :label="__('Kapak')" :current="$blog->coverUrl()" placeholder="{{ __('Görsel yok') }}" :hint="__('JPG, PNG ya da WebP · en fazla 5 MB · 1600 px\'e küçültülür')" />
+            <x-admin.image-upload name="cover" :label="__('Kapak')" :current="$blog->coverUrl()" :focus="$blog->cover_focus ?? 50" placeholder="{{ __('Görsel yok') }}" :hint="__('JPG, PNG ya da WebP · en fazla 5 MB · 1600 px\'e küçültülür')" />
         </section>
 
         {{-- 4. Etiketler ve aktiviteler --}}
