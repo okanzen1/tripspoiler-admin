@@ -64,6 +64,7 @@ class SiteSettingsController extends Controller
             'hero_image_mobile' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:' . self::MAX_KB, 'dimensions:min_width=720,min_height=1100'],
             'remove_hero_image_mobile' => ['boolean'],
             'hero_focus' => ['required', 'integer', 'between:0,100'],
+            'hero_focus_mobile' => ['required', 'integer', 'between:0,100'],
             'hero_overlay' => ['required', Rule::in(HeroSettings::OVERLAYS)],
             'hero_featured' => ['nullable', 'array', 'max:' . HeroSettings::FEATURED_MAX],
             'hero_featured.*' => ['nullable', 'integer', Rule::exists('activities', 'id')],
@@ -112,6 +113,7 @@ class SiteSettingsController extends Controller
         }
 
         Setting::put('hero_focus', (string) $data['hero_focus']);
+        Setting::put('hero_focus_mobile', (string) $data['hero_focus_mobile']);
         Setting::put('hero_overlay', $data['hero_overlay']);
 
         // Kart seçimleri: boş bırakılanlar sitede otomatik dolar

@@ -145,7 +145,7 @@
                             <input type="range" name="hero_focus" min="0" max="100" step="5" value="{{ old('hero_focus', $hero['focus']) }}" class="w-full accent-brand-900" data-hero-focus>
                             <span class="text-xs font-medium text-slate-500">{{ __('Sağ') }}</span>
                         </div>
-                        <p class="mt-1 text-xs text-slate-500">{{ __('Ekran dar olduğunda (ör. telefonda) resmin bir kısmı kesilir; kaydırarak hangi tarafın görüneceğini seç.') }}</p>
+                        <p class="mt-1 text-xs text-slate-500">{{ __('Bilgisayar ekranında resmin bir kısmı kesilirse hangi tarafın görüneceğini seç. Telefonun ayarı aşağıda ayrı.') }}</p>
                         @error('hero_focus') <p class="mt-1 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
                     </div>
                 </div>
@@ -176,7 +176,7 @@
                     <div class="mt-6 flex flex-col gap-5 rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200 sm:flex-row">
                         <div class="relative h-56 w-[7.5rem] shrink-0 overflow-hidden rounded-[1.4rem] border-4 border-slate-900 bg-slate-900">
                             <img src="{{ $hero['image_mobile_url'] ?: $hero['image_url'] }}" alt="" data-preview="mobile" @class(['absolute inset-0 size-full object-cover', 'hidden' => !($hero['image_mobile_url'] ?: $hero['image_url'])])
-                                style="object-position: {{ $hero['image_mobile_url'] ? '50' : $hero['focus'] }}% center">
+                                style="object-position: {{ $hero['focus_mobile'] }}% center">
                             <div class="absolute inset-0" data-preview-overlay></div>
                             <div class="absolute left-2.5 right-2.5 top-10 space-y-1">
                                 <div class="h-2 w-full rounded bg-white/95"></div>
@@ -199,6 +199,16 @@
                                         {{ __('Telefon resmini kaldır') }}
                                     </label>
                                 @endif
+                            </div>
+                            {{-- Telefonun kendi kadrajı (masaüstünden bağımsız) --}}
+                            <div class="max-w-md pt-2">
+                                <p class="text-sm font-semibold text-slate-900">{{ __('Telefonda kadraj: resmin hangi tarafı görünsün?') }}</p>
+                                <div class="mt-2 flex items-center gap-3">
+                                    <span class="text-xs font-medium text-slate-500">{{ __('Sol') }}</span>
+                                    <input type="range" name="hero_focus_mobile" min="0" max="100" step="5" value="{{ old('hero_focus_mobile', $hero['focus_mobile']) }}" class="w-full accent-brand-900" data-hero-focus-mobile>
+                                    <span class="text-xs font-medium text-slate-500">{{ __('Sağ') }}</span>
+                                </div>
+                                @error('hero_focus_mobile') <p class="mt-1 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
                             </div>
                             <p class="hidden text-xs font-medium" data-file-info="mobile"></p>
                             @error('hero_image_mobile') <p class="text-xs font-medium text-red-600">{{ $message }}</p> @enderror
@@ -527,10 +537,9 @@
                 const value = form.querySelector('[data-hero-overlay]:checked')?.value ?? 'medium';
                 form.querySelectorAll('[data-preview-overlay]').forEach(el => el.style.background = overlays[value]);
             };
-            const applyFocus = () => {
-                desktop.forEach(img => img.style.objectPosition = focus.value + '% center');
-                if (!hasMobile) mobile.style.objectPosition = focus.value + '% center';
-            };
+            const focusMobile = form.querySelector('[data-hero-focus-mobile]');
+            const applyFocus = () => desktop.forEach(img => img.style.objectPosition = focus.value + '% center');
+            const applyFocusMobile = () => mobile.style.objectPosition = focusMobile.value + '% center';
 
             // Büyük resim tarayıcıda küçültüldüyse (image-compress.js) eski/yeni boyutu sakla
             form.querySelectorAll('[data-hero-file]').forEach(input => input.addEventListener('image:compressed', (event) => {
@@ -574,11 +583,13 @@
                     form.querySelector('[data-file-label=hero_image]').textContent = @json(__('Başka resim seç'));
                 } else {
                     hasMobile = true;
-                    mobile.src = url; mobile.classList.remove('hidden'); mobile.style.objectPosition = '50% center';
+                    mobile.src = url; mobile.classList.remove('hidden');
+                    focusMobile.value = 50; applyFocusMobile(); // yeni dik resim: ortadan başla
                 }
             }));
 
             focus.addEventListener('input', applyFocus);
+            focusMobile.addEventListener('input', applyFocusMobile);
             form.querySelectorAll('[data-hero-overlay]').forEach(el => el.addEventListener('change', applyOverlay));
             applyOverlay();
 
