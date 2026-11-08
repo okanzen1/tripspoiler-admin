@@ -363,10 +363,10 @@
                 if (event.target.matches('[data-hero-focus]')) {
                     form.querySelectorAll('[data-hero-img], [data-live-img], [data-preview]').forEach((img) => img.style.objectPosition = event.target.value + '% center');
                 }
+                // Kadraj tek değer: aynı bölümdeki masaüstü VE telefon önizlemesi birlikte değişir (sitede ikisine de uygulanır)
                 if (event.target.matches('[data-banner-focus]')) {
-                    let node = event.target.parentElement;
-                    while (node && !node.querySelector('[data-preview]')) node = node.parentElement;
-                    node?.querySelectorAll('[data-preview]').forEach((img) => img.style.objectPosition = event.target.value + '% center');
+                    const scope = event.target.closest('[data-banner-slot], li') ?? form;
+                    scope.querySelectorAll('[data-preview]').forEach((img) => img.style.objectPosition = event.target.value + '% center');
                 }
                 if (event.target.name === 'overlay') form.querySelector('[data-hero-overlay]').className = 'absolute inset-0 bg-gradient-to-r ' + event.target.dataset.classes + ' to-transparent';
             });

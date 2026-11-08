@@ -1,5 +1,5 @@
 {{-- Banner resim alanı: masaüstü (sayfadaki oranda) + telefon (telefon çerçevesinde) önizleme, seç / kaldır --}}
-<div class="mt-5 flex flex-col gap-5 lg:flex-row lg:items-start">
+<div class="mt-5 flex flex-col gap-5 lg:flex-row lg:items-start" data-banner-slot>
     {{-- MASAÜSTÜ --}}
     <div class="min-w-0 flex-1 space-y-3" data-banner-box>
         <p class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">

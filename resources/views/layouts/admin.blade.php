@@ -214,6 +214,65 @@
                 toastTimer = setTimeout(() => toast.classList.add('hidden'), 4000);
             };
 
+            // Kayıt sırasında sayfayı kilitleyen katman: dönen simge, "Kaydediliyor…", resim yüklenirken yüzde.
+            // Bu sürede hiçbir şeye tıklanamaz, klavyeyle de işlem yapılamaz (inert).
+            let lock;
+            const lockText = {
+                saving: @json(__('Kaydediliyor…')),
+                uploading: @json(__('Resimler yükleniyor')),
+                processing: @json(__('Resimler işleniyor…')),
+                leaving: @json(__('Açılıyor…')),
+                deleting: @json(__('Siliniyor…')),
+            };
+            const setLock = (text, percent = null) => {
+                if (!lock) {
+                    lock = document.createElement('div');
+                    lock.setAttribute('role', 'alertdialog');
+                    lock.setAttribute('aria-busy', 'true');
+                    lock.className = 'fixed inset-0 z-[9990] grid cursor-wait place-items-center bg-slate-900/25 opacity-0 backdrop-blur-[2px] transition-opacity duration-150';
+                    lock.innerHTML = `
+                        <div class="flex min-w-[15rem] items-center gap-3.5 rounded-2xl bg-white px-5 py-4 shadow-2xl ring-1 ring-slate-200">
+                            <svg class="size-6 shrink-0 animate-spin text-brand-900" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-20"/><path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+                            <div class="min-w-0 flex-1">
+                                <p data-lock-text class="text-sm font-semibold text-slate-900"></p>
+                                <div data-lock-bar class="mt-2 hidden h-1.5 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full bg-brand-900 transition-[width] duration-200" style="width:0"></div></div>
+                            </div>
+                        </div>`;
+                    // Arkadaki her şey tıklanamaz ve klavyeyle erişilemez
+                    [...document.body.children].forEach((el) => { if (el !== lock && el.tagName !== 'SCRIPT') { el.dataset.wasInert = el.inert ? '1' : ''; el.inert = true; } });
+                    document.activeElement?.blur?.();
+                    document.body.appendChild(lock);
+                    requestAnimationFrame(() => lock.classList.replace('opacity-0', 'opacity-100'));
+                }
+                lock.querySelector('[data-lock-text]').textContent = percent === null ? text : `${text} %${percent}`;
+                const bar = lock.querySelector('[data-lock-bar]');
+                bar.classList.toggle('hidden', percent === null);
+                if (percent !== null) bar.firstElementChild.style.width = percent + '%';
+            };
+            const unlock = () => {
+                if (!lock) return;
+                [...document.body.children].forEach((el) => { if ('wasInert' in el.dataset) { el.inert = el.dataset.wasInert === '1'; delete el.dataset.wasInert; } });
+                lock.remove();
+                lock = null;
+            };
+
+            // XMLHttpRequest: fetch'ten farklı olarak yükleme ilerlemesini verir (resimler için yüzde)
+            const send = (url, body, onUpload) => new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', url);
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.setRequestHeader('Accept', 'application/json');
+                xhr.withCredentials = true;
+                xhr.upload.onprogress = (ev) => ev.lengthComputable && onUpload(Math.round(ev.loaded / ev.total * 100));
+                xhr.onload = () => {
+                    let data = {};
+                    try { data = JSON.parse(xhr.responseText); } catch {}
+                    resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, data });
+                };
+                xhr.onerror = () => reject(new Error('network'));
+                xhr.send(body);
+            });
+
             document.addEventListener('submit', async (e) => {
                 const form = e.target;
                 if (!(form instanceof HTMLFormElement)) return;
@@ -245,17 +304,20 @@
                 }
 
                 form.dataset.ajaxBusy = '1';
-                const btn = form.querySelector('button[type="submit"], input[type="submit"]');
-                if (btn) btn.disabled = true;
+                // Formun içindeki ve dışından form="…" ile bağlı (ör. alttaki "Değişiklikleri kaydet") bütün butonlar pasif
+                const buttons = [...form.querySelectorAll('button[type="submit"], button:not([type]), input[type="submit"]'),
+                    ...(form.id ? document.querySelectorAll(`button[form="${CSS.escape(form.id)}"]`) : [])];
+                buttons.forEach((b) => { b.disabled = true; });
+                const hasFiles = fileBytes > 0;
+                setLock(isDelete ? lockText.deleting : lockText.saving);
+                let leaving = false;
 
                 try {
-                    const res = await fetch(form.action, {
-                        method: 'POST',
-                        body: new FormData(form, e.submitter?.form === form ? e.submitter : undefined),
-                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-                        credentials: 'same-origin',
+                    const res = await send(form.action, new FormData(form, e.submitter?.form === form ? e.submitter : undefined), (percent) => {
+                        if (!hasFiles) return;
+                        percent < 100 ? setLock(lockText.uploading, percent) : setLock(lockText.processing);
                     });
-                    const data = await res.json().catch(() => ({}));
+                    const data = res.data;
 
                     if (res.ok && (data.success || data.redirect)) {
                         if (data.success) showToast(data.success);
@@ -272,7 +334,9 @@
                                 await window.liveRefresh?.(form);
                             }
                         } else {
-                            setTimeout(() => { window.location.href = target.href; }, data.success ? 700 : 0);
+                            leaving = true; // yeni sayfa açılana kadar kilit kalsın
+                            setLock(lockText.leaving);
+                            setTimeout(() => { window.location.href = target.href; }, data.success ? 500 : 0);
                         }
                     } else if (res.status === 422 && data.errors) {
                         const msgs = Object.values(data.errors).flat();
@@ -287,17 +351,22 @@
                         showToast(data.error, false);
                     } else {
                         // Beklenmeyen yanıt: normal submit'e düş
+                        leaving = true;
                         delete form.dataset.ajaxBusy;
                         form.submit();
                         return;
                     }
                 } catch (err) {
                     // Ağ hatası: normal submit'e düş
+                    leaving = true;
                     delete form.dataset.ajaxBusy;
                     form.submit();
                     return;
                 } finally {
-                    if (btn) btn.disabled = false;
+                    if (!leaving) {
+                        buttons.forEach((b) => { b.disabled = false; });
+                        unlock();
+                    }
                     delete form.dataset.ajaxBusy;
                 }
             }, true);
