@@ -74,7 +74,10 @@
                         <button type="submit" class="rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-700">{{ __('Diğer dillere çevir (:count)', ['count' => $sectionPending]) }}</button>
                     </form>
                 @else
-                    <span class="rounded-xl bg-emerald-50 px-3.5 py-2 text-sm font-semibold text-emerald-700">✓ {{ __('Tüm diller güncel') }}</span>
+                    <div class="flex flex-wrap items-center gap-2">
+                            <span class="rounded-xl bg-emerald-50 px-3.5 py-2 text-sm font-semibold text-emerald-700">✓ {{ __('Tüm diller güncel') }}</span>
+                            <x-admin.retranslate type="section" :model="$section" />
+                        </div>
                 @endif
             </div>
         </x-admin.card>

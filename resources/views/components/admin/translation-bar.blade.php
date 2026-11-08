@@ -44,10 +44,13 @@
                 </button>
             </form>
         @elseif ($status)
+            <div class="flex flex-wrap items-center gap-2">
             <span class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3.5 py-2 text-sm font-semibold text-emerald-700">
                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7" /></svg>
                 {{ __('Tüm çeviriler güncel') }}
             </span>
+            <x-admin.retranslate :type="$type" :model="$model" />
+            </div>
         @endif
     </div>
 

@@ -196,6 +196,8 @@
             } catch {}
         });
     </script>
+    {{-- Başka formların içindeki butonlara bağlı ayrı formlar (ör. x-admin.retranslate) --}}
+    @stack('forms')
     @stack('scripts')
 
     {{-- Global AJAX form submit: sayfa yenilenmeden kaydet --}}

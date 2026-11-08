@@ -305,7 +305,10 @@
                             {{ __('Diğer dillere çevir (:count)', ['count' => $textPending]) }}
                         </button>
                     @else
-                        <span class="rounded-xl bg-emerald-50 px-3.5 py-2 text-sm font-semibold text-emerald-700">✓ {{ __('Tüm diller güncel') }}</span>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="rounded-xl bg-emerald-50 px-3.5 py-2 text-sm font-semibold text-emerald-700">✓ {{ __('Tüm diller güncel') }}</span>
+                            <x-admin.retranslate type="hero" :model="$heroText" />
+                        </div>
                     @endif
                 </div>
                 <div class="flex flex-wrap gap-2 border-t border-slate-100 px-5 py-4">
