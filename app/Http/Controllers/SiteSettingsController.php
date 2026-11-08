@@ -75,6 +75,7 @@ class SiteSettingsController extends Controller
             'text.title_2' => ['nullable', 'string', 'max:40'],
             'text.title_3' => ['nullable', 'string', 'max:40'],
             'text.title_highlight' => ['nullable', 'string', 'max:40'],
+            'text.subtitle' => ['nullable', 'string', 'max:80'],
             'text.description' => ['nullable', 'string', 'max:260'],
         ], [
             'hero_image.dimensions' => __('Masaüstü görseli en az 1600 × 800 piksel olmalı (önerilen 2560 × 1440).'),

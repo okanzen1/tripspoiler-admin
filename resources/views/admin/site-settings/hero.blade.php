@@ -235,10 +235,11 @@
             $textFields = [
                 'eyebrow' => ['Üstteki küçük yazı', 'Başlığın üstünde, kırmızı çizginin yanındaki küçük yazı.', 60],
                 'title_1' => ['Başlık 1. satır', null, 40],
-                'title_2' => ['Başlık 2. satır', null, 40],
-                'title_3' => ['Başlık 3. satır (beyaz kısım)', 'Bu satırın sonuna kırmızı kelime eklenir.', 40],
-                'title_highlight' => ['Başlık 3. satır (kırmızı kısım)', null, 40],
-                'description' => ['Açıklama', 'Başlığın altındaki bir iki cümlelik yazı.', 260],
+                'title_2' => ['Başlık 2. satır', 'İsteğe bağlı.', 40],
+                'title_3' => ['Başlık 3. satır', 'İsteğe bağlı. 2 satırlık başlık için boş bırak.', 40],
+                'title_highlight' => ['Kırmızı kelime', 'Başlığın en son dolu satırının sonuna kırmızıyla eklenir.', 40],
+                'subtitle' => ['Alt başlık', 'Başlığın altındaki kalın kısa satır. İsteğe bağlı.', 80],
+                'description' => ['Açıklama', 'En alttaki bir iki cümlelik yazı.', 260],
             ];
             $textStatus = app(\App\Services\Translation\ModelTranslator::class)->status($heroText);
             $textPending = count(array_filter($textStatus, fn ($state) => $state !== 'ok'));
@@ -283,12 +284,9 @@
                         @endif
                         <div class="relative">
                             <p class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/75"><span class="h-px w-5 bg-red-500"></span><span data-preview-text="eyebrow"></span></p>
-                            <p class="mt-3 text-3xl font-extrabold leading-[1] tracking-tight">
-                                <span class="block" data-preview-text="title_1"></span>
-                                <span class="block" data-preview-text="title_2"></span>
-                                <span class="block"><span data-preview-text="title_3"></span> <span class="text-red-500" data-preview-text="title_highlight"></span></span>
-                            </p>
-                            <p class="mt-3 text-sm leading-relaxed text-white/85" data-preview-text="description"></p>
+                            <p class="mt-3 text-3xl font-extrabold leading-[1] tracking-tight" data-preview-title></p>
+                            <p class="mt-3 text-base font-semibold text-white" data-preview-text="subtitle"></p>
+                            <p class="mt-2 text-sm leading-relaxed text-white/85" data-preview-text="description"></p>
                         </div>
                     </div>
                 </div>
@@ -581,9 +579,29 @@
             applyOverlay();
 
             /* ---------- 2: yazı önizlemesi ---------- */
+            // Başlık: dolu satırlar alt alta, kırmızı kelime en son dolu satırın sonuna (sitedeki gibi)
+            const heroTitle = form.querySelector('[data-preview-title]');
+            const heroValue = (field) => (form.querySelector(`[data-hero-text="${field}"]`)?.value || '').trim();
+            const renderTitle = () => {
+                const lines = ['title_1', 'title_2', 'title_3'].map(heroValue).filter(Boolean);
+                const highlight = heroValue('title_highlight');
+                if (!lines.length && highlight) lines.push('');
+                heroTitle.replaceChildren(...lines.map((line, i) => {
+                    const row = document.createElement('span');
+                    row.className = 'block';
+                    row.textContent = line;
+                    if (highlight && i === lines.length - 1) {
+                        const red = document.createElement('span');
+                        red.className = 'text-red-500';
+                        red.textContent = (line ? ' ' : '') + highlight;
+                        row.append(red);
+                    }
+                    return row;
+                }));
+            };
             form.querySelectorAll('[data-hero-text]').forEach(input => {
                 const target = form.querySelector(`[data-preview-text="${input.dataset.heroText}"]`);
-                const update = () => target.textContent = input.value;
+                const update = () => target ? (target.textContent = input.value, target.classList.toggle('hidden', !input.value.trim())) : renderTitle();
                 input.addEventListener('input', update);
                 update();
             });
