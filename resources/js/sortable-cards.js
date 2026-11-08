@@ -59,7 +59,9 @@ document.querySelectorAll('[data-sortable-grid]').forEach((grid) => {
         const target = e.target.closest('[data-card]');
         if (!target || target === dragged || target.parentNode !== grid) return;
         const box = target.getBoundingClientRect();
-        const after = (e.clientY - box.top) / box.height > 0.5 || (e.clientX - box.left) / box.width > 0.5;
+        // Liste (data-sortable-list): sadece dikey konum; ızgara: dikey ya da yatay
+        const below = (e.clientY - box.top) / box.height > 0.5;
+        const after = grid.hasAttribute('data-sortable-list') ? below : below || (e.clientX - box.left) / box.width > 0.5;
         grid.insertBefore(dragged, after ? target.nextSibling : target);
     });
     grid.addEventListener('drop', (e) => e.preventDefault());

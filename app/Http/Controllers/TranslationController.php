@@ -120,6 +120,9 @@ class TranslationController extends Controller
         }
 
         $names = Language::whereIn('code', $done)->pluck('native_name')->implode(', ');
+        if ($done) {
+            \App\Support\ActivityLogger::write('translated', \Illuminate\Support\Str::snake(class_basename($model)), $model->getKey(), \App\Support\ActivityLogger::label($model), ['Diller' => [null, $names]]);
+        }
 
         return back()->with('success', $done
             ? __('Çevrildi: :languages', ['languages' => $names])
@@ -150,14 +153,14 @@ class TranslationController extends Controller
 
         // Kullanıcı sayfadan ayrılsa da süreç devam etsin
         ignore_user_abort(true);
-        defer(function () use ($key, $model, $locales) {
+        defer(function () use ($key, $model, $locales, $type, $title) {
             ignore_user_abort(true);
             set_time_limit(900);
             try {
                 $done = $this->translator->translate($model, $locales, fn (string $locale) => TranslationJobs::progress($key, $locale));
-                TranslationJobs::finish($key, __('Çevrildi: :languages', [
-                    'languages' => Language::whereIn('code', $done)->pluck('native_name')->implode(', '),
-                ]));
+                $names = Language::whereIn('code', $done)->pluck('native_name')->implode(', ');
+                TranslationJobs::finish($key, __('Çevrildi: :languages', ['languages' => $names]));
+                \App\Support\ActivityLogger::write('translated', \Illuminate\Support\Str::snake(class_basename($model)), $model->getKey(), (string) $title, ['Diller' => [null, $names]]);
             } catch (Throwable $e) {
                 report($e);
                 TranslationJobs::fail($key, __('Çeviri yapılamadı: :error', ['error' => $e->getMessage()]));

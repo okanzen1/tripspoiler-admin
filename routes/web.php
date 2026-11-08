@@ -175,6 +175,7 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
 Route::middleware(['auth', 'role:admin'])->prefix('yonetim')->group(function () {
     Route::get('/', [ManagementController::class, 'index'])->name('management.index');
     Route::get('/roller', [ManagementController::class, 'roles'])->name('roles.index');
+    Route::get('/islem-kaydi', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index');
 
     Route::resource('kullanicilar', UserController::class)
         ->except('show')

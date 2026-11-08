@@ -86,6 +86,15 @@
                 'color' => \App\Support\SectionColor::forRoute('redirects'),
                 'icon' => '<path d="M4 7h11l-3-3M20 17H9l3 3" />',
             ],
+            [
+                'key' => 'activity-logs',
+                'title' => 'İşlem kaydı',
+                'description' => 'Panelde kim, ne zaman, neyi değiştirdi; girişler ve başarısız denemeler.',
+                'url' => route('activity-logs.index'),
+                'stat' => __('Bugün :count işlem', ['count' => \App\Models\ActivityLog::where('created_at', '>=', today())->count()]),
+                'color' => \App\Support\SectionColor::forRoute('activity-logs'),
+                'icon' => '<path d="M12 8v4l3 2" /><circle cx="12" cy="12" r="9" />',
+            ],
         ];
         $cards = \App\Http\Controllers\ManagementController::sorted($cards, 'management_order');
     @endphp

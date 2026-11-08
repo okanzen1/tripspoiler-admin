@@ -28,5 +28,8 @@ class AppServiceProvider extends ServiceProvider
         Route::resourceVerbs(['create' => 'yeni', 'edit' => 'duzenle']);
 
         Gate::define('admin', fn (User $user) => $user->isAdmin());
+
+        // Panel işlem kaydı: tüm model değişiklikleri + giriş/çıkış (Yönetim > İşlem kaydı)
+        \App\Support\ActivityLogger::register();
     }
 }
