@@ -70,7 +70,7 @@
             <span class="font-medium normal-case tracking-normal text-slate-500">
                 {{ $start->format('H:i') }}–{{ $end->format('H:i') }} · {{ __(':count dk', ['count' => $minutes]) }}
                 @if ($entry)
-                    · {{ __('Kaynak') }}: {{ $entry->utm_source ?: ($entry->referrer_host ?: __('Doğrudan')) }}
+                    · {{ __('Kaynak') }}: <x-admin.referrer :visit="$entry" class="normal-case" />
                 @endif
             </span>
         </h2>
@@ -94,7 +94,7 @@
                             <span class="min-w-0 flex-1">
                                 <span class="block truncate font-medium text-slate-800">{{ $item->path }}</span>
                                 @if ($item->utm_source || $item->referrer_host)
-                                    <span class="block truncate text-xs text-slate-400">{{ __('Geldiği yer') }}: {{ $item->utm_source ?: $item->referrer_host }}</span>
+                                    <span class="flex min-w-0 items-center gap-1 text-xs text-slate-400">{{ __('Geldiği yer') }}: <x-admin.referrer :visit="$item" /></span>
                                 @endif
                             </span>
                             <span class="hidden shrink-0 text-xs uppercase text-slate-400 sm:block">{{ $item->locale }}</span>

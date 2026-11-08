@@ -55,13 +55,7 @@
                             </span>
                         </td>
                         <td class="max-w-[12rem] px-3 py-2.5">
-                            @if ($first->utm_source)
-                                <span class="rounded-md bg-violet-50 px-1.5 py-0.5 text-xs font-medium text-violet-700">{{ $first->utm_source }}</span>
-                            @elseif ($first->referrer_host)
-                                <span class="block truncate text-slate-700">{{ $first->referrer_host }}</span>
-                            @else
-                                <span class="text-slate-400">{{ __('Doğrudan') }}</span>
-                            @endif
+                            <x-admin.referrer :visit="$first" />
                         </td>
                         <td class="whitespace-nowrap px-3 py-2.5 text-slate-700">
                             {{ $deviceName[$last->device] ?? '—' }}
