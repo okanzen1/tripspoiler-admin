@@ -93,13 +93,13 @@
                         @endif
                         <div class="relative">
                             <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-red-400" data-live-out="eyebrow" data-example="{{ $fields['eyebrow'][2] }}"></p>
-                            <p class="mt-2 text-2xl font-extrabold leading-tight tracking-tight">
+                            <p class="mt-2 text-balance text-2xl font-extrabold leading-tight tracking-tight">
                                 @if ($page->key === 'blog')
                                     Istanbul<span class="mt-1 block text-base font-medium text-white/60" data-live-out="title" data-example="{{ $fields['title'][2] }}"></span>
                                 @elseif ($page->key === 'cities')
                                     Istanbul<span class="mt-1 block text-base font-bold text-white/90" data-live-out="title" data-example="{{ $fields['title'][2] }}"></span>
                                 @else
-                                    <span data-live-out="title" data-example="{{ $fields['title'][2] }}"></span><span class="block text-red-400" data-city-line>Istanbul</span>
+                                    <span data-live-out="title" data-example="{{ $fields['title'][2] }}"></span><span class="mt-1 block text-red-400" data-city-line>Istanbul</span>
                                 @endif
                             </p>
                             <p class="mt-3 line-clamp-3 text-xs leading-relaxed text-white/65" data-live-out="description" data-example="{{ $fields['description'][2] }}"></p>
