@@ -20,6 +20,11 @@ function summaryValue(form, name) {
     if (field.type === 'hidden' && field.dataset.label) return field.dataset.label;
     if (field.type === 'password') return '•'.repeat(8);
     if (field.type === 'radio') return field.dataset.label ?? field.value;
+    // Tarih: "2026-11-09" yerine "9 Kasım 2026"
+    if (field.type === 'date') {
+        const date = new Date(`${field.value}T12:00:00`);
+        return isNaN(date) ? field.value : date.toLocaleDateString(document.documentElement.lang || 'tr', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
     if (field.tagName === 'SELECT') return field.selectedOptions[0]?.textContent ?? field.value;
 
     return field.value;

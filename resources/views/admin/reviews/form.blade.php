@@ -86,7 +86,7 @@
             <section data-step hidden class="space-y-5">
                 <x-admin.step-heading :title="__('Özet')" :description="__('Bilgileri kontrol et, doğruysa yorumu ekle.')" />
                 <dl class="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
-                    @foreach (['Ad soyad' => 'name', 'Puan' => 'rating', 'Yorum' => 'comment', 'Yer' => 'activity_id', 'Onay durumu' => 'approved'] as $label => $name)
+                    @foreach (['Ad soyad' => 'name', 'Yorum tarihi' => 'review_date', 'Puan' => 'rating', 'Yorum' => 'comment', 'Yer' => 'activity_id', 'Onay durumu' => 'approved'] as $label => $name)
                         <div class="grid grid-cols-3 gap-4 px-5 py-3.5 text-sm">
                             <dt class="text-slate-500">{{ __($label) }}</dt>
                             <dd class="col-span-2 whitespace-pre-line font-medium text-slate-900" data-summary-for="{{ $name }}">—</dd>
