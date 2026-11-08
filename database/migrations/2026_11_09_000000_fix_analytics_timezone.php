@@ -12,6 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+            return; // DATE_ADD MySQL'e özel; testlerdeki boş SQLite veritabanında düzeltilecek kayıt yok
+        }
         foreach (['visits', 'affiliate_clicks'] as $table) {
             DB::table($table)->where('visitor_id', 'not like', 'demo_%')
                 ->update(['created_at' => DB::raw('DATE_ADD(created_at, INTERVAL 3 HOUR)')]);
@@ -20,6 +23,9 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (!in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+            return;
+        }
         foreach (['visits', 'affiliate_clicks'] as $table) {
             DB::table($table)->where('visitor_id', 'not like', 'demo_%')
                 ->update(['created_at' => DB::raw('DATE_SUB(created_at, INTERVAL 3 HOUR)')]);

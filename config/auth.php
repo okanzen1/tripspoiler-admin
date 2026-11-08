@@ -44,6 +44,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Claude uygulaması (MCP, routes/ai.php): OAuth erişim anahtarıyla gelir
+        'api' => [
+            'driver' => 'passport',
+            'provider' => 'users',
+        ],
     ],
 
     /*

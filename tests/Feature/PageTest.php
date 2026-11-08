@@ -34,7 +34,7 @@ class PageTest extends TestCase
         $this->actingAs(User::factory()->admin()->create())->put(route('pages.update', $page), [
             'meta_title' => 'About TripSpoiler',
             'meta_description' => 'Honest travel guides.',
-        ])->assertRedirect(route('pages.index'));
+        ])->assertRedirect(route('pages.edit', $page)); // kaydedince sayfanın kartlarına döner
 
         $page->refresh();
         $this->assertSame('About TripSpoiler', $page->meta_title);
@@ -45,7 +45,11 @@ class PageTest extends TestCase
     public function test_seeder_is_idempotent(): void
     {
         $this->seed(PageSeeder::class);
+        $count = Page::count();
 
-        $this->assertSame(8, Page::count());
+        $this->seed(PageSeeder::class); // ikinci kez çalışınca kopya oluşmamalı
+
+        $this->assertGreaterThan(0, $count);
+        $this->assertSame($count, Page::count());
     }
 }

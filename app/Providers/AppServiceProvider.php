@@ -29,6 +29,11 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('admin', fn (User $user) => $user->isAdmin());
 
+        // Claude uygulaması bağlanırken açılan izin ekranı (OAuth, routes/ai.php)
+        \Laravel\Passport\Passport::authorizationView(fn (array $parameters) => view('admin.auth.mcp-authorize', $parameters));
+        \Laravel\Passport\Passport::tokensExpireIn(now()->addDays(30));
+        \Laravel\Passport\Passport::refreshTokensExpireIn(now()->addMonths(6));
+
         // Panel işlem kaydı: tüm model değişiklikleri + giriş/çıkış (Yönetim > İşlem kaydı)
         \App\Support\ActivityLogger::register();
     }

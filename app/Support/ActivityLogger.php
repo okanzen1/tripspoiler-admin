@@ -27,6 +27,12 @@ class ActivityLogger
         \App\Models\TranslationState::class,
         \App\Models\Visit::class,
         \App\Models\AffiliateClick::class,
+        // Claude bağlantısının giriş anahtarları (teknik; bağlantı İşlem kaydı'nda "giriş" olarak görünmez)
+        \Laravel\Passport\Token::class,
+        \Laravel\Passport\RefreshToken::class,
+        \Laravel\Passport\AuthCode::class,
+        \Laravel\Passport\Client::class,
+        \Laravel\Passport\DeviceCode::class,
     ];
 
     /** Hiçbir zaman yazılmayan alanlar */
