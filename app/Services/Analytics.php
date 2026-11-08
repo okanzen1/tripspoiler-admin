@@ -167,6 +167,33 @@ class Analytics
         return $this->partnerNames ??= Partner::pluck('name', 'slug')->all();
     }
 
+    /**
+     * Canlı: son 5 dakikada sitede olanlar, şu an açık sayfalar ve son ziyaretler (IP, ülke/şehir, kaynak, cihaz).
+     *
+     * @return array{active: int, today: int, pages: Collection, recent: Collection}
+     */
+    public static function live(int $recent = 30): array
+    {
+        $since = now()->subMinutes(5);
+        $real = fn () => Visit::query()->where('visitor_id', 'not like', 'demo_%');
+
+        return [
+            'active' => $real()->where('created_at', '>=', $since)->distinct('visitor_id')->count('visitor_id'),
+            'today' => $real()->where('created_at', '>=', today())->distinct('visitor_id')->count('visitor_id'),
+            'pages' => $real()->where('created_at', '>=', $since)
+                ->selectRaw('path, COUNT(DISTINCT visitor_id) as total')->groupBy('path')->orderByDesc('total')->limit(6)->get(),
+            'recent' => $real()->latest('id')->limit($recent)->get(),
+        ];
+    }
+
+    /** Ülke kodu → bayrak emojisi */
+    public static function flag(?string $country): string
+    {
+        return $country && preg_match('/^[A-Z]{2}$/', $country)
+            ? mb_chr(0x1F1E6 + ord($country[0]) - 65) . mb_chr(0x1F1E6 + ord($country[1]) - 65)
+            : '🌐';
+    }
+
     public function hasDemoData(): bool
     {
         return Visit::where('visitor_id', 'like', 'demo_%')->exists();

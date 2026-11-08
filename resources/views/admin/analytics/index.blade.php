@@ -39,6 +39,11 @@
         </div>
     @endif
 
+    {{-- CANLI: 10 saniyede bir yenilenir (sekme açıkken) --}}
+    <div class="mb-6" data-live-analytics data-url="{{ route('analytics.live') }}">
+        @include('admin.analytics._live', ['live' => $live])
+    </div>
+
     @if (!$analytics->hasAnyData())
         <x-admin.card class="px-6 py-20 text-center">
             <div class="mx-auto grid size-14 place-items-center rounded-2xl bg-brand-50 text-brand-900">
@@ -133,3 +138,22 @@
         </div>
     @endif
 @endsection
+
+@push('scripts')
+    <script>
+        // Canlı bölüm: sekme görünürken 10 sn'de bir yenile (sayfa yenilenmez)
+        (() => {
+            const box = document.querySelector('[data-live-analytics]');
+            if (!box) return;
+            const refresh = async () => {
+                if (document.hidden) return;
+                try {
+                    const res = await fetch(box.dataset.url, { headers: { Accept: 'text/html' }, credentials: 'same-origin' });
+                    if (res.ok && !res.redirected) box.innerHTML = await res.text();
+                } catch { /* bir sonraki turda tekrar */ }
+            };
+            setInterval(refresh, 10000);
+            document.addEventListener('visibilitychange', () => !document.hidden && refresh());
+        })();
+    </script>
+@endpush

@@ -28,6 +28,12 @@ class AnalyticsController extends Controller
             'countries' => $analytics->countries(),
         ]);
 
-        return view('admin.analytics.index', ['analytics' => $analytics, ...$data]);
+        return view('admin.analytics.index', ['analytics' => $analytics, 'live' => Analytics::live(), ...$data]);
+    }
+
+    /** Canlı bölüm: sayfa 10 saniyede bir bunu çekip yerine koyar (önbelleksiz) */
+    public function live()
+    {
+        return view('admin.analytics._live', ['live' => Analytics::live()]);
     }
 }

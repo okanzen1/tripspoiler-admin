@@ -46,6 +46,7 @@ Route::middleware(['signed', 'throttle:20,1'])->prefix('abonelik/{subscriber}')-
 // Admin + editör
 Route::middleware(['auth', 'role:admin,editor'])->group(function () {
     Route::get('/', [AnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('/analitik/canli', [AnalyticsController::class, 'live'])->name('analytics.live');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
     // Bir kaydı (aktivite, blog, SSS, sayfa) diğer dillere çevir
     Route::get('/ceviri/{type}/{id}/{locale}', [TranslationController::class, 'edit'])->whereNumber('id')->name('translations.edit');
