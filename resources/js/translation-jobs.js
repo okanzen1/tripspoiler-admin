@@ -58,10 +58,8 @@ function card(job) {
             ? '<svg class="size-5 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>'
             : '<svg class="size-5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>';
     const heading = running ? t('Diğer dillere çevriliyor…') : failed ? t('Çeviri yapılamadı') : t('Çeviri tamamlandı');
-    const action = !running && !failed
-        ? (samePage(job.url)
-            ? `<button type="button" data-job-reload class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700">${escape(t('Sayfayı yenile'))}</button>`
-            : `<a href="${escape(job.url)}" class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700">${escape(t('Aç'))}</a>`)
+    const action = !running && !failed && !samePage(job.url)
+        ? `<a href="${escape(job.url)}" class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700">${escape(t('Aç'))}</a>`
         : '';
 
     return `
@@ -96,7 +94,6 @@ function render() {
         box.addEventListener('click', (e) => {
             const el = e.target.closest('[data-job]');
             if (!el) return;
-            if (e.target.closest('[data-job-reload]')) location.reload();
             if (e.target.closest('[data-job-close]')) dismiss(el.dataset.job);
         });
         document.body.append(box);
@@ -118,6 +115,8 @@ function upsert(job) {
     // Biten başarılı iş bir süre sonra kendiliğinden kapanır (hata kalır, kapatılana kadar)
     if (job.status === 'done' && before?.status !== 'done') {
         markSeen(job);
+        // Bu sayfanın kaydıysa çeviri durumları ve alanlar yerinde güncellensin (sayfa yenilenmez)
+        if (before && samePage(job.url)) window.liveRefresh?.();
         setTimeout(() => jobs.get(job.key)?.status === 'done' && dismiss(job.key), 12000);
     }
 }
@@ -210,3 +209,6 @@ if (jobs.size) {
     document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', render) : render();
     startPolling();
 }
+
+// Yerinde yenilenen bölgelerdeki butonlar da süren çeviri için pasif kalsın
+document.addEventListener('live:refreshed', lockButtons);

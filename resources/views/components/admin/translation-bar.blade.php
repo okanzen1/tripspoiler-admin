@@ -15,7 +15,7 @@
     ];
 @endphp
 
-<x-admin.card {{ $attributes->class('mb-5 overflow-hidden') }}>
+<x-admin.card {{ $attributes->class('mb-5 overflow-hidden')->merge(['data-live' => 'translations-' . $type . '-' . $model->getKey()]) }}>
     <div class="flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4">
         <div class="flex min-w-0 flex-1 items-center gap-3">
             <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-purple-500 text-white">

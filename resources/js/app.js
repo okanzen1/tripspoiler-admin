@@ -12,6 +12,7 @@ import './dropdown';
 import './sortable-cards';
 import './page-sections';
 import './confirm-dialog';
+import './live-refresh';
 import './translation-jobs';
 
 // Zengin metin editörü sadece gereken sayfalarda yüklensin

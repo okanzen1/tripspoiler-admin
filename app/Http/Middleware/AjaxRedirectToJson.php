@@ -18,6 +18,8 @@ class AjaxRedirectToJson
             $error = $session->get('error');
             $message = $success ?: ($error ?: __('İşlem tamamlandı.'));
             $type = $success ? 'success' : ($error ? 'error' : 'success');
+            // Mesaj sağ üstte gösterildi; sayfa yenilenmediği için bir sonraki sayfada tekrar banner olmasın
+            $session->forget(['success', 'error']);
 
             return response()->json([
                 $type => $message,

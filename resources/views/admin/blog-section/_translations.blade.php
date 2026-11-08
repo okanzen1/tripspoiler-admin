@@ -1,5 +1,5 @@
 {{-- Bölüm yazısının çeviri durumu: dil hapları (elle düzeltme) + çevir butonu (form="$formId") --}}
-<div class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-5 py-4 ring-1 ring-slate-200">
+<div class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-5 py-4 ring-1 ring-slate-200" data-live="translations-section-{{ $model->id }}">
     <div class="flex flex-wrap items-center gap-2">
         <span class="text-sm font-semibold text-slate-900">{{ __('Diğer diller') }}</span>
         @foreach (\App\Models\Language::targets() as $language)

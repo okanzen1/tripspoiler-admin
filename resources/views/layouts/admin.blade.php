@@ -197,7 +197,7 @@
         });
     </script>
     {{-- Başka formların içindeki butonlara bağlı ayrı formlar (ör. x-admin.retranslate) --}}
-    @stack('forms')
+    <div data-live="forms-stack">@stack('forms')</div>
     @stack('scripts')
 
     {{-- Global AJAX form submit: sayfa yenilenmeden kaydet --}}
@@ -228,6 +228,11 @@
                 const isDelete = method === 'DELETE' || form.querySelector('input[name="_method"][value="DELETE"]');
                 // Zaten işleniyorsa tekrar çalıştırma
                 if (form.dataset.ajaxBusy) return;
+                // Önce onay penceresi (confirm-dialog.js) ve resim küçültme (image-compress.js) bitsin; onlar formu yeniden gönderir
+                if (form.matches('[data-confirm]') && !form.dataset.confirmed) return;
+                if (form.hasAttribute('data-compressing')) return;
+                // Güncelleme (PUT/PATCH) ya da aynı sayfaya dönen işlem: sayfada kal, yerinde yenile
+                const spoofed = form.querySelector('input[name="_method"]')?.value?.toUpperCase();
 
                 e.preventDefault();
 
@@ -246,7 +251,7 @@
                 try {
                     const res = await fetch(form.action, {
                         method: 'POST',
-                        body: new FormData(form),
+                        body: new FormData(form, e.submitter?.form === form ? e.submitter : undefined),
                         headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
                         credentials: 'same-origin',
                     });
@@ -254,11 +259,20 @@
 
                     if (res.ok && (data.success || data.redirect)) {
                         if (data.success) showToast(data.success);
-                        if (isDelete) {
-                            // Silme işlemlerinde liste güncellensin
-                            setTimeout(() => { window.location.reload(); }, 600);
-                        } else if (data.redirect && data.redirect !== window.location.href) {
-                            setTimeout(() => { window.location.href = data.redirect; }, data.success ? 800 : 0);
+                        const target = data.redirect ? new URL(data.redirect, location.href) : null;
+                        const samePage = !target || target.pathname === location.pathname;
+                        // Sayfa değişmez: güncellemede (sunucu listeye yönlendirse de) ya da aynı sayfaya dönen işlemde.
+                        // Yeni kayıt oluşturma / silinen kaydın kendi sayfası: yeni adrese gidilir.
+                        const stay = samePage || (spoofed === 'PUT' || spoofed === 'PATCH');
+                        if (stay) {
+                            if (isDelete) {
+                                // Silinen satır listeden kalksın: sayfanın içeriğini yerinde yenile
+                                await window.removeRow?.(form);
+                            } else {
+                                await window.liveRefresh?.(form);
+                            }
+                        } else {
+                            setTimeout(() => { window.location.href = target.href; }, data.success ? 700 : 0);
                         }
                     } else if (res.status === 422 && data.errors) {
                         const msgs = Object.values(data.errors).flat();

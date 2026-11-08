@@ -98,6 +98,43 @@
             </a>
         @endif
 
+        {{-- ANASAYFA BÖLÜMLERİ: Yönetim > Bölümler'de düzenlenir (sıra, aç/kapa, yazılar) --}}
+        @if ($page->key === 'home')
+            @php
+                $homeLabels = [
+                    'steps' => 'Nasıl çalışır', 'blog' => 'Blog bölümü', 'features' => 'Özellik kartları', 'announcements' => 'Duyuru şeridi',
+                    'intro' => 'TripSpoiler nedir', 'social' => 'Sosyal medya', 'reviews' => 'Yorumlar', 'city_entry' => 'Şehir girişi', 'partners' => 'Destekçiler',
+                ];
+                $homeOn = array_values(array_filter(\App\Support\SiteSections::KEYS, fn ($key) => \App\Support\SiteSections::enabled($key)));
+            @endphp
+            <a href="{{ route('site-settings.index') }}" class="group relative block focus-visible:outline-none" data-card="sections">
+                <x-admin.card class="flex h-full flex-col overflow-hidden transition group-hover:-translate-y-1 group-hover:shadow-xl">
+                    {!! $handle !!}
+                    <div class="flex aspect-[16/8] flex-col justify-center gap-1.5 bg-slate-100 px-8 pl-12">
+                        @forelse (array_slice($homeOn, 0, 4) as $key)
+                            <div class="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm ring-1 ring-slate-200/70">
+                                <span class="text-slate-300">⋮⋮</span>{{ __($homeLabels[$key] ?? $key) }}
+                                <span class="ml-auto h-3 w-6 rounded-full bg-emerald-500"></span>
+                            </div>
+                        @empty
+                            <p class="text-center text-sm text-slate-500">{{ __('Açık bölüm yok') }}</p>
+                        @endforelse
+                        @if (count($homeOn) > 4)
+                            <p class="px-1 text-[11px] font-medium text-slate-500">{{ __('+ :n bölüm daha', ['n' => count($homeOn) - 4]) }}</p>
+                        @endif
+                    </div>
+                    <div class="flex flex-1 flex-col p-6">
+                        <div class="flex items-center justify-between gap-3">
+                            <p class="text-lg font-semibold text-slate-900">{{ __('Bölümler') }}</p>
+                            <span class="text-sm font-semibold text-brand-900 transition group-hover:translate-x-1">{{ __('Düzenle') }} →</span>
+                        </div>
+                        <p class="mt-1.5 flex-1 text-sm leading-relaxed text-slate-600">{{ __('Hero\'nun altındaki bölümler: yazılarını düzenle, sürükleyerek sırala, istemediğini kapat.') }}</p>
+                        <p class="mt-3 text-xs font-medium text-slate-500">{{ __(':n / :total bölüm açık', ['n' => count($homeOn), 'total' => count(\App\Support\SiteSections::KEYS)]) }}</p>
+                    </div>
+                </x-admin.card>
+            </a>
+        @endif
+
         {{-- BÖLÜMLER (anasayfa hariç): sıra + aç/kapa --}}
         @if (\App\Support\PageSections::supports($page->key))
             @php

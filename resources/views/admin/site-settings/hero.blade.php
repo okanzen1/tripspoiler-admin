@@ -303,8 +303,8 @@
                 </div>
             </div>
 
-            {{-- Çeviriler --}}
-            <div class="mt-6 rounded-2xl ring-1 ring-slate-200">
+            {{-- Çeviriler (kayıt/çeviri sonrası yerinde yenilenir: data-live) --}}
+            <div class="mt-6 rounded-2xl ring-1 ring-slate-200" data-live="translations-hero-{{ $heroText->id }}">
                 <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                     <div>
                         <p class="text-sm font-semibold text-slate-900">{{ __('Diğer diller') }} <span class="font-normal text-slate-500">· {{ __(':ok / :total dil güncel', ['ok' => count($textStatus) - $textPending, 'total' => count($textStatus)]) }}</span></p>

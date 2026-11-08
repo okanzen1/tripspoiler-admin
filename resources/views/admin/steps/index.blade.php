@@ -56,8 +56,8 @@
                 </div>
             </form>
 
-            {{-- çeviri durumu (yukarıdaki formun dışında: kendi formu var) --}}
-            <div class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-5 py-4 ring-1 ring-slate-200">
+            {{-- çeviri durumu (yukarıdaki formun dışında: kendi formu var; kayıt/çeviri sonrası yerinde yenilenir) --}}
+            <div class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-5 py-4 ring-1 ring-slate-200" data-live="translations-section-{{ $section->id }}">
                 <div class="flex flex-wrap items-center gap-2">
                     <span class="text-sm font-semibold text-slate-900">{{ __('Diğer diller') }}</span>
                     @foreach (\App\Models\Language::targets() as $language)
