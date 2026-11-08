@@ -483,6 +483,16 @@
                 const src = URL.createObjectURL(input.files[0]);
                 img.src = src;
                 img.classList.remove('opacity-40', 'opacity-50', 'opacity-60', 'grayscale', 'hidden');
+                // genel masaüstü resmi: "Görünüm" ve yazı önizlemeleri de hemen yeni resme geçsin
+                if (input.name === 'general') {
+                    form.querySelectorAll('[data-hero-img], [data-live-img]').forEach((preview) => {
+                        preview.src = src;
+                        preview.classList.remove('hidden');
+                    });
+                    // telefon kutusu: ayrı telefon resmi yoksa masaüstünden kesilir, o da değişsin
+                    const phone = input.closest('[data-banner-slot]')?.querySelectorAll('[data-banner-box]')[1]?.querySelector('[data-preview]');
+                    if (phone && !form.querySelector('input[name="general_mobile"]')?.files?.length && phone.dataset.ownMobile !== '1') phone.src = src;
+                }
                 // şehir satırı: masaüstü resmi seçilince listedeki küçük resim de değişsin
                 const row = input.closest('[data-city-row]');
                 if (row && input.name.startsWith('city[')) {

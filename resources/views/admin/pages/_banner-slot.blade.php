@@ -36,7 +36,7 @@
         </p>
         <div class="w-36 rounded-[1.4rem] border-4 border-slate-900 bg-slate-900 p-0.5">
             <div class="relative {{ $spec['mobile_ratio'] }} overflow-hidden rounded-[1rem] bg-slate-800">
-                <img src="{{ $mobilePreview }}" alt="" data-preview @class(['absolute inset-0 size-full object-cover', 'opacity-50' => !$mobile, 'hidden' => !$mobilePreview]) style="object-position: {{ $focus ?? 50 }}% center">
+                <img src="{{ $mobilePreview }}" alt="" data-preview data-own-mobile="{{ $mobile ? '1' : '0' }}" @class(['absolute inset-0 size-full object-cover', 'opacity-50' => !$mobile, 'hidden' => !$mobilePreview]) style="object-position: {{ $focus ?? 50 }}% center">
                 @if (!$mobile)
                     <span data-note class="absolute inset-x-1.5 bottom-1.5 rounded-md bg-slate-950/70 px-1.5 py-1 text-center text-[10px] font-medium leading-tight text-white/85">{{ __('Masaüstü resminden kesilir') }}</span>
                 @endif
