@@ -136,6 +136,18 @@
                         </div>
                         <span class="absolute inset-0 grid place-items-center text-sm text-white/60" data-preview-placeholder="desktop" @class(['hidden' => $hero['image_url']])>{{ __('Henüz resim yüklenmedi') }}</span>
                     </div>
+
+                    {{-- Kadraj (odak): resmin hangi tarafı görünsün; önizlemelerde hemen değişir --}}
+                    <div class="mt-3">
+                        <p class="text-sm font-semibold text-slate-900">{{ __('Kadraj: resmin hangi tarafı görünsün?') }}</p>
+                        <div class="mt-2 flex items-center gap-3">
+                            <span class="text-xs font-medium text-slate-500">{{ __('Sol') }}</span>
+                            <input type="range" name="hero_focus" min="0" max="100" step="5" value="{{ old('hero_focus', $hero['focus']) }}" class="w-full accent-brand-900" data-hero-focus>
+                            <span class="text-xs font-medium text-slate-500">{{ __('Sağ') }}</span>
+                        </div>
+                        <p class="mt-1 text-xs text-slate-500">{{ __('Ekran dar olduğunda (ör. telefonda) resmin bir kısmı kesilir; kaydırarak hangi tarafın görüneceğini seç.') }}</p>
+                        @error('hero_focus') <p class="mt-1 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
+                    </div>
                 </div>
 
                 <div class="space-y-4 lg:col-span-2">
@@ -194,24 +206,13 @@
                     </div>
 
             {{-- İSTEĞE BAĞLI --}}
-            <details class="group mt-6 rounded-2xl ring-1 ring-slate-200 open:bg-slate-50/50" @if ($errors->hasAny(['hero_focus', 'hero_overlay'])) open @endif>
+            <details class="group mt-6 rounded-2xl ring-1 ring-slate-200 open:bg-slate-50/50" @if ($errors->has('hero_overlay')) open @endif>
                 <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 text-sm font-semibold text-slate-800">
-                    <span>{{ __('İsteğe bağlı ayarlar') }} <span class="font-normal text-slate-500">— {{ __('kadraj ve karartma. Bilmiyorsan dokunma, şu haliyle iyi.') }}</span></span>
+                    <span>{{ __('İsteğe bağlı ayarlar') }} <span class="font-normal text-slate-500">— {{ __('karartma. Bilmiyorsan dokunma, şu haliyle iyi.') }}</span></span>
                     <svg class="size-4 shrink-0 text-slate-400 transition group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6" /></svg>
                 </summary>
 
                 <div class="space-y-8 border-t border-slate-200 px-5 py-6">
-
-                    {{-- Kadraj --}}
-                    <div>
-                        <p class="text-sm font-semibold text-slate-900">{{ __('Kadraj: resmin hangi tarafı görünsün?') }}</p>
-                        <p class="mt-1 text-sm text-slate-600">{{ __('Ekran dar olduğunda resmin bir kısmı kesilir. Kaydırarak hangi tarafın görüneceğini seç; yukarıdaki resimlerde hemen görürsün.') }}</p>
-                        <div class="mt-3 flex items-center gap-4">
-                            <span class="text-xs font-medium text-slate-500">{{ __('Sol taraf') }}</span>
-                            <input type="range" name="hero_focus" min="0" max="100" step="5" value="{{ old('hero_focus', $hero['focus']) }}" class="w-full accent-brand-900" data-hero-focus>
-                            <span class="text-xs font-medium text-slate-500">{{ __('Sağ taraf') }}</span>
-                        </div>
-                    </div>
 
                     {{-- Karartma --}}
                     <div>
