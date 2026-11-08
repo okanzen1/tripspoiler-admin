@@ -168,6 +168,9 @@ class Analytics
         return $this->partnerNames ??= Partner::pluck('name', 'slug')->all();
     }
 
+    /** Site analitik saatlerini bu saat diliminde yazar (tripspoiler Tracker::TIMEZONE); canlı hesaplar da buna göre */
+    public const TIMEZONE = 'Europe/Istanbul';
+
     /** Canlı listedeki filtreler: zaman aralığı (gün; 0 = bugün) */
     public const LIVE_RANGES = [0 => 'Bugün', 7 => 'Son 7 gün', 30 => 'Son 30 gün', 90 => 'Son 90 gün'];
 
@@ -179,16 +182,22 @@ class Analytics
      */
     public static function live(array $filters = [], int $limit = 50): array
     {
-        $since = now()->subMinutes(5);
+        $now = now(self::TIMEZONE);
+        $since = $now->copy()->subMinutes(5)->format('Y-m-d H:i:s');
+        $today = $now->copy()->startOfDay()->format('Y-m-d H:i:s');
         $real = fn () => Visit::query()->where('visitor_id', 'not like', 'demo_%');
+        $lastAt = $real()->max('created_at');
 
         return [
+            // Son ziyaret ne zaman: "şu an 0" iken sebebi görünsün (gerçekten kimse yok mu, saat mi kaymış)
+            'last_at' => $lastAt ? \Carbon\Carbon::parse($lastAt, self::TIMEZONE) : null,
+            'now' => $now,
             'active' => $real()->where('created_at', '>=', $since)->distinct()->count(DB::raw('COALESCE(ip, visitor_id)')),
-            'today' => $real()->where('created_at', '>=', today())->distinct()->count(DB::raw('COALESCE(ip, visitor_id)')),
+            'today' => $real()->where('created_at', '>=', $today)->distinct()->count(DB::raw('COALESCE(ip, visitor_id)')),
             'pages' => $real()->where('created_at', '>=', $since)
                 ->selectRaw('path, COUNT(DISTINCT COALESCE(ip, visitor_id)) as total')->groupBy('path')->orderByDesc('total')->limit(6)->get(),
             'visitors' => self::visitors($filters, $limit),
-            'countries' => $real()->where('created_at', '>=', now()->subDays(90))->whereNotNull('country')->distinct()->orderBy('country')->pluck('country'),
+            'countries' => $real()->where('created_at', '>=', $now->copy()->subDays(90)->format('Y-m-d H:i:s'))->whereNotNull('country')->distinct()->orderBy('country')->pluck('country'),
         ];
     }
 
@@ -200,7 +209,7 @@ class Analytics
     {
         $range = (int) ($filters['range'] ?? 0);
         $query = Visit::query()->where('visitor_id', 'not like', 'demo_%')
-            ->where('created_at', '>=', $range > 0 ? now()->subDays($range)->startOfDay() : today())
+            ->where('created_at', '>=', ($range > 0 ? now(self::TIMEZONE)->subDays($range) : now(self::TIMEZONE))->startOfDay()->format('Y-m-d H:i:s'))
             ->when($filters['country'] ?? null, fn ($q, $country) => $q->where('country', $country))
             ->when($filters['device'] ?? null, fn ($q, $device) => $q->where('device', $device))
             ->when(trim((string) ($filters['q'] ?? '')), fn ($q, $term) => $q->where(fn ($w) => $w
