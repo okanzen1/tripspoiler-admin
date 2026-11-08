@@ -95,7 +95,12 @@ class SiteSettingsController extends Controller
         ini_set('memory_limit', '512M');
 
         if ($request->hasFile('hero_image')) {
-            Setting::put('hero_image', $this->uploader->hero($request->file('hero_image'), Setting::get('hero_image')));
+            try {
+                Setting::put('hero_image', $this->uploader->hero($request->file('hero_image'), Setting::get('hero_image')));
+            } catch (\Throwable $e) {
+                report($e);
+                return back()->withInput()->with('error', __('Resim yüklenemedi: :msg', ['msg' => $e->getMessage()]));
+            }
         }
 
         if ($request->hasFile('hero_image_mobile')) {
@@ -122,6 +127,10 @@ class SiteSettingsController extends Controller
                 filled($value) ? $text->setTranslation($field, 'en', $value) : $text->forgetTranslation($field, 'en');
             }
             $text->save();
+        }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => __('Hero alanı kaydedildi. Anasayfada hemen görünür.')]);
         }
 
         return back()->with('success', __('Hero alanı kaydedildi. Anasayfada hemen görünür.'));

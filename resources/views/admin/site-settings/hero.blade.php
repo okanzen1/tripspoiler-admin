@@ -44,6 +44,15 @@
         @csrf
         @method('PUT')
 
+        <div data-form-errors class="rounded-2xl bg-red-50 px-5 py-4 text-sm font-medium text-red-700 ring-1 ring-red-200 @if (!$errors->any()) hidden @endif">
+            <p class="font-semibold">{{ __('Kaydedilemedi. Lütfen şu hataları düzelt:') }}</p>
+            <ul class="mt-2 list-disc space-y-1 pl-5">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+
         {{-- HARİTA: hangi numara nerede --}}
         <x-admin.card class="p-6 sm:p-8">
             <p class="text-lg font-semibold text-slate-900">{{ __('Anasayfada nereye denk geliyor?') }}</p>
@@ -247,17 +256,20 @@
                 <div class="space-y-4 lg:col-span-3">
                     @foreach ($textFields as $field => [$label, $hint, $limit])
                         <label class="block">
-                            <span class="text-sm font-medium text-slate-700">{{ __($label) }}</span>
+                            <span class="flex items-center justify-between text-sm font-medium text-slate-700">
+                                <span>{{ __($label) }}@if ($field === 'title_1') <span class="text-red-500" title="{{ __('Zorunlu') }}">*</span>@endif</span>
+                                @error("text.$field") <span class="text-xs font-medium text-red-600">{{ $message }}</span> @enderror
+                            </span>
                             @if ($field === 'description')
                                 <textarea name="text[{{ $field }}]" rows="3" maxlength="{{ $limit }}" data-hero-text="{{ $field }}"
                                     class="mt-1.5 block w-full resize-y rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm leading-relaxed outline-none transition focus:border-brand-900 focus:ring-4 focus:ring-brand-900/10">{{ old("text.$field", $heroText->getTranslation($field, 'en', false)) }}</textarea>
                             @else
                                 <input type="text" name="text[{{ $field }}]" maxlength="{{ $limit }}" data-hero-text="{{ $field }}" autocomplete="off"
                                     value="{{ old("text.$field", $heroText->getTranslation($field, 'en', false)) }}"
-                                    class="mt-1.5 block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-900 focus:ring-4 focus:ring-brand-900/10">
+                                    @if ($field === 'title_1') required @endif
+                                    class="mt-1.5 block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-900 focus:ring-4 focus:ring-brand-900/10 @error("text.$field") !border-red-400 @enderror">
                             @endif
                             @if ($hint) <span class="mt-1 block text-xs text-slate-500">{{ __($hint) }}</span> @endif
-                            @error("text.$field") <span class="mt-1 block text-xs font-medium text-red-600">{{ $message }}</span> @enderror
                         </label>
                     @endforeach
                 </div>
@@ -484,6 +496,17 @@
     <script>
         (() => {
             const form = document.getElementById('hero-settings');
+
+            // AJAX kaydet: sayfa yenilenmeden kaydet
+            const toast = document.createElement('div');
+            toast.className = 'hidden fixed right-6 top-6 z-50 rounded-2xl px-5 py-3 text-sm font-semibold shadow-lg ring-1';
+            document.body.appendChild(toast);
+            const showToast = (msg, ok = true) => {
+                toast.textContent = msg;
+                toast.className = 'fixed right-6 top-6 z-50 rounded-2xl px-5 py-3 text-sm font-semibold shadow-lg ring-1 ' + (ok ? 'bg-emerald-50 text-emerald-800 ring-emerald-200' : 'bg-red-50 text-red-700 ring-red-200');
+                clearTimeout(toast._t);
+                toast._t = setTimeout(() => toast.classList.add('hidden'), 4000);
+            };
 
             /* ---------- 1: resim önizleme, kadraj, karartma ---------- */
             const overlays = {

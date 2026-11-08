@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => App\Http\Middleware\EnsureUserHasRole::class,
         ]);
-        $middleware->web(append: [App\Http\Middleware\SetPanelLocale::class]);
+        $middleware->web(append: [App\Http\Middleware\SetPanelLocale::class, App\Http\Middleware\AjaxRedirectToJson::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Sayfa çok uzun açık kaldıysa form güvenlik anahtarı (CSRF) eskir: hata sayfası yerine geri dön, yazılanlar kaybolmasın

@@ -193,6 +193,86 @@
         });
     </script>
     @stack('scripts')
+
+    {{-- Global AJAX form submit: sayfa yenilenmeden kaydet --}}
+    <script>
+        (() => {
+            const toast = document.createElement('div');
+            toast.className = 'hidden fixed right-6 top-6 z-[9999] max-w-sm rounded-2xl px-5 py-3 text-sm font-semibold shadow-lg ring-1';
+            document.body.appendChild(toast);
+            let toastTimer;
+            const showToast = (msg, ok = true) => {
+                toast.textContent = msg;
+                toast.className = 'fixed right-6 top-6 z-[9999] max-w-sm rounded-2xl px-5 py-3 text-sm font-semibold shadow-lg ring-1 ' + (ok ? 'bg-emerald-50 text-emerald-800 ring-emerald-200' : 'bg-red-50 text-red-700 ring-red-200');
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => toast.classList.add('hidden'), 4000);
+            };
+
+            document.addEventListener('submit', async (e) => {
+                const form = e.target;
+                if (!(form instanceof HTMLFormElement)) return;
+                if (form.dataset.noAjax !== undefined) return;
+                const action = form.action || '';
+                // Yerel/dil değiştirme ve çıkış formları normal çalışsın
+                if (action.includes('/dil') || action.includes('/logout') || action.includes('/cevir')) return;
+                // Sadece POST/PUT/PATCH/DELETE formları
+                const method = (form.getAttribute('method') || 'GET').toUpperCase();
+                if (method === 'GET') return;
+                const isDelete = method === 'DELETE' || form.querySelector('input[name="_method"][value="DELETE"]');
+                // Zaten işleniyorsa tekrar çalıştırma
+                if (form.dataset.ajaxBusy) return;
+
+                e.preventDefault();
+                form.dataset.ajaxBusy = '1';
+                const btn = form.querySelector('button[type="submit"], input[type="submit"]');
+                if (btn) btn.disabled = true;
+
+                try {
+                    const res = await fetch(form.action, {
+                        method: 'POST',
+                        body: new FormData(form),
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                        credentials: 'same-origin',
+                    });
+                    const data = await res.json().catch(() => ({}));
+
+                    if (res.ok && (data.success || data.redirect)) {
+                        if (data.success) showToast(data.success);
+                        if (isDelete) {
+                            // Silme işlemlerinde liste güncellensin
+                            setTimeout(() => { window.location.reload(); }, 600);
+                        } else if (data.redirect && data.redirect !== window.location.href) {
+                            setTimeout(() => { window.location.href = data.redirect; }, data.success ? 800 : 0);
+                        }
+                    } else if (res.status === 422 && data.errors) {
+                        const msgs = Object.values(data.errors).flat();
+                        showToast(msgs.join(' '), false);
+                        // Hata kutusu varsa güncelle
+                        const errBox = form.querySelector('[data-form-errors]');
+                        if (errBox) {
+                            errBox.innerHTML = '<p class="font-semibold">' + @json(__('Kaydedilemedi. Lütfen hataları düzelt:')) + '</p><ul class="mt-2 list-disc space-y-1 pl-5">' + msgs.map(m => '<li>' + m + '</li>').join('') + '</ul>';
+                            errBox.classList.remove('hidden');
+                        }
+                    } else if (data.error) {
+                        showToast(data.error, false);
+                    } else {
+                        // Beklenmeyen yanıt: normal submit'e düş
+                        delete form.dataset.ajaxBusy;
+                        form.submit();
+                        return;
+                    }
+                } catch (err) {
+                    // Ağ hatası: normal submit'e düş
+                    delete form.dataset.ajaxBusy;
+                    form.submit();
+                    return;
+                } finally {
+                    if (btn) btn.disabled = false;
+                    delete form.dataset.ajaxBusy;
+                }
+            }, true);
+        })();
+    </script>
 </body>
 
 </html>
