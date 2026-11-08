@@ -146,7 +146,8 @@ class ModelTranslator
             $text = trim($translated[$i]);
             // Kaynakta son nokta yoksa Google'ın eklediğini at
             if (!preg_match('/[.!?…]$/u', $texts[$i])) {
-                $text = rtrim($text, '.。!?！？…');
+                // harf harf (u): rtrim byte byte siler, Korece/Çince harfin yarısını kesip metni bozabiliyordu
+                $text = preg_replace('/[.。!?！？…]+$/u', '', $text) ?? $text;
             }
             $result = array_merge($result, $this->distribute($text, $group ?: [$fields[0]], $i === $last && $highlight !== '' ? $highlightField : null, $highlight));
         }
@@ -163,7 +164,8 @@ class ModelTranslator
     private function distribute(string $text, array $lineFields, ?string $highlightField, string $highlight): array
     {
         $out = [];
-        $words = preg_split('/\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY);
+        // bölünemeyen metin (ör. bozuk karakter) çeviriyi düşürmesin: bölmeden olduğu gibi kullanılır
+        $words = preg_split('/\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY) ?: [];
         if (count($words) < 2) {
             return [$lineFields[0] => $text];
         }
@@ -171,7 +173,7 @@ class ModelTranslator
         // Vurgu: İngilizcedeki kadar kelime (en az 1), satırlara en az bir kelime kalsın
         $tail = 0;
         if ($highlightField) {
-            $take = min(max(1, count(preg_split('/\s+/u', $highlight))), count($words) - 1);
+            $take = min(max(1, count(preg_split('/\s+/u', $highlight) ?: [$highlight])), count($words) - 1);
             $out[$highlightField] = implode(' ', array_slice($words, -$take));
             $words = array_slice($words, 0, -$take);
             $tail = mb_strlen($out[$highlightField]);
