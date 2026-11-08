@@ -7,11 +7,14 @@ use App\Models\Language;
 use App\Models\TranslationState;
 use App\Services\Translation\ModelTranslator;
 use App\Support\HtmlSanitizer;
+use App\Support\TranslationJobs;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Throwable;
+
+use function Illuminate\Support\defer;
 
 /**
  * Yönetim → Diller ve çeviri: sitenin dilleri, dil dil ya da tüm dillere toplu çeviri (ücretsiz Google Çeviri).
@@ -102,6 +105,11 @@ class TranslationController extends Controller
             default => null,
         };
 
+        // Panel (fetch) arka planda çevirtir: hemen cevap döner, çeviri cevaptan sonra sürer; durum sağ üstte görünür
+        if ($request->expectsJson()) {
+            return $this->translateInBackground($type, $model, $locales);
+        }
+
         set_time_limit(600); // tüm diller birkaç dakika sürebilir
         try {
             $done = $this->translator->translate($model, $locales);
@@ -117,6 +125,59 @@ class TranslationController extends Controller
             ? __('Çevrildi: :languages', ['languages' => $names])
             : __('Tüm çeviriler zaten güncel.'));
     }
+    /**
+     * Çeviriyi başlatır ve hemen döner; diller cevap gönderildikten sonra (defer) çevrilir, ilerleme TranslationJobs'ta.
+     *
+     * @param  list<string>|null  $locales
+     */
+    private function translateInBackground(string $type, Model $model, ?array $locales)
+    {
+        $key = $type . ':' . $model->getKey();
+        if (TranslationJobs::running($key)) {
+            return response()->json(['job' => TranslationJobs::get($key)]);
+        }
+
+        $locales ??= $this->translator->pending($model);
+        if (!$locales) {
+            return response()->json(['message' => __('Tüm çeviriler zaten güncel.')]);
+        }
+
+        $owner = rescue(fn () => ModelTranslator::owner($type, $model), ['url' => url()->previous(), 'title' => __('Çeviri')], false);
+        $title = count($locales) === 1
+            ? $owner['title'] . ' · ' . Language::where('code', $locales[0])->value('native_name')
+            : $owner['title'];
+        $job = TranslationJobs::start($key, (string) $title, url()->previous() ?: $owner['url'], $locales);
+
+        // Kullanıcı sayfadan ayrılsa da süreç devam etsin
+        ignore_user_abort(true);
+        defer(function () use ($key, $model, $locales) {
+            ignore_user_abort(true);
+            set_time_limit(900);
+            try {
+                $done = $this->translator->translate($model, $locales, fn (string $locale) => TranslationJobs::progress($key, $locale));
+                TranslationJobs::finish($key, __('Çevrildi: :languages', [
+                    'languages' => Language::whereIn('code', $done)->pluck('native_name')->implode(', '),
+                ]));
+            } catch (Throwable $e) {
+                report($e);
+                TranslationJobs::fail($key, __('Çeviri yapılamadı: :error', ['error' => $e->getMessage()]));
+            }
+        });
+
+        return response()->json(['job' => $job]);
+    }
+
+    /** Panelin sağ üstteki çeviri bildirimi için işlerin durumu */
+    public function jobs(Request $request)
+    {
+        $keys = array_slice(array_filter((array) $request->query('keys', []), 'is_string'), 0, 20);
+
+        return response()->json([
+            'now' => time(),
+            'jobs' => array_values(array_filter(array_map(fn ($key) => TranslationJobs::get($key), $keys))),
+        ]);
+    }
+
     /**
      * Bir kaydın bir dildeki çevirisi: solda İngilizcesi, sağda düzenlenebilir hali.
      */

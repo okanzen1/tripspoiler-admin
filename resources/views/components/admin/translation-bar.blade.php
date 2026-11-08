@@ -33,11 +33,10 @@
         </div>
 
         @if ($pending > 0)
-            <form action="{{ route('translations.translate', [$type, $model->getKey()]) }}" method="POST" data-busy="{{ __('Diğer dillere çevriliyor…') }}" data-busy-hint="{{ __('Google Çeviri her dili sırayla çeviriyor; 1–2 dakika sürebilir. Bitince sayfa kendiliğinden yenilenir, sayfayı kapatma.') }}"
+            <form action="{{ route('translations.translate', [$type, $model->getKey()]) }}" method="POST" data-translate="{{ $type }}:{{ $model->getKey() }}"
                 data-confirm-title="{{ __(':count dile çevrilsin mi?', ['count' => $pending]) }}"
                 data-confirm="{{ __('Çevirisi olmayan ya da İngilizcesi değişen diller Google Çeviri ile çevrilir. Birkaç dakika sürebilir.') }}"
-                data-confirm-button="{{ __('Evet, çevir') }}"
-                onsubmit="setTimeout(() => this.querySelector('button').disabled = true); this.querySelector('span').textContent = @js(__('Çevriliyor… sayfayı kapatma'));">
+                data-confirm-button="{{ __('Evet, çevir') }}">
                 @csrf
                 <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-700 disabled:cursor-wait disabled:opacity-70">
                     <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6" /></svg>

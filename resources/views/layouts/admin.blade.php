@@ -21,7 +21,11 @@
     <meta name="upload-limit" content="{{ \App\Support\UploadLimit::fileBytes() }}" data-request="{{ \App\Support\UploadLimit::requestBytes() }}">
     {{-- JS'teki metinlerin çevirisi (resources/js/i18n.js) --}}
     <script>
-        window.i18n = {!! json_encode(collect(['Yeni', 'Açıklama…', 'Değiştir', 'Resim seç', 'En az bir abone seç ya da bir adres yaz.', 'Bu satır silinsin mi? Kaydettiğinde kalıcı olarak silinir.', 'Yazmaya başla…', 'Kaydedilemedi, tekrar dene.', ':count yeni görsel', 'Evet', 'otomatik', 'Görsel yükleniyor…', 'Görsel yüklenemedi (en fazla 5 MB; JPG, PNG, WebP).', 'Silinsin mi?', 'Emin misin?', 'Vazgeç', 'Evet, sil', 'Evet, devam et'])->mapWithKeys(fn ($key) => [$key => __($key)]), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!};
+        window.i18n = {!! json_encode(collect(['Yeni', 'Açıklama…', 'Değiştir', 'Resim seç', 'En az bir abone seç ya da bir adres yaz.', 'Bu satır silinsin mi? Kaydettiğinde kalıcı olarak silinir.', 'Yazmaya başla…', 'Kaydedilemedi, tekrar dene.', ':count yeni görsel', 'Evet', 'otomatik', 'Görsel yükleniyor…', 'Görsel yüklenemedi (en fazla 5 MB; JPG, PNG, WebP).', 'Silinsin mi?', 'Emin misin?', 'Vazgeç', 'Evet, sil', 'Evet, devam et', ':s sn', ':m dk :s sn', 'Çeviri sürüyor, bitince tekrar kullanılabilir.', 'Diğer dillere çevriliyor…', 'Çeviri yapılamadı', 'Çeviri tamamlandı', 'Sayfayı yenile', 'Aç', 'Kapat', 'Çeviri başlatılıyor…', ':done / :total dil', 'Başlatılıyor…', 'Bu arada başka işlerine devam edebilirsin.', 'Çeviri başlatılamadı, tekrar dene.', 'Çok sık çeviri isteği gönderildi, bir dakika sonra tekrar dene.', 'Oturum süresi doldu, sayfayı yenileyip tekrar dene.', 'Çeviri başlatılamadı (:code).'])->mapWithKeys(fn ($key) => [$key => __($key)]), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!};
+        {{-- Arka planda süren çeviriler: sağ üstteki bildirim (resources/js/translation-jobs.js) --}}
+        @auth
+            window.translationJobs = {!! json_encode(['statusUrl' => route('translations.jobs'), 'now' => time(), 'jobs' => \App\Support\TranslationJobs::recent()], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!};
+        @endauth
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>

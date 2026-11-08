@@ -50,6 +50,7 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
     // Bir kaydı (aktivite, blog, SSS, sayfa) diğer dillere çevir
     Route::get('/ceviri/{type}/{id}/{locale}', [TranslationController::class, 'edit'])->whereNumber('id')->name('translations.edit');
     Route::put('/ceviri/{type}/{id}/{locale}', [TranslationController::class, 'update'])->whereNumber('id')->name('translations.update');
+    Route::get('/ceviri-durum', [TranslationController::class, 'jobs'])->name('translations.jobs');
     Route::post('/ceviri/{type}/{id}', [TranslationController::class, 'translate'])->whereNumber('id')->middleware('throttle:20,1')->name('translations.translate');
     Route::post('/editor-gorseli', [EditorImageController::class, 'store'])->middleware('throttle:60,1')->name('editor-images.store');
 
