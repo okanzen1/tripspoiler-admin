@@ -11,6 +11,11 @@ let tickTimer;
 let box;
 
 const SEEN_KEY = 'translation-jobs-seen';
+const MIN_KEY = 'translation-jobs-minimized';
+const readMin = () => { try { return JSON.parse(localStorage.getItem(MIN_KEY) || '[]'); } catch { return []; } };
+const setMin = (key, on) => {
+    try { localStorage.setItem(MIN_KEY, JSON.stringify([...readMin().filter((k) => k !== key), ...(on ? [key] : [])].slice(-20))); } catch { /* gizli pencere */ }
+};
 const serverNow = () => Date.now() / 1000 - clockOffset;
 const seenId = (job) => `${job.key}@${job.finished_at}`;
 
@@ -48,7 +53,25 @@ function lockButtons() {
 }
 
 /* ---------- Bildirim ---------- */
+// Küçültülmüş hali: tek satırlık hap (simge + kısa durum); tıklayınca açılır
+function pill(job) {
+    const running = job.status === 'running';
+    const failed = job.status === 'failed';
+    const dot = running
+        ? '<svg class="size-4 animate-spin text-purple-600" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-20"/><path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>'
+        : `<span class="size-2.5 rounded-full ${failed ? 'bg-red-500' : 'bg-emerald-500'}"></span>`;
+    const label = running ? (job.total ? `${job.done} / ${job.total}` : t('Başlatılıyor…')) : failed ? t('Çeviri yapılamadı') : t('Çeviri tamamlandı');
+
+    return `
+        <button type="button" data-job="${escape(job.key)}" data-job-expand title="${escape(job.title || '')}"
+            class="pointer-events-auto ml-auto inline-flex max-w-full items-center gap-2 rounded-full bg-white py-2 pl-3 pr-4 text-xs font-semibold text-slate-700 shadow-lg ring-1 ${failed ? 'ring-red-200' : running ? 'ring-purple-200' : 'ring-emerald-200'} transition hover:-translate-y-0.5">
+            ${dot}<span class="truncate">${escape(t('Çeviri'))} · <span class="tabular-nums">${escape(label)}</span></span>
+            <svg class="size-3.5 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+        </button>`;
+}
+
 function card(job) {
+    if (readMin().includes(job.key)) return pill(job);
     const running = job.status === 'running';
     const failed = job.status === 'failed';
     const percent = job.total ? Math.round((job.done / job.total) * 100) : 0;
@@ -81,8 +104,12 @@ function card(job) {
                     : `<p class="mt-1 text-xs leading-relaxed ${failed ? 'text-red-700' : 'text-slate-600'}">${escape(job.message)}</p>
                        ${action ? `<div class="mt-2.5">${action}</div>` : ''}`}
                 </div>
-                ${running ? '' : `<button type="button" data-job-close class="-m-1 shrink-0 rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600" aria-label="${escape(t('Kapat'))}">
-                    <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>`}
+                <div class="-m-1 flex shrink-0 items-center">
+                    <button type="button" data-job-minimize class="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600" aria-label="${escape(t('Küçült'))}" title="${escape(t('Küçült'))}">
+                        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 12h12"/></svg></button>
+                    ${running ? '' : `<button type="button" data-job-close class="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600" aria-label="${escape(t('Kapat'))}">
+                        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>`}
+                </div>
             </div>
         </div>`;
 }
@@ -90,11 +117,14 @@ function card(job) {
 function render() {
     if (!box) {
         box = document.createElement('div');
-        box.className = 'pointer-events-none fixed right-4 top-4 z-[9998] flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-2';
+        // sağ altta, footer'ın üstünde: sağ üstteki sayfa butonlarını kapatmasın
+        box.className = 'pointer-events-none fixed bottom-24 right-4 z-[9998] flex w-[min(22rem,calc(100vw-2rem))] flex-col items-stretch gap-2';
         box.addEventListener('click', (e) => {
             const el = e.target.closest('[data-job]');
             if (!el) return;
             if (e.target.closest('[data-job-close]')) dismiss(el.dataset.job);
+            else if (e.target.closest('[data-job-minimize]')) { setMin(el.dataset.job, true); render(); }
+            else if (e.target.closest('[data-job-expand]')) { setMin(el.dataset.job, false); render(); }
         });
         document.body.append(box);
     }
