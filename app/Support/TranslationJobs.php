@@ -84,6 +84,16 @@ class TranslationJobs
             ->values()->all();
     }
 
+    /** Son bir saatteki bütün çeviri işleri, en yenisi üstte (Yönetim › Arka plan işleri) */
+    public static function history(): array
+    {
+        return collect(Cache::get(self::INDEX, []))
+            ->map(fn ($key) => self::get($key))
+            ->filter()
+            ->sortByDesc('started_at')
+            ->values()->all();
+    }
+
     private static function close(string $key, string $status, string $message): void
     {
         if ($job = Cache::get(self::cacheKey($key))) {

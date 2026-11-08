@@ -32,6 +32,7 @@ class SectionColor
         'redirects' => 'yellow',
         'site-settings' => 'rose',
         'activity-logs' => 'teal',
+        'queue' => 'blue',
     ];
 
     private const CLASSES = [

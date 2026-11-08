@@ -178,6 +178,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('yonetim')->group(function () 
     Route::get('/', [ManagementController::class, 'index'])->name('management.index');
     Route::get('/roller', [ManagementController::class, 'roles'])->name('roles.index');
     Route::get('/islem-kaydi', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index');
+    // Arka plan işleri: cron durumu, süren çeviriler, sıradaki ve başarısız işler
+    Route::get('/arka-plan-isleri', [\App\Http\Controllers\QueueController::class, 'index'])->name('queue.index');
+    Route::post('/arka-plan-isleri/calistir', [\App\Http\Controllers\QueueController::class, 'run'])->middleware('throttle:10,1')->name('queue.run');
+    Route::post('/arka-plan-isleri/basarisiz/tumu', [\App\Http\Controllers\QueueController::class, 'retryAll'])->name('queue.retry-all');
+    Route::delete('/arka-plan-isleri/basarisiz/tumu', [\App\Http\Controllers\QueueController::class, 'flush'])->name('queue.flush');
+    Route::post('/arka-plan-isleri/basarisiz/{uuid}', [\App\Http\Controllers\QueueController::class, 'retry'])->name('queue.retry');
+    Route::delete('/arka-plan-isleri/basarisiz/{uuid}', [\App\Http\Controllers\QueueController::class, 'forget'])->name('queue.forget');
+    Route::delete('/arka-plan-isleri/sira/{id}', [\App\Http\Controllers\QueueController::class, 'destroy'])->whereNumber('id')->name('queue.destroy');
 
     Route::resource('kullanicilar', UserController::class)
         ->except('show')

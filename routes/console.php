@@ -11,3 +11,6 @@ Schedule::command('model:prune', ['--model' => [\App\Models\ActivityLog::class]]
 // Sıradaki işler (ör. Diller ve çeviri › toplu çeviri): her dakika işlenir, sırada iş yoksa hemen biter.
 // Paylaşımlı sunucuda sürekli çalışan kuyruk işçisi olmadığı için (cron: * * * * * php artisan schedule:run)
 Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')->everyMinute()->withoutOverlapping();
+
+// Nabız: zamanlayıcı (cron) her dakika çalışıyor mu? Yönetim › Arka plan işleri bunu gösterir
+Schedule::call(fn () => \Illuminate\Support\Facades\Cache::forever('scheduler:last_run', now()->timestamp))->everyMinute()->name('scheduler-heartbeat');

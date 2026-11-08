@@ -95,6 +95,15 @@
                 'color' => \App\Support\SectionColor::forRoute('activity-logs'),
                 'icon' => '<path d="M12 8v4l3 2" /><circle cx="12" cy="12" r="9" />',
             ],
+            [
+                'key' => 'queue',
+                'title' => 'Arka plan işleri',
+                'description' => 'Çeviriler ve sıradaki işler: ne sürüyor, ne bekliyor, ne başarısız oldu.',
+                'url' => route('queue.index'),
+                'stat' => ($failedJobs = \Illuminate\Support\Facades\DB::table('failed_jobs')->count()) ? __(':count başarısız', ['count' => $failedJobs]) : __(':count sırada', ['count' => \Illuminate\Support\Facades\DB::table('jobs')->count()]),
+                'color' => \App\Support\SectionColor::forRoute('queue'),
+                'icon' => '<path d="M4 6h16M4 12h10M4 18h7" /><circle cx="18" cy="16" r="3" /><path d="M18 14.5V16l1 1" />',
+            ],
         ];
         $cards = \App\Http\Controllers\ManagementController::sorted($cards, 'management_order');
     @endphp
