@@ -228,121 +228,204 @@
                         }" />
                 </div>
 
-                {{-- başlık satırı --}}
-                <div class="hidden grid-cols-12 gap-4 border-y border-slate-100 bg-slate-50 px-6 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 md:grid">
-                    <span class="col-span-3">{{ __('Şehir') }}</span>
-                    @if ($hasImages)
-                        <span class="col-span-4">{{ __('Masaüstü') }}</span>
-                        <span class="col-span-2">{{ __('Telefon') }}</span>
-                    @endif
-                    <span class="{{ $hasImages ? 'col-span-3' : 'col-span-9' }}">{{ $page->key === 'blog' ? __('Kemerler') : ($page->key === 'cities' ? __('Fotoğraf üstü kartlar') : '') }}</span>
-                </div>
-
-                <ul class="divide-y divide-slate-100">
+                <ul class="divide-y divide-slate-100 border-t border-slate-100">
                     @foreach ($rows as $rowCity)
                         @php
                             $banner = $cityBanners->get($rowCity->id);
                             $desk = $url($banner?->image, 'sm');
                             $mob = $url($banner?->image_mobile);
+                            $cityFocus = $banner?->focus ?? $focus; // şehre özel kadraj yoksa sayfa kadrajı
                             $cardValues = array_pad(explode(',', (string) $rowCity->guide?->hero_cards), 2, '');
                             $guideOptions = $page->key === 'cities' ? $rowCity->guideSections->filter->isWritten() : collect();
                             $arch = $page->key === 'blog' ? $archCities->first(fn ($r) => $r['city']->is($rowCity)) : null;
+                            $hasError = $errors->has("city.{$rowCity->id}") || $errors->has("city_mobile.{$rowCity->id}");
+                            $optionName = fn ($id) => ($o = $guideOptions->firstWhere('id', (int) $id)) ? ($o->topic->getTranslation('name', 'tr', false) ?: $o->topic->name) : null;
+                            $cardsSummary = collect($cardValues)->map(fn ($v) => $v === '' ? __('Otomatik') : ($v === '0' ? __('Gösterme') : ($optionName($v) ?? __('Otomatik'))))->implode(' · ');
                         @endphp
-                        <li class="grid items-center gap-4 px-6 py-4 md:grid-cols-12">
-                            {{-- şehir --}}
-                            <div class="flex min-w-0 items-center gap-3 md:col-span-3">
-                                <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-slate-100 text-xl leading-none">{{ $rowCity->country?->flag }}</span>
-                                <div class="min-w-0">
-                                    <p class="truncate font-semibold text-slate-900">{{ $rowCity->name }}</p>
-                                    <p class="truncate text-xs text-slate-500">{{ $rowCity->country?->name }} · {{ $arch ? __(':n yazı', ['n' => $arch['city']->blogs->count()]) : __(':n aktivite', ['n' => $rowCity->activities_count]) }}</p>
+                        {{-- satır: kayıttan sonra sunucudan yerinde yenilenir (data-live) --}}
+                        <li data-live="hero-city-{{ $rowCity->id }}" data-city-row>
+                            <div class="flex items-center gap-4 px-6 py-3.5 transition hover:bg-slate-50">
+                                {{-- küçük önizleme --}}
+                                @if ($hasImages)
+                                    <span class="relative aspect-[16/9] w-24 shrink-0 overflow-hidden rounded-lg bg-slate-100 ring-1 ring-slate-200">
+                                        <img src="{{ $desk ?: $generalDesktop }}" alt="" data-preview @class(['absolute inset-0 size-full object-cover', 'opacity-50 grayscale' => !$desk]) style="object-position: {{ $cityFocus }}% center">
+                                    </span>
+                                @endif
+
+                                {{-- şehir --}}
+                                <div class="min-w-0 flex-1">
+                                    <p class="flex items-center gap-2 font-semibold text-slate-900">
+                                        <span class="text-lg leading-none">{{ $rowCity->country?->flag }}</span>
+                                        <span class="truncate">{{ $rowCity->name }}</span>
+                                    </p>
+                                    <p class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                                        <span>{{ $rowCity->country?->name }} · {{ $arch ? __(':n yazı', ['n' => $arch['city']->blogs->count()]) : __(':n aktivite', ['n' => $rowCity->activities_count]) }}</span>
+                                        @if ($hasImages)
+                                            <span @class(['rounded-md px-1.5 py-0.5 font-medium', 'bg-emerald-50 text-emerald-700' => $desk, 'bg-slate-100 text-slate-500' => !$desk])>{{ $desk ? __('Özel resim') : __('Genel resim') }}</span>
+                                            @if ($mob) <span class="rounded-md bg-sky-50 px-1.5 py-0.5 font-medium text-sky-700">{{ __('Telefon resmi') }}</span> @endif
+                                        @endif
+                                        @if ($page->key === 'cities')
+                                            <span class="truncate">{{ $guideOptions->isEmpty() ? __('Rehber yazılmamış') : __('Kartlar') . ': ' . $cardsSummary }}</span>
+                                        @endif
+                                    </p>
+                                    @if ($hasError)
+                                        <p class="mt-1 text-xs font-medium text-red-600">{{ $errors->first("city.{$rowCity->id}") ?: $errors->first("city_mobile.{$rowCity->id}") }}</p>
+                                    @endif
                                 </div>
+
+                                <button type="button" data-city-open class="inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-semibold text-brand-900 ring-1 ring-slate-200 transition hover:bg-white hover:ring-brand-200">
+                                    <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                                    {{ __('Düzenle') }}
+                                </button>
                             </div>
 
-                            @if ($hasImages)
-                                {{-- masaüstü --}}
-                                <div class="flex items-center gap-3 md:col-span-4" data-banner-box>
-                                    <div class="relative aspect-[16/9] w-32 shrink-0 overflow-hidden rounded-lg bg-slate-100 ring-1 ring-slate-200">
-                                        <img src="{{ $desk ?: $generalDesktop }}" alt="" data-preview @class(['absolute inset-0 size-full object-cover', 'opacity-40 grayscale' => !$desk]) style="object-position: {{ $cityBanners[$rowCity->id]?->focus ?? 50 }}% center">
-                                    </div>
-                                    <input type="range" name="city_focus[{{ $rowCity->id }}]" min="0" max="100" step="5" value="{{ old('city_focus.' . $rowCity->id, $cityBanners[$rowCity->id]?->focus ?? 50) }}" class="w-32 accent-brand-900" data-banner-focus>
-                                    <div class="space-y-1.5">
-                                        <label class="{{ $thumbBtn }}">
-                                            <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16" /></svg>
-                                            {{ $desk ? __('Değiştir') : __('Yükle') }}
-                                            <input type="file" name="city[{{ $rowCity->id }}]" accept="image/jpeg,image/png,image/webp" class="sr-only">
-                                        </label>
-                                        @if ($desk)
-                                            <label class="flex cursor-pointer items-center gap-1.5 text-xs text-slate-500 hover:text-red-600"><input type="checkbox" name="remove[city][{{ $rowCity->id }}]" value="1" class="size-3.5 rounded border-slate-300 text-red-600">{{ __('Kaldır') }}</label>
-                                        @else
-                                            <p class="text-[11px] text-slate-400" data-note>{{ __('Genel resim') }}</p>
-                                        @endif
-                                        <p class="text-[11px] font-medium text-emerald-700" data-file-name></p>
-                                    </div>
-                                </div>
-                                {{-- telefon --}}
-                                <div class="flex items-center gap-3 md:col-span-2" data-banner-box>
-                                    <div class="relative h-14 w-9 shrink-0 overflow-hidden rounded-md border-2 border-slate-800 bg-slate-800">
-                                        <img src="{{ $mob ?: ($desk ?: $generalDesktop) }}" alt="" data-preview @class(['absolute inset-0 size-full object-cover', 'opacity-40 grayscale' => !$mob]) style="object-position: {{ $cityBanners[$rowCity->id]?->focus ?? 50 }}% center">
-                                    </div>
-                                    <div class="space-y-1.5">
-                                        <label class="{{ $thumbBtn }}">
-                                            <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16" /></svg>
-                                            {{ $mob ? __('Değiştir') : __('Yükle') }}
-                                            <input type="file" name="city_mobile[{{ $rowCity->id }}]" accept="image/jpeg,image/png,image/webp" class="sr-only">
-                                        </label>
-                                        @if ($mob)
-                                            <label class="flex cursor-pointer items-center gap-1.5 text-xs text-slate-500 hover:text-red-600"><input type="checkbox" name="remove[city_mobile][{{ $rowCity->id }}]" value="1" class="size-3.5 rounded border-slate-300 text-red-600">{{ __('Kaldır') }}</label>
-                                        @endif
-                                        <p class="text-[11px] font-medium text-emerald-700" data-file-name></p>
-                                    </div>
-                                </div>
-                            @endif
-
-                            {{-- kartlar / kemerler --}}
-                            <div class="{{ $hasImages ? 'md:col-span-3' : 'md:col-span-9' }}">
-                                @if ($page->key === 'cities')
-                                    @if ($guideOptions->isEmpty())
-                                        <p class="text-xs text-slate-400">{{ __('Rehber yazılmamış') }}</p>
-                                    @else
-                                        <div class="grid gap-2">
-                                            @foreach ([__('Sol alt'), __('Sağ üst')] as $i => $cardLabel)
-                                                <label class="flex items-center gap-2">
-                                                    <span class="w-14 shrink-0 text-[11px] font-semibold text-slate-500">{{ $cardLabel }}</span>
-                                                    <select name="cards[{{ $rowCity->id }}][{{ $i }}]" class="{{ $select }}">
-                                                        <option value="" @selected($cardValues[$i] === '')>{{ __('Otomatik') }}</option>
-                                                        <option value="0" @selected($cardValues[$i] === '0')>{{ __('Gösterme') }}</option>
-                                                        @foreach ($guideOptions as $option)
-                                                            <option value="{{ $option->id }}" @selected($cardValues[$i] === (string) $option->id)>{{ $option->topic->getTranslation('name', 'tr', false) ?: $option->topic->name }}{{ $option->image_path ? '' : ' (' . __('resimsiz') . ')' }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </label>
-                                            @endforeach
+                            {{-- DÜZENLEME PANELİ (sağdan açılır; formun içinde: "Kaydet" bütün formu kaydeder) --}}
+                            <div data-city-drawer @class(['fixed inset-0 z-[60]', 'hidden' => !$hasError]) role="dialog" aria-modal="true" aria-label="{{ $rowCity->name }}">
+                                <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]" data-city-close></div>
+                                <div class="absolute inset-y-0 right-0 flex w-full max-w-xl flex-col bg-white shadow-2xl">
+                                    <div class="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
+                                        <span class="grid size-10 place-items-center rounded-xl bg-slate-100 text-xl leading-none">{{ $rowCity->country?->flag }}</span>
+                                        <div class="min-w-0 flex-1">
+                                            <p class="truncate text-lg font-semibold text-slate-900">{{ $rowCity->name }}</p>
+                                            <p class="text-xs text-slate-500">{{ $page->name }} · {{ __('şehre özel banner') }}</p>
                                         </div>
-                                    @endif
-                                @elseif ($arch)
-                                    <div class="grid gap-2 sm:grid-cols-3">
-                                        @foreach ([__('Orta (büyük)'), __('Sol'), __('Sağ')] as $i => $archLabel)
-                                            <label class="block">
-                                                <span class="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-slate-500">
-                                                    <span @class(['inline-block w-2.5 rounded-t-full', 'h-4 bg-red-400' => $i === 0, 'h-3 bg-slate-300' => $i > 0])></span>{{ $archLabel }}
-                                                </span>
-                                                <select name="arches[{{ $rowCity->id }}][{{ $i }}]" class="{{ $select }}">
-                                                    <option value="">{{ __('Otomatik') }}</option>
-                                                    @foreach ($arch['city']->blogs as $archBlog)
-                                                        <option value="{{ $archBlog->id }}" @selected($arch['values'][$i] === (string) $archBlog->id) @disabled(!$archBlog->cover_path)>
-                                                            {{ \Illuminate\Support\Str::limit($archBlog->getTranslation('title', 'en', false), 40) }}{{ $archBlog->cover_path ? '' : ' (' . __('kapak yok') . ')' }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </label>
-                                        @endforeach
+                                        <button type="button" data-city-close class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="{{ __('Kapat') }}">
+                                            <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                                        </button>
                                     </div>
-                                @endif
+
+                                    <div class="flex-1 space-y-7 overflow-y-auto px-6 py-6">
+                                        @if ($hasError)
+                                            <p class="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-200">{{ $errors->first("city.{$rowCity->id}") ?: $errors->first("city_mobile.{$rowCity->id}") }}</p>
+                                        @endif
+
+                                        @if ($hasImages)
+                                            {{-- masaüstü --}}
+                                            <section data-banner-box>
+                                                <p class="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                                    <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="12" rx="2" /><path d="M8 20h8M12 16.5V20" /></svg>
+                                                    {{ __('Masaüstü') }}
+                                                </p>
+                                                <div class="relative {{ $spec['ratio'] }} w-full overflow-hidden rounded-xl bg-slate-900">
+                                                    <img src="{{ $desk ?: $generalDesktop }}" alt="" data-preview @class(['absolute inset-0 size-full object-cover', 'opacity-60' => !$desk]) style="object-position: {{ $cityFocus }}% center">
+                                                    @if (!$desk)
+                                                        <span data-note class="absolute bottom-2 right-2 rounded-md bg-slate-950/70 px-2 py-1 text-[11px] font-medium text-white/85">{{ __('Şu an genel resim kullanılıyor') }}</span>
+                                                    @endif
+                                                </div>
+                                                <div class="mt-3 flex flex-wrap items-center gap-2">
+                                                    <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-brand-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800">
+                                                        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16" /></svg>
+                                                        {{ $desk ? __('Resmi değiştir') : __('Şehre özel resim seç') }}
+                                                        <input type="file" name="city[{{ $rowCity->id }}]" accept="image/jpeg,image/png,image/webp" class="sr-only">
+                                                    </label>
+                                                    @if ($desk)
+                                                        <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600">
+                                                            <input type="checkbox" name="remove[city][{{ $rowCity->id }}]" value="1" class="rounded border-slate-300 text-red-600">{{ __('Kaldır, genel resmi kullan') }}
+                                                        </label>
+                                                    @endif
+                                                    <span class="text-xs font-medium text-emerald-700" data-file-name></span>
+                                                </div>
+                                            </section>
+
+                                            {{-- telefon --}}
+                                            <section data-banner-box class="flex items-start gap-5">
+                                                <div class="w-32 shrink-0 rounded-[1.4rem] border-4 border-slate-900 bg-slate-900 p-0.5">
+                                                    <div class="relative {{ $spec['mobile_ratio'] }} overflow-hidden rounded-[1rem] bg-slate-800">
+                                                        <img src="{{ $mob ?: ($desk ?: $generalDesktop) }}" alt="" data-preview @class(['absolute inset-0 size-full object-cover', 'opacity-60' => !$mob]) style="object-position: {{ $cityFocus }}% center">
+                                                    </div>
+                                                </div>
+                                                <div class="min-w-0 flex-1">
+                                                    <p class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                                        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2" /><path d="M11 18.5h2" /></svg>
+                                                        {{ __('Telefon') }}
+                                                    </p>
+                                                    <p class="mt-1 text-sm text-slate-500">{{ $mob ? __('Telefonda bu resim görünür.') : __('Ayrı resim yoksa masaüstü resminden kesilir.') }}</p>
+                                                    <div class="mt-3 flex flex-wrap items-center gap-2">
+                                                        <label class="inline-flex cursor-pointer items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50">
+                                                            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16" /></svg>
+                                                            {{ $mob ? __('Değiştir') : __('Telefon resmi seç') }}
+                                                            <input type="file" name="city_mobile[{{ $rowCity->id }}]" accept="image/jpeg,image/png,image/webp" class="sr-only">
+                                                        </label>
+                                                        @if ($mob)
+                                                            <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600">
+                                                                <input type="checkbox" name="remove[city_mobile][{{ $rowCity->id }}]" value="1" class="rounded border-slate-300 text-red-600">{{ __('Kaldır') }}
+                                                            </label>
+                                                        @endif
+                                                    </div>
+                                                    <span class="mt-1 block text-xs font-medium text-emerald-700" data-file-name></span>
+                                                </div>
+                                            </section>
+
+                                            {{-- kadraj: bu şehrin bütün önizlemeleri birlikte değişir --}}
+                                            <section>
+                                                <p class="text-sm font-semibold text-slate-900">{{ __('Kadraj: resmin hangi tarafı görünsün?') }}</p>
+                                                <div class="mt-2 flex items-center gap-3">
+                                                    <span class="text-xs font-medium text-slate-500">{{ __('Sol') }}</span>
+                                                    <input type="range" name="city_focus[{{ $rowCity->id }}]" min="0" max="100" step="5" value="{{ old('city_focus.' . $rowCity->id, $cityFocus) }}" class="w-full accent-brand-900" data-banner-focus>
+                                                    <span class="text-xs font-medium text-slate-500">{{ __('Sağ') }}</span>
+                                                </div>
+                                            </section>
+                                        @endif
+
+                                        {{-- fotoğraf üstü kartlar (şehirler) / kemerler (blog) --}}
+                                        @if ($page->key === 'cities')
+                                            <section>
+                                                <p class="text-sm font-semibold text-slate-900">{{ __('Fotoğrafın üstündeki kartlar') }}</p>
+                                                <p class="mt-0.5 text-xs text-slate-500">{{ __('Otomatik: kapak resmi olan ilk rehber konuları.') }}</p>
+                                                @if ($guideOptions->isEmpty())
+                                                    <p class="mt-3 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500 ring-1 ring-slate-200">{{ __('Bu şehrin rehberi henüz yazılmamış; kartlar rehber yazılınca seçilebilir.') }}</p>
+                                                @else
+                                                    <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                                                        @foreach ([__('Sol alt'), __('Sağ üst')] as $i => $cardLabel)
+                                                            <label class="block">
+                                                                <span class="mb-1 block text-xs font-semibold text-slate-600">{{ $cardLabel }}</span>
+                                                                <select name="cards[{{ $rowCity->id }}][{{ $i }}]" class="{{ $field }}">
+                                                                    <option value="" @selected($cardValues[$i] === '')>{{ __('Otomatik') }}</option>
+                                                                    <option value="0" @selected($cardValues[$i] === '0')>{{ __('Gösterme') }}</option>
+                                                                    @foreach ($guideOptions as $option)
+                                                                        <option value="{{ $option->id }}" @selected($cardValues[$i] === (string) $option->id)>{{ $option->topic->getTranslation('name', 'tr', false) ?: $option->topic->name }}{{ $option->image_path ? '' : ' (' . __('resimsiz') . ')' }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </label>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                            </section>
+                                        @elseif ($arch)
+                                            <section>
+                                                <p class="text-sm font-semibold text-slate-900">{{ __('Kemerler') }}</p>
+                                                <p class="mt-0.5 text-xs text-slate-500">{{ __('Sağdaki üç kemerde hangi yazı dursun. Kapağı olmayan yazı seçilemez.') }}</p>
+                                                <div class="mt-3 grid gap-3">
+                                                    @foreach ([__('Orta (büyük)'), __('Sol'), __('Sağ')] as $i => $archLabel)
+                                                        <label class="block">
+                                                            <span class="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-600">
+                                                                <span @class(['inline-block w-2.5 rounded-t-full', 'h-4 bg-red-400' => $i === 0, 'h-3 bg-slate-300' => $i > 0])></span>{{ $archLabel }}
+                                                            </span>
+                                                            <select name="arches[{{ $rowCity->id }}][{{ $i }}]" class="{{ $field }}">
+                                                                <option value="">{{ __('Otomatik') }}</option>
+                                                                @foreach ($arch['city']->blogs as $archBlog)
+                                                                    <option value="{{ $archBlog->id }}" @selected($arch['values'][$i] === (string) $archBlog->id) @disabled(!$archBlog->cover_path)>
+                                                                        {{ \Illuminate\Support\Str::limit($archBlog->getTranslation('title', 'en', false), 50) }}{{ $archBlog->cover_path ? '' : ' (' . __('kapak yok') . ')' }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </label>
+                                                    @endforeach
+                                                </div>
+                                            </section>
+                                        @endif
+                                    </div>
+
+                                    <div class="flex items-center justify-end gap-2 border-t border-slate-100 bg-slate-50/70 px-6 py-4">
+                                        <button type="button" data-city-close class="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 ring-1 ring-slate-200 transition hover:bg-white">{{ __('Kapat') }}</button>
+                                        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-brand-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800">
+                                            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7" /></svg>
+                                            {{ __('Kaydet') }}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </li>
-                        @if ($errors->has("city.{$rowCity->id}") || $errors->has("city_mobile.{$rowCity->id}"))
-                            <li class="bg-red-50 px-6 py-2 text-xs font-medium text-red-700">{{ $rowCity->name }}: {{ $errors->first("city.{$rowCity->id}") ?: $errors->first("city_mobile.{$rowCity->id}") }}</li>
-                        @endif
                     @endforeach
                 </ul>
             </x-admin.card>
@@ -360,24 +443,52 @@
             live();
             form.addEventListener('input', (event) => {
                 if (event.target.matches('[data-live]')) live();
-                if (event.target.matches('[data-hero-focus]')) {
-                    form.querySelectorAll('[data-hero-img], [data-live-img], [data-preview]').forEach((img) => img.style.objectPosition = event.target.value + '% center');
-                }
-                // Kadraj tek değer: aynı bölümdeki masaüstü VE telefon önizlemesi birlikte değişir (sitede ikisine de uygulanır)
-                if (event.target.matches('[data-banner-focus]')) {
-                    const scope = event.target.closest('[data-banner-slot], li') ?? form;
-                    scope.querySelectorAll('[data-preview]').forEach((img) => img.style.objectPosition = event.target.value + '% center');
+                // Sayfa kadrajı: "Görünüm" adımındaki ve genel resmin altındaki kaydırıcı aynı ayar; biri oynayınca diğeri de
+                // (sitede genel resme uygulanır). Şehirlerin kendi kadrajı ayrı (Düzenle paneli).
+                const pageFocus = (value) => {
+                    form.querySelectorAll('[data-hero-focus], [data-banner-slot] [data-banner-focus]').forEach((el) => { if (el !== event.target) el.value = value; });
+                    form.querySelectorAll('[data-hero-img], [data-live-img], [data-banner-slot] [data-preview]').forEach((img) => img.style.objectPosition = value + '% center');
+                };
+                if (event.target.matches('[data-hero-focus]') || event.target.closest('[data-banner-slot]')?.contains(event.target) && event.target.matches('[data-banner-focus]')) {
+                    pageFocus(event.target.value);
+                } else if (event.target.matches('[data-banner-focus]')) {
+                    // Şehir kadrajı: o şehrin listedeki küçük resmi ve paneldeki masaüstü/telefon önizlemesi birlikte değişir
+                    event.target.closest('li')?.querySelectorAll('[data-preview]').forEach((img) => img.style.objectPosition = event.target.value + '% center');
                 }
                 if (event.target.name === 'overlay') form.querySelector('[data-hero-overlay]').className = 'absolute inset-0 bg-gradient-to-r ' + event.target.dataset.classes + ' to-transparent';
             });
+            // Şehir düzenleme paneli: aç / kapat (Esc), arkadaki sayfa kaymasın
+            const drawers = () => [...form.querySelectorAll('[data-city-drawer]')];
+            const closeDrawers = () => { drawers().forEach((d) => d.classList.add('hidden')); document.documentElement.classList.remove('overflow-hidden'); };
+            form.addEventListener('click', (event) => {
+                if (event.target.closest('[data-city-open]')) {
+                    closeDrawers();
+                    event.target.closest('[data-city-row]').querySelector('[data-city-drawer]').classList.remove('hidden');
+                    document.documentElement.classList.add('overflow-hidden');
+                } else if (event.target.closest('[data-city-close]')) {
+                    closeDrawers();
+                }
+            });
+            document.addEventListener('keydown', (event) => event.key === 'Escape' && closeDrawers());
+            // Kaydedilince satırlar sunucudan yenilenir (yeni küçük resim, durum): açık panel de kapanır
+            document.addEventListener('live:refreshed', () => { if (!drawers().some((d) => !d.classList.contains('hidden'))) document.documentElement.classList.remove('overflow-hidden'); });
+            if (drawers().some((d) => !d.classList.contains('hidden'))) document.documentElement.classList.add('overflow-hidden');
+
             // seçilen resim hemen önizlenir (kaydetmeden)
             form.addEventListener('change', (event) => {
                 const input = event.target;
                 if (input.type !== 'file' || !input.files?.length) return;
                 const box = input.closest('[data-banner-box]');
                 const img = box.querySelector('[data-preview]');
-                img.src = URL.createObjectURL(input.files[0]);
-                img.classList.remove('opacity-40', 'opacity-50', 'grayscale', 'hidden');
+                const src = URL.createObjectURL(input.files[0]);
+                img.src = src;
+                img.classList.remove('opacity-40', 'opacity-50', 'opacity-60', 'grayscale', 'hidden');
+                // şehir satırı: masaüstü resmi seçilince listedeki küçük resim de değişsin
+                const row = input.closest('[data-city-row]');
+                if (row && input.name.startsWith('city[')) {
+                    const thumb = row.querySelector(':scope > div [data-preview]');
+                    if (thumb) { thumb.src = src; thumb.classList.remove('opacity-50', 'grayscale'); }
+                }
                 box.querySelector('[data-note]')?.remove();
                 const name = box.querySelector('[data-file-name]');
                 if (name) name.textContent = '✓ ' + input.files[0].name;

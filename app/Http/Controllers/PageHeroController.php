@@ -104,17 +104,19 @@ class PageHeroController extends Controller
             ...array_keys((array) $request->input('remove.city_mobile', [])),
             ...array_keys((array) $request->input('city_focus', [])),
         ]);
+        // Sayfa kadrajı (aynı istekte değişmiş olabilir): resmi olmayan şehirde bundan farklı kadraj "şehre özel" sayılır
+        $pageFocus = (int) ($request->input('focus') ?? \App\Models\Setting::get("banner_{$page->key}_focus") ?? 50);
         foreach (City::whereIn('id', $ids)->pluck('id') as $id) {
             $this->save($page->key, $id, $request->file("city.{$id}"), $request->file("city_mobile.{$id}"),
                 $request->boolean("remove.city.{$id}"), $request->boolean("remove.city_mobile.{$id}"),
-                $request->filled("city_focus.{$id}") ? (int) $request->input("city_focus.{$id}") : null);
+                $request->filled("city_focus.{$id}") ? (int) $request->input("city_focus.{$id}") : null, $pageFocus);
         }
     }
 
     /**
      * Tek resim alanı (genel ya da bir şehir): yeni dosya yüklenir ya da kaldırılır; ikisi de boşalırsa kayıt silinir.
      */
-    private function save(string $pageKey, ?int $cityId, $desktop, $mobile, bool $removeDesktop, bool $removeMobile, ?int $focus = null): void
+    private function save(string $pageKey, ?int $cityId, $desktop, $mobile, bool $removeDesktop, bool $removeMobile, ?int $focus = null, ?int $pageFocus = null): void
     {
         if (!$desktop && !$mobile && !$removeDesktop && !$removeMobile && $focus === null) {
             return;
@@ -142,7 +144,11 @@ class PageHeroController extends Controller
             $banner->focus = 50;
         }
 
-        if ($banner->image || $banner->image_mobile) {
+        // Resmi olmayan şehir de kendi kadrajını saklayabilir: genel resim o şehirde böyle kırpılır (site: PageBanner::urls).
+        // Sayfa kadrajıyla aynıysa saklanmaz; şehir sayfa kadrajını izlemeye devam eder.
+        $customFocus = $cityId && $pageFocus !== null && $banner->focus !== null && (int) $banner->focus !== $pageFocus;
+
+        if ($banner->image || $banner->image_mobile || $customFocus) {
             $banner->save();
         } elseif ($banner->exists) {
             $banner->delete();
