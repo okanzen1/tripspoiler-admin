@@ -12,6 +12,7 @@ import './dropdown';
 import './sortable-cards';
 import './page-sections';
 import './confirm-dialog';
+import './busy-overlay';
 
 // Zengin metin editörü sadece gereken sayfalarda yüklensin
 if (document.querySelector('[data-rich-editor]')) {

@@ -18,7 +18,7 @@
 @section('header')
     <x-admin.page-header :title="$language->flag() . ' ' . __(':language çevirisi', ['language' => $language->native_name])" :description="$owner['title']" :breadcrumb="[$owner['title'] => $owner['url']]">
         <x-slot:icon><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6" /></x-slot:icon>
-        <form action="{{ route('translations.translate', [$type, $model->getKey()]) }}" method="POST"
+        <form action="{{ route('translations.translate', [$type, $model->getKey()]) }}" method="POST" data-busy="{{ __(':language çevriliyor…', ['language' => $language->native_name]) }}" data-busy-hint="{{ __('Birkaç saniye sürer. Bitince sayfa kendiliğinden yenilenir.') }}"
             data-confirm-title="{{ __(':language baştan çevrilsin mi?', ['language' => $language->native_name]) }}"
             data-confirm="{{ __('Bu dildeki tüm alanlar İngilizceden Google Çeviri ile yeniden çevrilir. Elle yaptığın düzeltmeler gider.') }}"
             data-confirm-button="{{ __('Evet, yeniden çevir') }}"

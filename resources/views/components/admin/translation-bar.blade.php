@@ -33,7 +33,7 @@
         </div>
 
         @if ($pending > 0)
-            <form action="{{ route('translations.translate', [$type, $model->getKey()]) }}" method="POST"
+            <form action="{{ route('translations.translate', [$type, $model->getKey()]) }}" method="POST" data-busy="{{ __('Diğer dillere çevriliyor…') }}" data-busy-hint="{{ __('Google Çeviri her dili sırayla çeviriyor; 1–2 dakika sürebilir. Bitince sayfa kendiliğinden yenilenir, sayfayı kapatma.') }}"
                 data-confirm-title="{{ __(':count dile çevrilsin mi?', ['count' => $pending]) }}"
                 data-confirm="{{ __('Çevirisi olmayan ya da İngilizcesi değişen diller Google Çeviri ile çevrilir. Birkaç dakika sürebilir.') }}"
                 data-confirm-button="{{ __('Evet, çevir') }}"

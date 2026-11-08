@@ -215,14 +215,24 @@
                 const action = form.action || '';
                 // Yerel/dil değiştirme ve çıkış formları normal çalışsın
                 if (action.includes('/dil') || action.includes('/logout') || action.includes('/cevir')) return;
-                // Sadece POST/PUT/PATCH/DELETE formları
+                // Sadece sunucuya giden POST formları (PUT/PATCH/DELETE de _method ile POST'tur).
+                // GET ve onay penceresinin <form method="dialog">'u karışmasın: yoksa pencere kapanmaz, sayfaya POST gider (405)
                 const method = (form.getAttribute('method') || 'GET').toUpperCase();
-                if (method === 'GET') return;
+                if (method !== 'POST') return;
                 const isDelete = method === 'DELETE' || form.querySelector('input[name="_method"][value="DELETE"]');
                 // Zaten işleniyorsa tekrar çalıştırma
                 if (form.dataset.ajaxBusy) return;
 
                 e.preventDefault();
+
+                // Seçilen dosyaların toplamı sunucu sınırını (post_max_size) aşarsa sunucu formu tamamen atar: baştan uyar
+                const postMax = {{ \App\Support\UploadLimit::requestBytes() }};
+                const fileBytes = [...form.querySelectorAll('input[type=file]')].flatMap(i => [...i.files]).reduce((sum, f) => sum + f.size, 0);
+                if (fileBytes > postMax * 0.95) {
+                    showToast(@json(__('Seçilen resimler birlikte çok büyük (sunucu sınırı :max MB). Daha küçük resim seç ya da resimleri ayrı ayrı kaydet.', ['max' => round(\App\Support\UploadLimit::requestBytes() / 1024 ** 2, 1)])), false);
+                    return;
+                }
+
                 form.dataset.ajaxBusy = '1';
                 const btn = form.querySelector('button[type="submit"], input[type="submit"]');
                 if (btn) btn.disabled = true;

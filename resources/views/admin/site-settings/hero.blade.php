@@ -482,7 +482,7 @@
     </form>
 
     {{-- Yazıları çevir: ana formun içinde form olamayacağı için ayrı; 2. adımdaki buton form="hero-translate" ile bağlı --}}
-    <form id="hero-translate" action="{{ route('translations.translate', ['hero', $heroText->id]) }}" method="POST" class="hidden"
+    <form id="hero-translate" action="{{ route('translations.translate', ['hero', $heroText->id]) }}" method="POST" class="hidden" data-busy="{{ __('Diğer dillere çevriliyor…') }}" data-busy-hint="{{ __('Google Çeviri her dili sırayla çeviriyor; 1–2 dakika sürebilir. Bitince sayfa kendiliğinden yenilenir, sayfayı kapatma.') }}"
         data-confirm-title="{{ __('Yazılar diğer dillere çevrilsin mi?') }}"
         data-confirm="{{ __('Kaydedilmiş İngilizce yazı Google Çeviri ile çevrilir. Kaydetmediğin değişiklik varsa önce kaydet.') }}"
         data-confirm-button="{{ __('Evet, çevir') }}">

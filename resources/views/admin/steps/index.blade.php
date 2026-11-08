@@ -68,7 +68,7 @@
                     @endforeach
                 </div>
                 @if ($sectionPending)
-                    <form action="{{ route('translations.translate', ['section', $section->id]) }}" method="POST"
+                    <form action="{{ route('translations.translate', ['section', $section->id]) }}" method="POST" data-busy="{{ __('Diğer dillere çevriliyor…') }}" data-busy-hint="{{ __('Google Çeviri her dili sırayla çeviriyor; 1–2 dakika sürebilir. Bitince sayfa kendiliğinden yenilenir, sayfayı kapatma.') }}"
                         data-confirm-title="{{ __('Başlık diğer dillere çevrilsin mi?') }}" data-confirm="{{ __('Kaydedilmiş İngilizce yazı Google Çeviri ile çevrilir.') }}" data-confirm-button="{{ __('Evet, çevir') }}">
                         @csrf
                         <button type="submit" class="rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-700">{{ __('Diğer dillere çevir (:count)', ['count' => $sectionPending]) }}</button>

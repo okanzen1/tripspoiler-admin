@@ -158,7 +158,7 @@
 
     {{-- Çeviri formları (ana formun içinde form olamaz; butonlar form="..." ile bağlı) --}}
     @foreach (['translate-blog' => $section, 'translate-newsletter' => $newsletter] as $formId => $model)
-        <form id="{{ $formId }}" action="{{ route('translations.translate', ['section', $model->id]) }}" method="POST" class="hidden"
+        <form id="{{ $formId }}" action="{{ route('translations.translate', ['section', $model->id]) }}" method="POST" class="hidden" data-busy="{{ __('Diğer dillere çevriliyor…') }}" data-busy-hint="{{ __('Google Çeviri her dili sırayla çeviriyor; 1–2 dakika sürebilir. Bitince sayfa kendiliğinden yenilenir, sayfayı kapatma.') }}"
             data-confirm-title="{{ __('Diğer dillere çevrilsin mi?') }}" data-confirm="{{ __('Kaydedilmiş İngilizce yazı Google Çeviri ile çevrilir. Kaydetmediğin değişiklik varsa önce kaydet.') }}" data-confirm-button="{{ __('Evet, çevir') }}">
             @csrf
         </form>
