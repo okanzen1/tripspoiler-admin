@@ -39,6 +39,33 @@
         </div>
     @endif
 
+    {{-- CANLI filtreleri (yenilenen alanın dışında: yazılanlar kaybolmasın) --}}
+    @php $liveField = 'rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-brand-900 focus:ring-4 focus:ring-brand-900/10'; @endphp
+    <form class="mb-4 flex flex-wrap items-center gap-2" data-live-filters onsubmit="return false">
+        <div class="relative min-w-[14rem] flex-1 sm:max-w-sm">
+            <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+            <input type="search" name="q" value="{{ $liveFilters['q'] }}" placeholder="{{ __('IP, sayfa, şehir ya da kaynak ara…') }}" autocomplete="off" class="{{ $liveField }} w-full pl-9">
+        </div>
+        <select name="when" class="{{ $liveField }}">
+            @foreach (\App\Services\Analytics::LIVE_RANGES as $value => $label)
+                <option value="{{ $value }}" @selected($liveFilters['range'] === $value)>{{ __($label) }}</option>
+            @endforeach
+        </select>
+        <select name="country" class="{{ $liveField }}">
+            <option value="">{{ __('Tüm ülkeler') }}</option>
+            @foreach ($live['countries'] as $code)
+                <option value="{{ $code }}" @selected($liveFilters['country'] === $code)>{{ \App\Services\Analytics::flag($code) }} {{ \Locale::getDisplayRegion("-{$code}", app()->getLocale()) ?: $code }}</option>
+            @endforeach
+        </select>
+        <select name="device" class="{{ $liveField }}">
+            <option value="">{{ __('Tüm cihazlar') }}</option>
+            @foreach (['desktop' => 'Bilgisayar', 'mobile' => 'Telefon', 'tablet' => 'Tablet'] as $value => $label)
+                <option value="{{ $value }}" @selected($liveFilters['device'] === $value)>{{ __($label) }}</option>
+            @endforeach
+        </select>
+        <button type="button" data-live-reset @class(['rounded-xl px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100', 'hidden' => !array_filter($liveFilters)])>{{ __('Temizle') }}</button>
+    </form>
+
     {{-- CANLI: 10 saniyede bir yenilenir (sekme açıkken) --}}
     <div class="mb-6" data-live-analytics data-url="{{ route('analytics.live') }}">
         @include('admin.analytics._live', ['live' => $live])
@@ -141,17 +168,38 @@
 
 @push('scripts')
     <script>
-        // Canlı bölüm: sekme görünürken 10 sn'de bir yenile (sayfa yenilenmez)
+        // Canlı bölüm: sekme görünürken 10 sn'de bir, filtre değişince hemen yenile (sayfa yenilenmez).
+        // Filtreler adrese yazılır: sayfa yenilense ya da link paylaşılsa da kalır.
         (() => {
             const box = document.querySelector('[data-live-analytics]');
-            if (!box) return;
+            const form = document.querySelector('[data-live-filters]');
+            if (!box || !form) return;
+            const reset = form.querySelector('[data-live-reset]');
+            const params = () => {
+                const p = new URLSearchParams();
+                new FormData(form).forEach((value, key) => { if (String(value).trim() !== '' && !(key === 'when' && value === '0')) p.set(key, value); });
+                return p;
+            };
+            let ticket = 0;
             const refresh = async () => {
                 if (document.hidden) return;
+                const mine = ++ticket;
                 try {
-                    const res = await fetch(box.dataset.url, { headers: { Accept: 'text/html' }, credentials: 'same-origin' });
-                    if (res.ok && !res.redirected) box.innerHTML = await res.text();
+                    const res = await fetch(box.dataset.url + '?' + params(), { headers: { Accept: 'text/html' }, credentials: 'same-origin' });
+                    if (res.ok && !res.redirected && mine === ticket) box.innerHTML = await res.text();
                 } catch { /* bir sonraki turda tekrar */ }
             };
+            const apply = () => {
+                const p = params();
+                const url = new URL(location.href);
+                ['q', 'when', 'country', 'device'].forEach((key) => p.has(key) ? url.searchParams.set(key, p.get(key)) : url.searchParams.delete(key));
+                history.replaceState(null, '', url);
+                reset.classList.toggle('hidden', ![...p.keys()].length);
+                refresh();
+            };
+            let typing;
+            form.addEventListener('input', (e) => { clearTimeout(typing); typing = setTimeout(apply, e.target.type === 'search' ? 300 : 0); });
+            reset.addEventListener('click', () => { form.reset(); form.querySelectorAll('input, select').forEach((el) => { el.value = el.name === 'when' ? '0' : ''; }); apply(); });
             setInterval(refresh, 10000);
             document.addEventListener('visibilitychange', () => !document.hidden && refresh());
         })();

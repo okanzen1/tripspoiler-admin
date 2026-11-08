@@ -28,12 +28,34 @@ class AnalyticsController extends Controller
             'countries' => $analytics->countries(),
         ]);
 
-        return view('admin.analytics.index', ['analytics' => $analytics, 'live' => Analytics::live(), ...$data]);
+        $filters = $this->liveFilters($request);
+
+        return view('admin.analytics.index', ['analytics' => $analytics, 'live' => Analytics::live($filters), 'liveFilters' => $filters, ...$data]);
     }
 
-    /** Canlı bölüm: sayfa 10 saniyede bir bunu çekip yerine koyar (önbelleksiz) */
-    public function live()
+    /** Canlı bölüm: sayfa 10 saniyede bir (ve filtre değişince) bunu çekip yerine koyar (önbelleksiz) */
+    public function live(Request $request)
     {
-        return view('admin.analytics._live', ['live' => Analytics::live()]);
+        return view('admin.analytics._live', ['live' => Analytics::live($this->liveFilters($request))]);
+    }
+
+    /** Tek ziyaretçi (IP): bütün oturumları, sayfaları ve partner tıklamaları */
+    public function visitor(string $who)
+    {
+        $data = Analytics::visitor($who);
+        abort_if($data['visits']->isEmpty() && $data['clicks']->isEmpty(), 404);
+
+        return view('admin.analytics.visitor', ['who' => $who, ...$data]);
+    }
+
+    /** Canlı liste filtreleri: ara, aralık, ülke, cihaz */
+    private function liveFilters(Request $request): array
+    {
+        return [
+            'q' => mb_substr(trim((string) $request->query('q')), 0, 100) ?: null,
+            'range' => array_key_exists((int) $request->query('when'), Analytics::LIVE_RANGES) ? (int) $request->query('when') : 0,
+            'country' => preg_match('/^[A-Z]{2}$/', (string) $request->query('country')) ? $request->query('country') : null,
+            'device' => in_array($request->query('device'), ['desktop', 'mobile', 'tablet'], true) ? $request->query('device') : null,
+        ];
     }
 }
