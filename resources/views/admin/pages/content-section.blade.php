@@ -20,7 +20,7 @@
     <x-admin.page-header :title="__($name)" :breadcrumb="['Sayfalar' => route('pages.index'), $page->name => route('pages.edit', $page), 'Sayfa içeriği' => route('pages.content', $page)]"
         :description="__($hint) . ' ' . __('İngilizce yaz ve kaydet; sonra “Tüm dillere çevir”. Boş bırakırsan varsayılan metin görünür.')">
         <x-slot:icon>{!! preg_replace('#^<svg[^>]*>|</svg>$#', '', \App\Support\FeatureIcons::svg($icon)) !!}</x-slot:icon>
-        <form action="{{ route('pages.content.translate', [$page, $key]) }}" method="POST">
+        <form action="{{ route('pages.content.translate', [$page, $key]) }}" method="POST" data-translate="content:{{ $page->id }}:{{ $key }}" data-live="content-translate-{{ $key }}">
             @csrf
             <button type="submit" class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold ring-1 transition {{ $pending ? 'bg-amber-50 text-amber-800 ring-amber-200 hover:bg-amber-100' : 'text-slate-700 ring-slate-200 hover:bg-white' }}">
                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6" /></svg>

@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\TranslateModel;
 use App\Models\Page;
 use App\Models\SectionText;
 use App\Services\Translation\ModelTranslator;
+use App\Support\TranslationJobs;
 use Illuminate\Http\Request;
+
+use function Illuminate\Support\defer;
 
 /**
  * Sayfa içeriği (şimdilik Hakkımızda): sayfadaki bölümlerin yazıları. Her blok bir section_texts kaydı
@@ -156,18 +158,65 @@ class PageContentController extends Controller
     }
 
     /** Bölümün bütün yazılarını eksik/eskimiş dillere çevirir */
-    public function translate(Page $page, string $section)
+    /**
+     * Bölümün (başlık + kartlar) eksik/eskimiş dillerini çevirir. Panel (fetch) arka planda çevirtir: hemen döner,
+     * çeviri cevaptan sonra sürer, ilerleme sağ üstteki bildirimde (TranslationJobs). Sıraya (kuyruk) atılmaz:
+     * canlıda kuyruk işçisi olmayınca çeviri hiç yapılmıyordu.
+     */
+    public function translate(Request $request, Page $page, string $section)
     {
         $def = self::SECTIONS[$page->key][$section] ?? abort(404);
-        $count = 0;
-        foreach ([$def[3], ...$def[4]] as $key) {
-            $record = SectionText::for($key);
-            if (filled($record->title) && $locales = $this->translator->pending($record)) {
-                TranslateModel::dispatch($record, $locales);
-                $count++;
-            }
+        $work = collect([$def[3], ...$def[4]])
+            ->map(fn ($key) => SectionText::for($key))
+            ->filter(fn ($record) => filled($record->title))
+            ->map(fn ($record) => [$record, $this->translator->pending($record)])
+            ->filter(fn ($item) => $item[1] !== [])
+            ->values();
+
+        if ($work->isEmpty()) {
+            return $request->expectsJson()
+                ? response()->json(['message' => __('Tüm çeviriler zaten güncel.')])
+                : back()->with('success', __('Tüm çeviriler zaten güncel.'));
         }
 
-        return back()->with('success', $count ? __('Çeviriye gönderildi.') : __('Tüm çeviriler zaten güncel.'));
+        $run = function (?string $jobKey = null) use ($work, $page, $section, $def) {
+            $done = [];
+            foreach ($work as [$record, $locales]) {
+                $done = [...$done, ...$this->translator->translate($record, $locales, fn (string $locale) => $jobKey && TranslationJobs::progress($jobKey, $locale))];
+            }
+            $names = \App\Models\Language::whereIn('code', array_unique($done))->pluck('native_name')->implode(', ');
+            \App\Support\ActivityLogger::write('translated', 'section_text', null, $page->name . ' · ' . __($def[0]), ['Diller' => [null, $names]]);
+
+            return $names;
+        };
+
+        if (!$request->expectsJson()) {
+            set_time_limit(900);
+            $names = $run();
+
+            return back()->with('success', __('Çevrildi: :languages', ['languages' => $names]));
+        }
+
+        $key = "content:{$page->id}:{$section}";
+        if (TranslationJobs::running($key)) {
+            return response()->json(['job' => TranslationJobs::get($key)]);
+        }
+        // ilerleme: her (kayıt, dil) çifti bir adım
+        $steps = $work->flatMap(fn ($item) => $item[1])->values()->all();
+        $job = TranslationJobs::start($key, $page->name . ' · ' . __($def[0]), url()->previous(), $steps);
+
+        ignore_user_abort(true);
+        defer(function () use ($run, $key) {
+            ignore_user_abort(true);
+            set_time_limit(900);
+            try {
+                TranslationJobs::finish($key, __('Çevrildi: :languages', ['languages' => $run($key)]));
+            } catch (\Throwable $e) {
+                report($e);
+                TranslationJobs::fail($key, __('Çeviri yapılamadı: :error', ['error' => $e->getMessage()]));
+            }
+        });
+
+        return response()->json(['job' => $job]);
     }
 }
