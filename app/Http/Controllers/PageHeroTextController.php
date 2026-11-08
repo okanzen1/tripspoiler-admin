@@ -18,7 +18,7 @@ class PageHeroTextController extends Controller
     public const FIELDS = [
         'activities' => [
             'eyebrow' => ['Üst etiket', 'Başlığın üstündeki küçük kırmızı yazı.', 'Activities', 40],
-            'title' => ['Başlık', 'Büyük beyaz başlık. Altına seçili şehrin adı kırmızıyla otomatik gelir.', 'Things to do in', 60],
+            'title' => ['Başlık', 'Şehrin geleceği yere :city yaz, orada kırmızıyla görünür (ör. "Things to do in :city"). Yazmazsan şehir başlığın altına gelir.', 'Things to do in :city', 60],
             'description' => ['Açıklama', 'Başlığın altındaki kısa yazı.', 'Hand-picked tickets, tours and city cards…', 260],
         ],
         'cities' => [

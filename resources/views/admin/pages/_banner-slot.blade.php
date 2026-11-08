@@ -20,7 +20,7 @@
             </label>
             @if ($desktop)
                 <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600">
-                    <input type="checkbox" name="{{ $removeDesktop }}" value="1" class="rounded border-slate-300 text-red-600 focus:ring-red-500">
+                    <input type="checkbox" name="{{ $removeDesktop }}" value="1" data-remove-image class="rounded border-slate-300 text-red-600 focus:ring-red-500">
                     {{ __('Kaldır') }}
                 </label>
             @endif
@@ -50,7 +50,7 @@
             </label>
             @if ($mobile)
                 <label class="inline-flex cursor-pointer items-center gap-1.5 rounded-xl px-2.5 py-2 text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600">
-                    <input type="checkbox" name="{{ $removeMobile }}" value="1" class="rounded border-slate-300 text-red-600 focus:ring-red-500">
+                    <input type="checkbox" name="{{ $removeMobile }}" value="1" data-remove-image class="rounded border-slate-300 text-red-600 focus:ring-red-500">
                     {{ __('Kaldır') }}
                 </label>
             @endif
@@ -61,5 +61,7 @@
             <input type="range" name="{{ $desktopName }}_focus" min="0" max="100" step="5" value="{{ old($desktopName . '_focus', $focus ?? 50) }}" class="w-full accent-brand-900" data-banner-focus>
             <span class="text-[11px] font-medium text-slate-500">Sağ</span>
         </div>
+        {{-- resim çerçeveye tam oturuyorsa kaydırıcı onu değiştiremez: neden değişmediği yazsın (hero-text.blade.php betiği) --}}
+        <p class="hidden text-[11px] leading-snug text-amber-700" data-focus-hint></p>
     </div>
 </div>

@@ -85,8 +85,10 @@
                 <div class="lg:col-span-2">
                     <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Önizleme') }}</p>
                     <div class="relative overflow-hidden rounded-2xl bg-[#0F1420] p-6 text-white">
-                        @if ($hasImages && $generalDesktop)
-                            <img src="{{ $generalDesktop }}" alt="" data-live-img class="absolute inset-0 size-full object-cover opacity-40" style="object-position: {{ $focus }}% center">
+                        @if ($hasImages)
+                            <span class="contents" data-live="hero-text-preview-img">
+                                <img src="{{ $generalDesktop }}" alt="" data-live-img @class(['absolute inset-0 size-full object-cover opacity-40', 'hidden' => !$generalDesktop]) style="object-position: {{ $focus }}% center">
+                            </span>
                             <div class="absolute inset-0 bg-gradient-to-r from-[#0F1420] via-[#0F1420]/80 to-transparent"></div>
                         @endif
                         <div class="relative">
@@ -97,7 +99,7 @@
                                 @elseif ($page->key === 'cities')
                                     Istanbul<span class="mt-1 block text-base font-bold text-white/90" data-live-out="title" data-example="{{ $fields['title'][2] }}"></span>
                                 @else
-                                    <span data-live-out="title" data-example="{{ $fields['title'][2] }}"></span><span class="block text-red-400">Istanbul</span>
+                                    <span data-live-out="title" data-example="{{ $fields['title'][2] }}"></span><span class="block text-red-400" data-city-line>Istanbul</span>
                                 @endif
                             </p>
                             <p class="mt-3 line-clamp-3 text-xs leading-relaxed text-white/65" data-live-out="description" data-example="{{ $fields['description'][2] }}"></p>
@@ -116,6 +118,7 @@
                     {!! $badge(2) !!}
                     <x-admin.step-heading :title="__('Genel resim')" :description="__('Kendi resmi olmayan her şehirde bu görünür; boşsa anasayfa hero resmi. Masaüstü önerilen :dw × :dh, telefon :mw × :mh piksel. Otomatik küçültülür ve WebP olur.', ['dw' => $spec['desktop'][0][0], 'dh' => $spec['desktop'][0][1], 'mw' => $spec['mobile'][0][0], 'mh' => $spec['mobile'][0][1]])" />
                 </div>
+                <div data-live="hero-general-slot">
                 @include('admin.pages._banner-slot', [
                     'spec' => $spec,
                     'desktopName' => 'general', 'mobileName' => 'general_mobile',
@@ -123,8 +126,9 @@
                     'desktop' => $general?->image, 'mobile' => $general?->image_mobile,
                     'desktopPreview' => $generalDesktop, 'mobilePreview' => $url($general?->image_mobile) ?: $generalDesktop,
                     'note' => $general?->image ? null : __('Şu an anasayfa resmi kullanılıyor'),
-                    'focus' => $general?->focus ?? 50,
+                    'focus' => $focus, // sayfa kadrajı (Görünüm adımıyla aynı ayar)
                 ])
+                </div>
                 @error('general') <p class="mt-2 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
                 @error('general_mobile') <p class="mt-2 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
                 <p class="mt-4 text-xs text-slate-500">{{ __($spec['layout']) }}</p>
@@ -140,9 +144,9 @@
                 </div>
                 <div class="mt-5 grid gap-6 lg:grid-cols-2">
                     <div class="relative aspect-[16/8] overflow-hidden rounded-2xl bg-slate-900">
-                        @if ($generalDesktop)
-                            <img src="{{ $generalDesktop }}" alt="" data-hero-img class="absolute inset-0 size-full object-cover" style="object-position: {{ $focus }}% center">
-                        @endif
+                        <span class="contents" data-live="hero-look-img">
+                            <img src="{{ $generalDesktop }}" alt="" data-hero-img @class(['absolute inset-0 size-full object-cover', 'hidden' => !$generalDesktop]) style="object-position: {{ $focus }}% center">
+                        </span>
                         <div data-hero-overlay class="absolute inset-0 bg-gradient-to-r {{ $overlays[$overlay][2] }} to-transparent"></div>
                         <div class="absolute left-6 top-1/2 w-2/5 -translate-y-1/2 space-y-1.5">
                             <div class="h-2.5 rounded bg-white/90"></div>
@@ -320,7 +324,7 @@
                                                     </label>
                                                     @if ($desk)
                                                         <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600">
-                                                            <input type="checkbox" name="remove[city][{{ $rowCity->id }}]" value="1" class="rounded border-slate-300 text-red-600">{{ __('Kaldır, genel resmi kullan') }}
+                                                            <input type="checkbox" name="remove[city][{{ $rowCity->id }}]" value="1" class="rounded border-slate-300 text-red-600" data-remove-image>{{ __('Kaldır, genel resmi kullan') }}
                                                         </label>
                                                     @endif
                                                     <span class="text-xs font-medium text-emerald-700" data-file-name></span>
@@ -348,7 +352,7 @@
                                                         </label>
                                                         @if ($mob)
                                                             <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600">
-                                                                <input type="checkbox" name="remove[city_mobile][{{ $rowCity->id }}]" value="1" class="rounded border-slate-300 text-red-600">{{ __('Kaldır') }}
+                                                                <input type="checkbox" name="remove[city_mobile][{{ $rowCity->id }}]" value="1" class="rounded border-slate-300 text-red-600" data-remove-image>{{ __('Kaldır') }}
                                                             </label>
                                                         @endif
                                                     </div>
@@ -436,9 +440,18 @@
         (() => {
             const form = document.getElementById('hero-text-form');
             // canlı önizleme: yazılar
+            // Başlıkta ":city" varsa şehir tam oraya kırmızı gelir (sitedeki gibi) ve alttaki ayrı şehir satırı gizlenir
+            const escapeHtml = (text) => text.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
             const live = () => form.querySelectorAll('[data-live-out]').forEach((out) => {
                 const input = form.querySelector(`[data-live="${out.dataset.liveOut}"]`);
-                out.textContent = ((input?.value || out.dataset.example) ?? '').replaceAll(':city', 'Istanbul');
+                const text = (input?.value || out.dataset.example) ?? '';
+                if (out.dataset.liveOut === 'title') {
+                    const inline = text.includes(':city');
+                    out.innerHTML = escapeHtml(text).replaceAll(':city', '<span class="text-red-400">Istanbul</span>');
+                    out.parentElement.querySelector('[data-city-line]')?.classList.toggle('hidden', inline);
+                } else {
+                    out.textContent = text.replaceAll(':city', 'Istanbul');
+                }
             });
             live();
             form.addEventListener('input', (event) => {
@@ -473,6 +486,51 @@
             // Kaydedilince satırlar sunucudan yenilenir (yeni küçük resim, durum): açık panel de kapanır
             document.addEventListener('live:refreshed', () => { if (!drawers().some((d) => !d.classList.contains('hidden'))) document.documentElement.classList.remove('overflow-hidden'); });
             if (drawers().some((d) => !d.classList.contains('hidden'))) document.documentElement.classList.add('overflow-hidden');
+
+            // "Kaldır" işaretlenince: önizleme soluklaşsın, kaydedince ne olacağı yazsın
+            form.addEventListener('change', (event) => {
+                const box = event.target.matches('[data-remove-image]') && event.target.closest('[data-banner-box], section');
+                if (!box) return;
+                const img = box.querySelector('[data-preview]');
+                img?.classList.toggle('opacity-30', event.target.checked);
+                img?.classList.toggle('grayscale', event.target.checked);
+                let note = box.querySelector('[data-remove-note]');
+                if (!note) {
+                    note = document.createElement('span');
+                    note.dataset.removeNote = '';
+                    note.className = 'block text-xs font-medium text-red-600';
+                    event.target.closest('label').after(note);
+                }
+                note.textContent = event.target.checked ? @json(__('Kaydedince kaldırılacak')) : '';
+            });
+
+            // Kaydırıcı resmi ancak çerçeveden taşan kısmı varsa kaydırabilir. Resim çerçeveye tam oturuyorsa
+            // (ör. 1080×1350 telefon resmi 4:5 çerçevede) kaydırınca değişmez: bunu kaydırıcının altına yaz.
+            const fits = (img) => {
+                if (!img?.naturalWidth || !img.clientHeight) return null;
+                return img.naturalWidth / img.naturalHeight <= img.clientWidth / img.clientHeight + 0.02;
+            };
+            const updateFocusHints = () => form.querySelectorAll('[data-banner-slot]').forEach((slot) => {
+                const hint = slot.querySelector('[data-focus-hint]');
+                if (!hint) return;
+                const [desk, phone] = [...slot.querySelectorAll('[data-banner-box]')].map((box) => box.querySelector('[data-preview]'));
+                const deskFits = fits(desk);
+                const phoneFits = fits(phone);
+                hint.textContent = deskFits && phoneFits ? @json(__('Resimler çerçeveye tam oturuyor; kaydırınca değişmez (kesilen yer yok).'))
+                    : phoneFits ? @json(__('Telefon resmi çerçeveye tam oturuyor, kaydırınca telefonda değişmez; kadraj masaüstünde fark eder.'))
+                    : deskFits ? @json(__('Masaüstü resmi çerçeveye tam oturuyor; kadraj telefonda fark eder.'))
+                    : '';
+                hint.classList.toggle('hidden', !hint.textContent);
+            });
+            form.querySelectorAll('[data-banner-slot] [data-preview]').forEach((img) => {
+                img.addEventListener('load', updateFocusHints);
+                if (img.complete) updateFocusHints();
+            });
+            window.addEventListener('resize', updateFocusHints);
+            document.addEventListener('live:refreshed', () => form.querySelectorAll('[data-banner-slot] [data-preview]').forEach((img) => {
+                img.addEventListener('load', updateFocusHints);
+                if (img.complete) updateFocusHints();
+            }));
 
             // seçilen resim hemen önizlenir (kaydetmeden)
             form.addEventListener('change', (event) => {
