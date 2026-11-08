@@ -27,7 +27,13 @@ class SaveRecord extends PanelTool
             throw new \RuntimeException('Give at least one field.');
         }
 
-        $model = filled($request->get('id')) ? ContentTypes::find($type, (string) $request->get('id')) : ContentTypes::model($type);
+        $id = (string) $request->get('id');
+        // Bölüm yazısı anahtarla (ör. "about_story") verilir; henüz kaydı yoksa oluşturulur
+        $model = match (true) {
+            $id === '' => ContentTypes::model($type),
+            $type === 'section_text' && !is_numeric($id) => \App\Models\SectionText::for($id),
+            default => ContentTypes::find($type, $id),
+        };
         $created = !$model->exists;
         $warnings = ContentTypes::fill($type, $model, $fields);
         $model->save();

@@ -122,7 +122,16 @@
                 </svg>
             </button>
             <x-admin.logo class="size-8 lg:hidden" />
-            <span class="hidden text-sm text-slate-500 sm:block">{{ now()->locale(app()->getLocale())->translatedFormat('j F Y, l') }}</span>
+            {{-- Geri: bir önceki panel sayfasına; dışarıdan gelindiyse bir üst sayfaya (adresin son parçası atılır) --}}
+            @unless (request()->routeIs('analytics.index'))
+                <button type="button" data-back
+                    class="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 ring-1 ring-slate-200 transition hover:bg-white hover:text-slate-900">
+                    <svg class="size-4 rtl:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+                    <span class="hidden sm:inline">{{ __('Geri') }}</span>
+                </button>
+            @endunless
+            {{-- Tarih: çubuğun ortasında --}}
+            <span class="pointer-events-none absolute left-1/2 hidden -translate-x-1/2 whitespace-nowrap text-sm font-semibold text-slate-700 md:block">{{ now()->locale(app()->getLocale())->translatedFormat('j F Y, l') }}</span>
             <div class="ml-auto flex items-center gap-2.5">
                 <x-admin.locale-switch />
             </div>
@@ -180,6 +189,16 @@
     </div>
 
     <script>
+        // Geri: panelin içinden gelindiyse tarayıcı geçmişi, değilse adresin bir üst parçası
+        document.querySelector('[data-back]')?.addEventListener('click', () => {
+            const fromPanel = document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1;
+            if (fromPanel) return history.back();
+            const parts = location.pathname.replace(/\/+$/, '').split('/');
+            const last = parts.pop();
+            // ".../aktiviteler/5/duzenle" → listeye (".../aktiviteler"), kaydın kendi sayfası yok
+            if (last === 'duzenle' && /^\d+$/.test(parts.at(-1) ?? '')) parts.pop();
+            location.href = parts.join('/') || '/';
+        });
         const sidebar = document.getElementById('sidebar');
         const backdrop = document.getElementById('sidebar-backdrop');
         const setSidebar = (open) => {
