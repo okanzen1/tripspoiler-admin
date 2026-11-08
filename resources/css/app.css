@@ -1,9 +1,11 @@
 @import 'tailwindcss';
 
-/* Toast/modallarda sayfa kaymasın: kaydırma çubuğu alanı sabit kalsın */
+/* Toast/modallarda sayfa kaymasın: kaydırma çubuğu alanı sabit kalsın.
+   Yatay taşma "clip" ile gizlenir, "hidden" DEĞİL: hidden html ve body'yi ayrı kaydırma alanına çevirir;
+   o zaman alttaki sticky footer içerikle yukarı kayar ve sayfanın sonu kesilir. */
 html {
     scrollbar-gutter: stable;
-    overflow-x: hidden;
+    overflow-x: clip;
     overscroll-behavior-x: none;
 }
 

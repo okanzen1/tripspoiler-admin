@@ -68,13 +68,59 @@
 
                     {{-- bölüm: ad, açıklama, anasayfadaki başlığı --}}
                     <a href="{{ $url }}" @class(['flex min-w-0 flex-1 items-center gap-3.5 transition focus-visible:outline-none', 'opacity-50 grayscale' => !$on]) data-card-link>
-                        <span class="grid size-10 shrink-0 place-items-center rounded-xl {{ $color }} text-white shadow-sm">
+                        {{-- küçük önizleme: bölüm anasayfada nasıl görünüyor --}}
+                        <span class="relative hidden aspect-[16/8] w-36 shrink-0 overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200/70 sm:block">
+                            @switch($section)
+                                @case('steps')
+                                    <span class="absolute inset-0 flex items-center justify-center gap-1.5 px-2">
+                                        <span class="absolute left-[16%] right-[16%] top-1/2 border-t border-dashed border-slate-300"></span>
+                                        @foreach ($steps->take(3) as $step)
+                                            <span class="relative grid w-9 place-items-center rounded-lg bg-white py-1.5 shadow-sm ring-1 ring-slate-200/70">
+                                                <span class="grid size-4 place-items-center rounded-full bg-gradient-to-br from-rose-500 to-red-700 text-[6px] font-extrabold text-white">{{ sprintf('%02d', $loop->iteration) }}</span>
+                                            </span>
+                                        @endforeach
+                                    </span>
+                                    @break
+                                @case('blog')
+                                    <span class="absolute inset-0 grid grid-cols-5 gap-1 p-2">
+                                        <span class="col-span-3 rounded-md bg-slate-300"></span>
+                                        <span class="col-span-2 grid gap-1"><span class="rounded bg-white ring-1 ring-slate-200"></span><span class="rounded bg-white ring-1 ring-slate-200"></span><span class="rounded bg-slate-800"></span></span>
+                                    </span>
+                                    @break
+                                @case('features')
+                                    <span class="absolute inset-0 flex items-center gap-1.5 overflow-hidden px-2">
+                                        @foreach ($features->take(3) as $feature)
+                                            <span class="w-14 shrink-0 rounded-lg bg-white p-1.5 shadow-sm ring-1 ring-slate-200/70">
+                                                <span class="grid size-4 place-items-center rounded-md bg-gradient-to-br from-rose-500 to-red-700 text-white">{!! $feature->iconHtml('size-2.5') !!}</span>
+                                                <span class="mt-1 block truncate text-[7px] font-bold text-slate-900">{{ $feature->title }}</span>
+                                            </span>
+                                        @endforeach
+                                    </span>
+                                    @break
+                                @case('announcements')
+                                    <span class="absolute inset-x-0 top-3 flex h-4 items-center gap-3 overflow-hidden whitespace-nowrap bg-slate-900 px-2 text-[7px] font-semibold text-white/90">
+                                        <span>● {{ __('Kayan yazı') }}</span><span>● {{ __('Kayan yazı') }}</span><span>● {{ __('Kayan yazı') }}</span>
+                                    </span>
+                                    <span class="absolute inset-x-0 top-7 h-4 border-b border-slate-200 bg-white"></span>
+                                    @break
+                                @default
+                                    @php $sectionModel = \App\Models\SectionText::for($section); @endphp
+                                    <span class="absolute inset-0 flex flex-col justify-center px-2.5">
+                                        <span class="truncate text-[6px] font-bold uppercase tracking-[0.18em] text-red-600">{{ $sectionModel->getTranslation('eyebrow', 'en', false) }}</span>
+                                        <span class="mt-0.5 line-clamp-2 text-[10px] font-extrabold leading-tight text-slate-900">
+                                            {{ $sectionModel->getTranslation('title', 'en', false) }} <span class="text-red-600">{{ $sectionModel->getTranslation('title_highlight', 'en', false) }}</span>
+                                        </span>
+                                    </span>
+                            @endswitch
+                        </span>
+                        {{-- telefonda önizleme yerine renkli ikon --}}
+                        <span class="grid size-10 shrink-0 place-items-center rounded-xl {{ $color }} text-white shadow-sm sm:hidden">
                             <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $icon !!}</svg>
                         </span>
                         <span class="min-w-0 flex-1">
                             <span class="flex flex-wrap items-baseline gap-x-2">
                                 <span class="font-semibold text-slate-900 group-hover:text-brand-900">{{ __($name) }}</span>
-                                @if ($preview)
+                                @if ($preview && in_array($section, ['steps', 'blog', 'features'], true))
                                     <span class="truncate text-xs text-slate-400">“{{ \Illuminate\Support\Str::limit($preview, 70) }}”</span>
                                 @endif
                             </span>
