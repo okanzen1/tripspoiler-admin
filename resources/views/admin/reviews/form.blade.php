@@ -32,7 +32,10 @@
                 <x-admin.input name="name" :label="__('Ad soyad')" :value="$review->name" required maxlength="120" placeholder="{{ __('Emily Carter') }}" autocomplete="off" />
                 <x-admin.input name="email" :label="__('E-posta (isteğe bağlı)')" type="email" :value="$review->email" maxlength="190" autocomplete="off"
                     :hint="__('Sitede gösterilmez; şifreli saklanır.')" />
+                <x-admin.input name="review_date" :label="__('Yorum tarihi')" type="date" :value="($review->created_at ?? now())->toDateString()" max="{{ now()->toDateString() }}"
+                    :hint="__('Sitede ay ve yıl olarak görünür (ör. Kasım 2026).')" />
             </div>
+            <p class="-mt-2 text-xs text-slate-500">{{ __('Sitede ad gizlilik için maskelenir: “Lukas Schneider” → “L**** S.”') }}</p>
             <div>
                 <span class="block text-sm font-medium text-slate-700">{{ __('Puan') }}</span>
                 <div class="mt-1.5"><x-admin.rating-picker :value="$review->rating" /></div>

@@ -59,7 +59,11 @@ class ReviewController extends Controller
 
     public function store(ReviewRequest $request)
     {
-        Review::create($request->validated());
+        $data = $request->validated();
+        $date = \Illuminate\Support\Arr::pull($data, 'review_date');
+        $review = new Review($data);
+        $this->setDate($review, $date);
+        $review->save();
 
         return redirect()->route('reviews.index')->with('success', __('Yorum eklendi.'));
     }
@@ -71,9 +75,25 @@ class ReviewController extends Controller
 
     public function update(ReviewRequest $request, Review $review)
     {
-        $review->update($request->validated());
+        $data = $request->validated();
+        $date = \Illuminate\Support\Arr::pull($data, 'review_date');
+        $review->fill($data);
+        $this->setDate($review, $date);
+        $review->save();
 
         return redirect()->route('reviews.index')->with('success', __('Yorum güncellendi.'));
+    }
+
+    /** Yorum tarihi (sitede "Kasım 2026" gibi görünür): gün değiştiyse o güne, saati korunarak */
+    private function setDate(Review $review, ?string $date): void
+    {
+        if (!$date) {
+            return;
+        }
+        $current = $review->created_at ?? now();
+        if ($current->toDateString() !== $date) {
+            $review->created_at = \Carbon\Carbon::parse($date)->setTimeFrom($current);
+        }
     }
 
     public function destroy(Review $review)

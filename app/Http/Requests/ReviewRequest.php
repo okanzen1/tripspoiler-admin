@@ -28,11 +28,12 @@ class ReviewRequest extends FormRequest
             'comment' => ['required', 'string', 'max:2000'],
             'activity_id' => ['nullable', 'exists:activities,id'],
             'approved' => ['boolean'],
+            'review_date' => ['nullable', 'date', 'before_or_equal:today'],
         ];
     }
 
     public function attributes(): array
     {
-        return ['name' => __('ad'), 'email' => __('e-posta'), 'rating' => __('puan'), 'comment' => __('yorum'), 'activity_id' => __('aktivite')];
+        return ['name' => __('ad'), 'email' => __('e-posta'), 'rating' => __('puan'), 'comment' => __('yorum'), 'activity_id' => __('aktivite'), 'review_date' => __('yorum tarihi')];
     }
 }
