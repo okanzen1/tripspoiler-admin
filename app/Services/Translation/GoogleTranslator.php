@@ -41,7 +41,34 @@ class GoogleTranslator
      */
     public function translate(array $texts, string $locale, bool $html = false): array
     {
-        return array_map(fn ($text) => trim((string) $text) === '' ? '' : ($html ? $this->html($text, $locale) : $this->batch([$this->clean($text)], $locale)[0]), $texts);
+        return array_map(fn ($text) => trim((string) $text) === '' ? '' : ($html ? $this->html($text, $locale) : $this->plain($text, $locale)), $texts);
+    }
+
+    /**
+     * Düz metin. ":city" gibi yer tutucular çevrilmesin diye #{n} ile korunur ("Things to do in :city");
+     * Google onları bozarsa İngilizcesi kalır (":şehir" sitede şehir adına dönüşmez).
+     */
+    private function plain(string $text, string $locale): string
+    {
+        $pattern = '/(?<![\w:]):[a-z][a-z_]*/';
+        if (!preg_match_all($pattern, $text, $found)) {
+            return $this->batch([$this->clean($text)], $locale)[0];
+        }
+
+        $i = 0;
+        $masked = preg_replace_callback($pattern, function () use (&$i) {
+            return '#{' . $i++ . '}';
+        }, $text);
+        $translated = preg_replace('/#\s*\{\s*(\d+)\s*\}/u', '#{$1}', $this->batch([$this->clean($masked)], $locale)[0]);
+
+        foreach ($found[0] as $n => $token) {
+            if (substr_count($translated, '#{' . $n . '}') !== 1) {
+                return $text;
+            }
+            $translated = str_replace('#{' . $n . '}', $token, $translated);
+        }
+
+        return $translated;
     }
 
     /**

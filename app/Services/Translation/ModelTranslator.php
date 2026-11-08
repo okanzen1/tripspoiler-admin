@@ -46,7 +46,21 @@ class ModelTranslator
      */
     private const GROUPS = [
         HeroText::class => ['title_1', 'title_2', 'title_3', 'title_highlight'],
+        SectionText::class => ['title', 'title_highlight'], // "Plan your trip in" + "three steps."
     ];
+
+    /** Kırmızı alanı başlığın devamı olmayan bölümler (ayrı çevrilir): Hakkımızda "Hikâyemiz" alıntısı */
+    private const UNGROUPED_SECTIONS = ['about_story'];
+
+    /** @return list<string> */
+    private function group(Model $model): array
+    {
+        if ($model instanceof SectionText && in_array($model->key, self::UNGROUPED_SECTIONS, true)) {
+            return [];
+        }
+
+        return self::GROUPS[$model::class] ?? [];
+    }
 
     /** HTML olarak çevrilen alanlar (etiketler korunur) */
     private const HTML_FIELDS = ['description', 'content'];
@@ -63,7 +77,7 @@ class ModelTranslator
         $source = $this->source($model);
         $hash = $this->hash($model);
 
-        $group = self::GROUPS[$model::class] ?? [];
+        $group = $this->group($model);
 
         foreach ($locales as $locale) {
             if ($group) {
