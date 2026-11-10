@@ -189,6 +189,11 @@
     </div>
 
     <script>
+        // Geri/ileri ile dönülen sayfa tarayıcı hafızasındaki eski haliyle açılmasın (ör. kaydetmeden önceki boş form):
+        // her zaman sunucudan güncel hali gelsin
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted || performance.getEntriesByType('navigation')[0]?.type === 'back_forward') location.reload();
+        });
         // Geri: panelin içinden gelindiyse tarayıcı geçmişi, değilse adresin bir üst parçası
         document.querySelector('[data-back]')?.addEventListener('click', () => {
             const fromPanel = document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1;

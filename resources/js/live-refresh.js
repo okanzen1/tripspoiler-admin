@@ -70,7 +70,18 @@ export async function liveRefresh(form = null, { main = false } = {}) {
 
     doc.querySelectorAll('[data-live]').forEach((fresh) => {
         const old = document.querySelector(`[data-live="${CSS.escape(fresh.dataset.live)}"]`);
-        if (old && old.innerHTML !== fresh.innerHTML) old.replaceWith(document.importNode(fresh, true));
+        if (old) {
+            if (old.innerHTML !== fresh.innerHTML) old.replaceWith(document.importNode(fresh, true));
+            return;
+        }
+        // Yeni çıkan bölge (ör. ilk kayıttan sonra çeviri kutusu): yanındaki tanıdık öğenin önüne/arkasına eklenir
+        const find = (el) => !el ? null
+            : el.id ? document.getElementById(el.id)
+            : el.dataset?.live ? document.querySelector(`[data-live="${CSS.escape(el.dataset.live)}"]`) : null;
+        const next = find(fresh.nextElementSibling);
+        const prev = next ? null : find(fresh.previousElementSibling);
+        if (next) next.before(document.importNode(fresh, true));
+        else if (prev) prev.after(document.importNode(fresh, true));
     });
 
     if (form) {

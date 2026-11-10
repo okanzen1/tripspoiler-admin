@@ -15,7 +15,7 @@
     "isDynamicEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-ChzY1aBU.js",
+    "file": "assets/app-DUb6Xchm.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -25,7 +25,7 @@
     ]
   },
   "resources/js/rich-editor.js": {
-    "file": "assets/rich-editor-SU-vfQgo.js",
+    "file": "assets/rich-editor-CpPr8Va2.js",
     "name": "rich-editor",
     "src": "resources/js/rich-editor.js",
     "isDynamicEntry": true,

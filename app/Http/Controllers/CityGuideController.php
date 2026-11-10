@@ -124,7 +124,8 @@ class CityGuideController extends Controller
         $section->active = $request->boolean('active');
         $section->save();
 
-        return redirect()->route('city-guides.show', $city)->with('success', __(':topic kaydedildi.', ['topic' => $section->topic->getTranslation('name', 'tr', false) ?: $section->topic->name]));
+        // Aynı sayfada kal: ilk kayıttan sonra çeviri kutusu hemen görünsün
+        return redirect()->route('city-guides.sections.edit', [$city, $section])->with('success', __(':topic kaydedildi.', ['topic' => $section->topic->getTranslation('name', 'tr', false) ?: $section->topic->name]));
     }
 
     /**
