@@ -28,8 +28,8 @@ class ManagementTest extends TestCase
     {
         $editor = User::factory()->create();
 
-        $this->actingAs($editor)->get(route('management.index'))->assertForbidden();
-        $this->actingAs($editor)->get(route('roles.index'))->assertForbidden();
+        $this->actingAs($editor)->get(route('management.index'))->assertRedirect(route("analytics.index"));
+        $this->actingAs($editor)->get(route('roles.index'))->assertRedirect(route("analytics.index"));
     }
 
     public function test_create_page_renders_wizard(): void

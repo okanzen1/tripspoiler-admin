@@ -25,7 +25,7 @@ class UserManagementTest extends TestCase
 
     public function test_editor_cannot_access_user_management(): void
     {
-        $this->actingAs(User::factory()->create())->get(route('users.index'))->assertForbidden();
+        $this->actingAs(User::factory()->create())->get(route('users.index'))->assertRedirect(route("analytics.index"));
     }
 
     public function test_admin_can_list_and_search_users(): void

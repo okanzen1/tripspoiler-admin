@@ -136,7 +136,7 @@ class TranslationTest extends TestCase
         $this->actingAs($admin)->patchJson(route('languages.toggle', $de))->assertJson(['active' => false]);
         $this->actingAs($admin)->patchJson(route('languages.toggle', Language::where('code', 'en')->first()))->assertStatus(422);
 
-        $this->actingAs(User::factory()->create())->get(route('translations.index'))->assertForbidden();
+        $this->actingAs(User::factory()->create())->get(route('translations.index'))->assertRedirect(route("analytics.index"));
     }
     public function test_translation_can_be_viewed_and_corrected_by_hand(): void
     {

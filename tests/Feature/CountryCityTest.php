@@ -35,9 +35,9 @@ class CountryCityTest extends TestCase
         $editor = User::factory()->create();
         $country = Country::where('code', 'IT')->first();
 
-        $this->actingAs($editor)->get(route('locations.index'))->assertForbidden();
+        $this->actingAs($editor)->get(route('locations.index'))->assertRedirect(route("analytics.index"));
         $this->actingAs($editor)->patch(route('countries.toggle', $country))->assertForbidden();
-        $this->actingAs($editor)->get(route('cities.create'))->assertForbidden();
+        $this->actingAs($editor)->get(route('cities.create'))->assertRedirect(route("analytics.index"));
         $this->assertFalse($country->fresh()->active);
     }
 

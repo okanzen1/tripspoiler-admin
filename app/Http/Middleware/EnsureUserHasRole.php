@@ -16,8 +16,16 @@ class EnsureUserHasRole
     {
         $allowed = array_map(fn (string $role) => Role::from($role), $roles);
 
-        abort_unless($request->user()?->hasRole(...$allowed), 403);
+        if ($request->user()?->hasRole(...$allowed)) {
+            return $next($request);
+        }
 
-        return $next($request);
+        // Yetkisiz sayfa linki açıldıysa 403 yerine ana sayfaya (analitik) gönder
+        if ($request->isMethod('GET') && ! $request->expectsJson() && $request->user()) {
+            return redirect()->route('analytics.index')
+                ->with('error', __('Bu sayfayı görme yetkiniz yok.'));
+        }
+
+        abort(403);
     }
 }

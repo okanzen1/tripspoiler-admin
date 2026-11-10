@@ -37,7 +37,7 @@ class PartnerTest extends TestCase
     {
         $editor = User::factory()->create();
 
-        $this->actingAs($editor)->get(route('partners.index'))->assertForbidden();
+        $this->actingAs($editor)->get(route('partners.index'))->assertRedirect(route("analytics.index"));
         $this->actingAs($editor)->post(route('partners.store'), ['name' => 'X'])->assertForbidden();
     }
 

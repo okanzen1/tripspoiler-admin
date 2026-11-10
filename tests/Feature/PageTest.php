@@ -21,7 +21,7 @@ class PageTest extends TestCase
 
     public function test_only_admin_manages_pages(): void
     {
-        $this->actingAs(User::factory()->create())->get(route('pages.index'))->assertForbidden();
+        $this->actingAs(User::factory()->create())->get(route('pages.index'))->assertRedirect(route("analytics.index"));
         $this->actingAs(User::factory()->admin()->create())->get(route('pages.index'))
             ->assertOk()->assertSee('Anasayfa')->assertSee('Gizlilik politikası')->assertSee('8 sayfanın SEO bilgisi eksik');
     }

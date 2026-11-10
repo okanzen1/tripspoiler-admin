@@ -51,7 +51,7 @@ class AuthTest extends TestCase
     {
         Route::middleware(['web', 'auth', 'role:admin'])->get('/_admin-only', fn () => 'ok');
 
-        $this->actingAs(User::factory()->create())->get('/_admin-only')->assertForbidden();
+        $this->actingAs(User::factory()->create())->get('/_admin-only')->assertRedirect(route("analytics.index"));
         $this->actingAs(User::factory()->admin()->create())->get('/_admin-only')->assertOk();
     }
     public function test_login_is_always_remembered(): void
