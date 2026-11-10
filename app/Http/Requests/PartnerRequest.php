@@ -31,7 +31,16 @@ class PartnerRequest extends FormRequest
             'name' => ['required', 'string', 'max:100'],
             'slug' => ['required', 'alpha_num', 'max:50', Rule::unique('partners')->ignore($this->route('partner'))],
             'website' => ['nullable', 'url', 'max:255'],
-            'logo' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            // SVG'yi bazı sunucular "text/xml" sanar: SVG uzantı + içerikle tanınır, diğerleri gerçek resim olmalı
+            'logo' => ['nullable', 'file', 'max:2048', function (string $attribute, $file, \Closure $fail) {
+                $extension = strtolower($file->getClientOriginalExtension());
+                $ok = $extension === 'svg'
+                    ? str_contains((string) file_get_contents($file->getRealPath(), length: 4096), '<svg')
+                    : in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true) && in_array($file->getMimeType(), ['image/jpeg', 'image/png', 'image/webp'], true);
+                if (!$ok) {
+                    $fail(__('Logo SVG, PNG, JPG ya da WebP olmalı.'));
+                }
+            }],
             'remove_logo' => ['boolean'],
             'active' => ['boolean'],
             'show_on_site' => ['boolean'],

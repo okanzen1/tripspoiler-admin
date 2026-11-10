@@ -33,6 +33,26 @@ class PartnerTest extends TestCase
         ]);
     }
 
+    public function test_svg_logo_is_accepted_even_when_server_sees_xml(): void
+    {
+        $svg = '<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><defs><style>.a{fill:#000}</style></defs><rect class="a" width="10" height="10"/></svg>';
+        $file = UploadedFile::fake()->createWithContent('logo.svg', $svg)->mimeType('text/xml');
+
+        $this->actingAs($this->admin)->post(route('partners.store'), ['name' => 'Mega', 'logo' => $file])->assertSessionHasNoErrors();
+
+        $partner = Partner::where('slug', 'mega')->firstOrFail();
+        $this->assertStringEndsWith('.svg', $partner->logo_path);
+        Storage::disk('media')->assertExists($partner->logo_path);
+    }
+
+    public function test_svg_logo_with_script_is_rejected(): void
+    {
+        $file = UploadedFile::fake()->createWithContent('logo.svg', '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');
+
+        $this->actingAs($this->admin)->post(route('partners.store'), ['name' => 'Bad', 'logo' => $file])->assertSessionHasErrors('logo');
+        $this->assertNull(Partner::where('slug', 'bad')->first());
+    }
+
     public function test_editor_cannot_manage_partners(): void
     {
         $editor = User::factory()->create();
