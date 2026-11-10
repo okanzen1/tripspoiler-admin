@@ -9,11 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Partner extends Model
 {
-    protected $fillable = ['name', 'slug', 'website', 'logo_path', 'active', 'show_on_site'];
+    protected $fillable = ['name', 'slug', 'website', 'logo_path', 'active', 'show_on_site', 'sort_order'];
 
     protected function casts(): array
     {
-        return ['active' => 'boolean', 'show_on_site' => 'boolean'];
+        return ['active' => 'boolean', 'show_on_site' => 'boolean', 'sort_order' => 'integer'];
     }
 
     public function activities(): HasMany

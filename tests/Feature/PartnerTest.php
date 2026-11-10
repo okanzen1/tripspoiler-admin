@@ -33,6 +33,23 @@ class PartnerTest extends TestCase
         ]);
     }
 
+    public function test_partners_can_be_reordered_and_new_ones_go_last(): void
+    {
+        $a = Partner::create(['name' => 'Alpha', 'slug' => 'alpha', 'sort_order' => 1]);
+        $b = Partner::create(['name' => 'Beta', 'slug' => 'beta', 'sort_order' => 2]);
+        $c = Partner::create(['name' => 'Gamma', 'slug' => 'gamma', 'sort_order' => 3]);
+
+        $this->actingAs($this->admin)->patchJson(route('partners.reorder'), ['key' => 'partners', 'order' => [$c->id, $a->id, $b->id]])->assertOk();
+        $this->assertSame([$c->id, $a->id, $b->id], Partner::orderBy('sort_order')->pluck('id')->all());
+        $this->get(route('partners.index'))->assertSeeInOrder(['Gamma', 'Alpha', 'Beta']);
+
+        $this->post(route('partners.store'), ['name' => 'Delta']);
+        $this->assertSame('delta', Partner::orderByDesc('sort_order')->value('slug'));
+
+        $editor = User::factory()->create();
+        $this->actingAs($editor)->patchJson(route('partners.reorder'), ['order' => [$a->id]])->assertForbidden();
+    }
+
     public function test_svg_logo_is_accepted_even_when_server_sees_xml(): void
     {
         $svg = '<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><defs><style>.a{fill:#000}</style></defs><rect class="a" width="10" height="10"/></svg>';

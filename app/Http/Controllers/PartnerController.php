@@ -21,7 +21,7 @@ class PartnerController extends Controller
             ->pluck('total', 'partner');
 
         return view('admin.partners.index', [
-            'partners' => Partner::orderByDesc('active')->orderBy('name')->get(),
+            'partners' => Partner::orderBy('sort_order')->orderBy('name')->get(),
             'clicks' => $clicks,
         ]);
     }
@@ -39,6 +39,7 @@ class PartnerController extends Controller
             $data['logo_path'] = $this->uploader->logo($request->file('logo'));
         }
 
+        $data['sort_order'] = (int) Partner::max('sort_order') + 1; // yeni partner sona
         $partner = Partner::create($data);
 
         return redirect()->route('partners.index')->with('success', __(':name eklendi.', ['name' => $partner->name]));
@@ -66,6 +67,24 @@ class PartnerController extends Controller
         $partner->update($data);
 
         return redirect()->route('partners.index')->with('success', __(':name güncellendi.', ['name' => $partner->name]));
+    }
+
+    /** Listede sürükleyerek verilen sıra (sitedeki partner şeridi de bu sırayla) */
+    public function reorder(Request $request)
+    {
+        $ids = array_values(array_unique(array_map('intval', $request->validate([
+            'order' => ['required', 'array', 'min:1', 'max:200'],
+            'order.*' => ['integer'],
+        ])['order'])));
+        abort_if(Partner::whereIn('id', $ids)->count() !== count($ids), 422);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($ids) {
+            foreach ($ids as $i => $id) {
+                Partner::whereKey($id)->update(['sort_order' => $i + 1]);
+            }
+        });
+
+        return response()->json(['message' => __('Sıra kaydedildi.')]);
     }
 
     public function destroy(Partner $partner)

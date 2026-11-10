@@ -229,6 +229,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('yonetim')->group(function () 
         ->except('show')
         ->names('partners')
         ->parameters(['partnerler' => 'partner']);
+    Route::patch('/partnerler-siralama', [PartnerController::class, 'reorder'])->name('partners.reorder');
     Route::patch('/partnerler/{partner}/durum', [PartnerController::class, 'toggle'])->name('partners.toggle');
     Route::patch('/partnerler/{partner}/sitede', [PartnerController::class, 'toggleShowcase'])->name('partners.showcase');
 
