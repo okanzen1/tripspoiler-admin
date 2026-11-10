@@ -50,6 +50,12 @@ class GoogleTranslator
      */
     private function plain(string $text, string $locale): string
     {
+        // Çok satırlı metin (ör. "- " ile başlayan maddeler): satırlar ayrı ayrı çevrilir, satır sonları ve
+        // madde işaretleri aynen kalır (yoksa Google hepsini tek paragrafa çevirir)
+        if (preg_match('/\R/u', trim($text))) {
+            return $this->lines($text, $locale);
+        }
+
         $pattern = '/(?<![\w:]):[a-z][a-z_]*/';
         if (!preg_match_all($pattern, $text, $found)) {
             return $this->batch([$this->clean($text)], $locale)[0];
@@ -69,6 +75,25 @@ class GoogleTranslator
         }
 
         return $translated;
+    }
+
+    /** Her satır kendi başına çevrilir; boş satırlar ve satır başındaki "- " / "• " işaretleri korunur */
+    private function lines(string $text, string $locale): string
+    {
+        $rows = preg_split('/\R/u', trim($text));
+        $parts = array_map(fn ($row) => preg_match('/^(\s*(?:[-•*]\s+)?)(.*)$/u', $row, $m) ? [$m[1], trim($m[2])] : ['', trim($row)], $rows);
+
+        // Yer tutucusu (":city") olmayan satırlar tek istekte, olanlar tek tek (korunarak)
+        $simple = array_filter($parts, fn ($p) => $p[1] !== '' && !preg_match('/(?<![\w:]):[a-z][a-z_]*/', $p[1]));
+        $done = $simple ? array_combine(array_keys($simple), $this->batch(array_map(fn ($p) => $this->clean($p[1]), $simple), $locale)) : [];
+
+        return implode("\n", array_map(function ($p, $i) use ($done, $locale) {
+            if ($p[1] === '') {
+                return rtrim($p[0]);
+            }
+
+            return $p[0] . ($done[$i] ?? $this->plain($p[1], $locale));
+        }, $parts, array_keys($parts)));
     }
 
     /**

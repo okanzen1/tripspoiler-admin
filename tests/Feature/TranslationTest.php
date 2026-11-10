@@ -163,4 +163,13 @@ class TranslationTest extends TestCase
         $this->actingAs($editor)->get(route('translations.edit', ['activity', $this->activity->id, 'ja']))->assertNotFound(); // kapalı dil
         $this->actingAs($editor)->get(route('translations.edit', ['activity', $this->activity->id, 'en']))->assertNotFound(); // kaynak dil
     }
+
+    public function test_multiline_text_keeps_line_breaks_and_bullets(): void
+    {
+        $text = "We only collect:\n- Contact form: your name.\n\n- Reviews: your rating.\nThat is all.";
+        $out = $this->google->translate([$text], 'tr')[0];
+
+        $this->assertSame("[tr] We only collect:\n- [tr] Contact form: your name.\n\n- [tr] Reviews: your rating.\n[tr] That is all.", $out);
+        $this->assertCount(1, $this->google->requests); // satırlar tek istekte
+    }
 }
