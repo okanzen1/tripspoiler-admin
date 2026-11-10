@@ -172,4 +172,24 @@ class TranslationTest extends TestCase
         $this->assertSame("[tr] We only collect:\n- [tr] Contact form: your name.\n\n- [tr] Reviews: your rating.\n[tr] That is all.", $out);
         $this->assertCount(1, $this->google->requests); // satırlar tek istekte
     }
+
+    public function test_page_content_can_be_retranslated_when_up_to_date(): void
+    {
+        $this->seed(\Database\Seeders\PageSeeder::class);
+        $page = \App\Models\Page::where('key', 'privacy')->firstOrFail();
+        $record = \App\Models\SectionText::for('privacy_summary');
+        $record->setTranslation('title', 'en', 'In short');
+        $record->setTranslation('description', 'en', "One.\nTwo.");
+        $record->save();
+        $admin = \App\Models\User::factory()->admin()->create();
+
+        $this->actingAs($admin)->post(route('pages.content.translate', [$page, 'privacy_summary']))->assertRedirect();
+        $this->assertSame("[tr] One.\n[tr] Two.", $record->fresh()->getTranslation('description', 'tr'));
+
+        // Elle bozulmuş ama "güncel" görünen çeviri: all=1 baştan çevirir
+        $record->refresh()->setTranslation('description', 'tr', 'Tek paragraf')->saveQuietly();
+        $this->actingAs($admin)->post(route('pages.content.translate', [$page, 'privacy_summary']))->assertSessionHas('success', 'Tüm çeviriler zaten güncel.');
+        $this->actingAs($admin)->post(route('pages.content.translate', [$page, 'privacy_summary']), ['all' => 1])->assertRedirect();
+        $this->assertSame("[tr] One.\n[tr] Two.", $record->fresh()->getTranslation('description', 'tr'));
+    }
 }

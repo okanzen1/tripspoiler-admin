@@ -179,10 +179,12 @@ class PageContentController extends Controller
     public function translate(Request $request, Page $page, string $section)
     {
         $def = self::SECTIONS[$page->key][$section] ?? abort(404);
+        // all=1 ("Yeniden çevir"): güncel olsa da tüm diller İngilizceden baştan çevrilir
+        $targets = $request->boolean('all') ? \App\Models\Language::targets()->pluck('code')->all() : null;
         $work = collect([$def[3], ...$def[4]])
             ->map(fn ($key) => SectionText::for($key))
             ->filter(fn ($record) => filled($record->title))
-            ->map(fn ($record) => [$record, $this->translator->pending($record)])
+            ->map(fn ($record) => [$record, $targets ?? $this->translator->pending($record)])
             ->filter(fn ($item) => $item[1] !== [])
             ->values();
 

@@ -92,8 +92,11 @@ class ModelTranslator
             }
 
             foreach (array_diff_key($source, array_flip($group)) as $field => $value) {
-                $html = in_array($field, self::HTML_FIELDS, true);
                 $texts = is_array($value) ? array_values($value) : [$value];
+                // "description" bazı kayıtlarda HTML (aktivite, blog), bazılarında düz metin (bölüm yazıları):
+                // içinde etiket yoksa düz metin çevrilir, satır sonları ve "- " maddeleri korunur
+                $html = in_array($field, self::HTML_FIELDS, true)
+                    && collect($texts)->contains(fn ($text) => preg_match('/<[a-z][^>]*>/i', (string) $text));
                 $translated = $this->google->translate($texts, $locale, $html);
 
                 $model->setTranslation($field, $locale, is_array($value) ? $translated : $translated[0]);
