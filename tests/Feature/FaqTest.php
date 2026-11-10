@@ -128,4 +128,18 @@ class FaqTest extends TestCase
         $this->actingAs($this->editor)->post(route('faqs.store'), ['question' => 'x', 'answer' => 'y', 'target' => 'blog:999'])
             ->assertSessionHasErrors('target');
     }
+
+    public function test_drag_reorder_swaps_positions_within_same_place(): void
+    {
+        $a = Faq::create(['question' => ['en' => 'A?'], 'answer' => ['en' => 'a'], 'sort_order' => 1, 'active' => true]);
+        $b = Faq::create(['question' => ['en' => 'B?'], 'answer' => ['en' => 'b'], 'sort_order' => 2, 'active' => true]);
+        $c = Faq::create(['question' => ['en' => 'C?'], 'answer' => ['en' => 'c'], 'sort_order' => 2, 'active' => true]);
+        $other = Faq::create(['question' => ['en' => 'P?'], 'answer' => ['en' => 'p'], 'page_key' => 'about', 'sort_order' => 1, 'active' => true]);
+
+        $this->actingAs($this->editor)->patchJson(route('faqs.reorder'), ['order' => [$c->id, $a->id, $b->id]])->assertOk();
+        $this->assertSame([$c->id, $a->id, $b->id], Faq::general()->orderBy('sort_order')->orderBy('id')->pluck('id')->all());
+
+        // Farklı yerdeki sorular birlikte sıralanamaz
+        $this->actingAs($this->editor)->patchJson(route('faqs.reorder'), ['order' => [$a->id, $other->id]])->assertStatus(422);
+    }
 }

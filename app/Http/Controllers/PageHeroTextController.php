@@ -45,6 +45,7 @@ class PageHeroTextController extends Controller
         'contact' => [
             'eyebrow' => ['Üst etiket', 'Başlığın üstündeki küçük kırmızı yazı.', 'Contact', 40],
             'title' => ['Başlık', 'Büyük beyaz başlık.', 'Let’s talk', 60],
+            'title_highlight' => ['Alt satır', 'Büyük başlığın altındaki soluk yazı; başlıkla birlikte bir cümle gibi okunur. Boş bırakırsan görünmez.', 'about your trip', 60],
             'description' => ['Açıklama', 'Solunda kırmızı çizgi olan kısa yazı.', 'A question about a city, an idea…', 260],
         ],
         'blog' => [

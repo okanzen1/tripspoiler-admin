@@ -18,6 +18,7 @@ class ActivityLogController extends Controller
         'updated' => ['güncelledi', 'sky'],
         'deleted' => ['sildi', 'rose'],
         'translated' => ['çevirdi', 'purple'],
+        'reordered' => ['sırasını değiştirdi', 'indigo'],
         'login' => ['giriş yaptı', 'slate'],
         'logout' => ['çıkış yaptı', 'slate'],
         'login_failed' => ['başarısız giriş denemesi', 'amber'],

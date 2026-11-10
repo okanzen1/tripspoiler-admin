@@ -6,10 +6,14 @@
 // <input data-card-search="site_settings_order">   (isteğe bağlı arama)
 // <span data-order-saved="site_settings_order" class="hidden">✓</span>   (isteğe bağlı "kaydedildi")
 // <p data-card-empty="site_settings_order" class="hidden">…</p>   (isteğe bağlı "sonuç yok")
+// Gruplu liste (ör. SSS): kartta data-group="…" varsa yalnızca aynı gruptakiler arasında yer değişir
+// ve sunucuya sadece o grubun sırası gider.
 
 const normalize = (text) => String(text).toLocaleLowerCase('tr').replace(/ı/g, 'i').normalize('NFD').replace(/[̀-ͯ]/g, '');
 
-document.querySelectorAll('[data-sortable-grid]').forEach((grid) => {
+function init(grid) {
+    if (grid.dataset.sortableReady) return;
+    grid.dataset.sortableReady = '1';
     const key = grid.dataset.orderKey;
     const cards = () => [...grid.querySelectorAll(':scope > [data-card]')];
     let dragged = null;
@@ -21,14 +25,14 @@ document.querySelectorAll('[data-sortable-grid]').forEach((grid) => {
             .forEach((card) => grid.appendChild(card));
     }
 
-    const save = () => fetch(grid.dataset.orderUrl, {
+    const save = (group = null) => fetch(grid.dataset.orderUrl, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
         },
-        body: JSON.stringify({ key, order: cards().map((card) => card.dataset.card) }),
+        body: JSON.stringify({ key, order: cards().filter((card) => group === null || card.dataset.group === group).map((card) => card.dataset.card) }),
     }).then((response) => {
         const note = document.querySelector(`[data-order-saved="${key}"]`);
         if (!response.ok || !note) return;
@@ -47,9 +51,10 @@ document.querySelectorAll('[data-sortable-grid]').forEach((grid) => {
             requestAnimationFrame(() => dragged === card && card.classList.add('opacity-40'));
         });
         handle.addEventListener('dragend', () => {
+            const group = dragged?.dataset.group ?? null;
             dragged?.classList.remove('opacity-40');
             dragged = null;
-            save();
+            save(group);
         });
     });
 
@@ -58,6 +63,7 @@ document.querySelectorAll('[data-sortable-grid]').forEach((grid) => {
         e.preventDefault();
         const target = e.target.closest('[data-card]');
         if (!target || target === dragged || target.parentNode !== grid) return;
+        if ((target.dataset.group ?? null) !== (dragged.dataset.group ?? null)) return;
         const box = target.getBoundingClientRect();
         // Liste (data-sortable-list): sadece dikey konum; ızgara: dikey ya da yatay
         const below = (e.clientY - box.top) / box.height > 0.5;
@@ -78,4 +84,9 @@ document.querySelectorAll('[data-sortable-grid]').forEach((grid) => {
         });
         document.querySelector(`[data-card-empty="${key}"]`)?.classList.toggle('hidden', shown > 0);
     });
-});
+}
+
+const initAll = () => document.querySelectorAll('[data-sortable-grid]').forEach(init);
+initAll();
+// Panel bir bölgeyi yenileyince (live-refresh) yeni gelen listeler de sürüklenebilsin
+document.addEventListener('live:refreshed', initAll);

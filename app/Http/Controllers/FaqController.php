@@ -37,6 +37,7 @@ class FaqController extends Controller
             ->orderBy('activity_id')
             ->orderBy('blog_id')
             ->orderBy('sort_order')
+            ->orderBy('id')
             ->paginate(30)
             ->withQueryString();
 
@@ -116,6 +117,49 @@ class FaqController extends Controller
         return $request->expectsJson()
             ? response()->json(['active' => $faq->active, 'message' => $message])
             : back()->with('success', $message);
+    }
+
+    /**
+     * Sürükle-bırak sırası (resources/js/sortable-cards.js): aynı yerdeki soruların id'leri yeni sırayla.
+     * Listede görünen soruların mevcut sıra numaraları yeni sıraya dağıtılır; filtre ya da sayfa yüzünden
+     * görünmeyen sorular yerinde kalır.
+     */
+    public function reorder(Request $request)
+    {
+        $ids = array_values(array_unique(array_map('intval', $request->validate([
+            'order' => ['required', 'array', 'min:1', 'max:200'],
+            'order.*' => ['integer'],
+        ])['order'])));
+        $faqs = Faq::whereIn('id', $ids)->get()->keyBy('id');
+        $first = $faqs->first();
+        abort_if(!$first || $faqs->count() !== count($ids), 422);
+        abort_if($faqs->contains(fn (Faq $faq) => $faq->activity_id !== $first->activity_id || $faq->blog_id !== $first->blog_id
+            || $faq->city_id !== $first->city_id || $faq->page_key !== $first->page_key), 422, __('Sorular farklı yerlerde.'));
+
+        // Aynı sıra numarası olanlar (eski kayıtlar) ayrışsın diye boşlukları da sırayla doldur
+        $slots = $faqs->pluck('sort_order')->sort()->values();
+        $slots = $slots->unique()->count() === $slots->count() ? $slots : collect(range((int) $slots->min(), (int) $slots->min() + count($ids) - 1));
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($ids, $slots) {
+            foreach ($ids as $i => $id) {
+                Faq::whereKey($id)->update(['sort_order' => $slots[$i]]);
+            }
+        });
+
+        \App\Support\ActivityLogger::write('reordered', 'faq', null, __('Sıkça sorulan sorular') . ' · ' . $this->placeName($first));
+
+        return response()->json(['ok' => true, 'message' => __('Sıra kaydedildi.')]);
+    }
+
+    private function placeName(Faq $faq): string
+    {
+        return match (true) {
+            $faq->activity_id !== null => $faq->activity?->name ?? __('Aktivite'),
+            $faq->blog_id !== null => 'Blog · ' . ($faq->blog?->title ?? ''),
+            $faq->city_id !== null => __('Şehir') . ' · ' . ($faq->city?->name ?? ''),
+            $faq->page_key !== null => __('Sayfa') . ' · ' . ($faq->page?->name ?? $faq->page_key),
+            default => __('Anasayfa'),
+        };
     }
 
     /**

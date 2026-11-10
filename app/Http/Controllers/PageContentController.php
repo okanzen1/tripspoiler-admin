@@ -21,6 +21,15 @@ class PageContentController extends Controller
      */
     public const BLOCKS = [
         'privacy' => [
+            'privacy_summary' => ['Kısaca kutusu', 'Başlığın sağındaki beyaz kutu.', [
+                'title' => ['Kutu başlığı', 'In short', 40],
+                'description' => ['Maddeler (her satıra bir madde)', "We never sell your data.\nYou can browse without an account.", 800],
+            ]],
+            'privacy_contact' => ['Alttaki iletişim kutusu', 'Sayfanın sonundaki koyu kutu ve düğme.', [
+                'title' => ['Başlık', 'Questions about your data?', 90],
+                'description' => ['Metin', 'Write to us and we will answer within one business day.', 260],
+                'eyebrow' => ['Düğme yazısı', 'Contact us', 30],
+            ]],
             'privacy_who' => ['Biz kimiz', 'Gizlilik sayfasındaki bölüm.', ['title' => ['Başlık', 'Biz kimiz', 90], 'description' => ['Metin ("- " ile başlayan satır liste olur)', '...', 3000]]],
             'privacy_collect' => ['Neleri topluyoruz', 'Gizlilik sayfasındaki bölüm.', ['title' => ['Başlık', 'Neleri topluyoruz', 90], 'description' => ['Metin ("- " ile başlayan satır liste olur)', '...', 3000]]],
             'privacy_use' => ['Nasıl kullanıyoruz', 'Gizlilik sayfasındaki bölüm.', ['title' => ['Başlık', 'Nasıl kullanıyoruz', 90], 'description' => ['Metin ("- " ile başlayan satır liste olur)', '...', 3000]]],
@@ -71,6 +80,7 @@ class PageContentController extends Controller
      */
     public const SECTIONS = [
         'privacy' => [
+            'privacy_summary' => ['Kısaca kutusu', 'Başlığın sağındaki beyaz kutu: başlık ve maddeler.', 'check', 'privacy_summary', []],
             'privacy_who' => ['Biz kimiz', 'Başlık ve metin.', 'shield', 'privacy_who', []],
             'privacy_collect' => ['Neleri topluyoruz', 'Başlık ve metin.', 'shield', 'privacy_collect', []],
             'privacy_use' => ['Nasıl kullanıyoruz', 'Başlık ve metin.', 'shield', 'privacy_use', []],
@@ -79,6 +89,7 @@ class PageContentController extends Controller
             'privacy_storage' => ['Saklama ve güvenlik', 'Başlık ve metin.', 'shield', 'privacy_storage', []],
             'privacy_rights' => ['Haklar', 'Başlık ve metin.', 'shield', 'privacy_rights', []],
             'privacy_changes' => ['Değişiklikler', 'Başlık ve metin.', 'shield', 'privacy_changes', []],
+            'privacy_contact' => ['Alttaki iletişim kutusu', 'Sayfanın sonundaki koyu kutu: başlık, metin ve düğme yazısı.', 'message', 'privacy_contact', []],
         ],
         'reviews' => [
             'reviews_list' => ['Yorum listesi', 'Listenin başlığı.', 'message', 'reviews_list', []],
@@ -100,7 +111,8 @@ class PageContentController extends Controller
         $sections = self::SECTIONS[$page->key] ?? abort(404);
         $config = \App\Support\PageSections::config($page->key);
 
-        $rows = collect($sections)->map(function ($section, $key) use ($config) {
+        $first = array_key_first($sections);
+        $rows = collect($sections)->map(function ($section, $key) use ($config, $first) {
             $records = collect([$section[3], ...$section[4]])->map(fn ($k) => SectionText::for($k));
             $written = $records->filter(fn ($r) => filled($r->title));
 
@@ -111,7 +123,8 @@ class PageContentController extends Controller
                 'pending' => $written->sum(fn ($r) => count($this->translator->pending($r))),
                 // bölüm listesinde olmayan (sabit) içerikler her zaman açık
                 'on' => !in_array($key, $config['order'], true) || in_array($key, $config['on'], true),
-                'position' => array_search($key, $config['order'], true),
+                // sırası olmayan sabit kutular: listedeki ilk ise en üstte, değilse en altta
+                'position' => ($pos = array_search($key, $config['order'], true)) !== false ? $pos : ($key === $first ? -1 : 9999),
             ];
         })->sortBy('position')->values();
 

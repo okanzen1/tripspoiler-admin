@@ -14,6 +14,7 @@
         'purple' => 'bg-purple-50 text-purple-700 ring-purple-200',
         'slate' => 'bg-slate-100 text-slate-600 ring-slate-200',
         'amber' => 'bg-amber-50 text-amber-800 ring-amber-200',
+        'indigo' => 'bg-indigo-50 text-indigo-700 ring-indigo-200',
     ];
     $device = fn (?string $agent) => match (true) {
         !$agent => null,

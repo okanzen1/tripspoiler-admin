@@ -28,9 +28,18 @@
                 <p class="mt-1 text-sm text-slate-500">{{ __('Filtreyi değiştir ya da yeni bir soru ekle.') }}</p>
             </div>
         @else
-            <ul class="divide-y divide-slate-100 border-t border-slate-100">
+            <div class="flex items-center gap-2 border-t border-slate-100 bg-slate-50/60 px-6 py-2.5 text-xs text-slate-500">
+                <svg class="size-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" /><circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" /><circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" /></svg>
+                <span>{{ __('Sırayı değiştirmek için soldaki tutamaçtan tutup sürükle. Sitede bu sırayla görünür; her soru yalnızca kendi yerindekilerle (aynı etiket) yer değiştirir.') }}</span>
+                <span data-order-saved="faqs" class="ml-auto hidden font-semibold text-emerald-600">✓ {{ __('Sıra kaydedildi') }}</span>
+            </div>
+            <ul class="divide-y divide-slate-100 border-t border-slate-100" data-sortable-grid data-sortable-list data-order-key="faqs" data-order-url="{{ route('faqs.reorder') }}">
                 @foreach ($faqs as $faq)
-                    <li class="flex items-start gap-4 px-6 py-4 transition hover:bg-slate-50/60">
+                    <li class="flex items-start gap-3 py-4 pl-2 pr-6 transition hover:bg-slate-50/60" data-card="{{ $faq->id }}" data-group="{{ $faq->activity_id }}|{{ $faq->blog_id }}|{{ $faq->city_id }}|{{ $faq->page_key }}">
+                        <span data-drag-handle draggable="true" title="{{ __('Sürükleyerek sırala') }}" aria-label="{{ __('Sürükleyerek sırala') }}"
+                            class="mt-6 grid h-10 w-8 shrink-0 cursor-grab place-items-center rounded-lg text-slate-300 transition hover:bg-slate-100 hover:text-slate-600 active:cursor-grabbing">
+                            <svg class="size-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" /><circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" /><circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" /></svg>
+                        </span>
                         <div class="min-w-0 flex-1">
                             <div class="flex flex-wrap items-center gap-2">
                                 @if ($faq->activity)
