@@ -31,6 +31,10 @@
             <div class="rounded-2xl bg-sky-50 px-5 py-4 text-sm text-sky-950 ring-1 ring-sky-200">
                 {{ __('Bu düzen tüm aktivite sayfalarında aynıdır. Bölümler o aktiviteye göre dolar: kendi yorumları, kendi soruları, aynı şehirdeki benzerleri. İçeriği olmayan bölüm görünmez.') }}
             </div>
+        @elseif ($page->key === 'post')
+            <div class="rounded-2xl bg-sky-50 px-5 py-4 text-sm text-sky-950 ring-1 ring-sky-200">
+                {{ __('Bu düzen tüm blog yazılarında aynıdır. Bölümler o yazıya göre dolar: kendi soruları, yazının şehrindeki aktiviteler. İçeriği olmayan bölüm görünmez. En alttaki “Diğer rehberler” her zaman yazının sonunda kalır.') }}
+            </div>
         @else
         <div class="flex items-start gap-3 rounded-2xl bg-sky-50 px-5 py-4 text-sm text-sky-950 ring-1 ring-sky-200">
             <span class="mt-0.5 shrink-0 whitespace-nowrap rounded-md bg-sky-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">{{ __('Şehre özel') }}</span>

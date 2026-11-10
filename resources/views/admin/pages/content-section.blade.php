@@ -45,14 +45,14 @@
         {{-- bölüm başlığı --}}
         <x-admin.card class="p-6 sm:p-8">
             <p class="text-sm font-semibold text-slate-900">{{ $cards->isNotEmpty() ? __('Bölüm başlığı') : __('Yazılar') }}</p>
+            @if (filled($headRecord->title))
+                <x-admin.language-pills type="section" :model="$headRecord" class="mt-3 border-b border-slate-100 pb-4" />
+            @endif
             <div class="mt-4 grid gap-4 sm:grid-cols-2">
                 @foreach ($headFields as $f => [$label, $example, $max])
                     <div @class(['sm:col-span-2' => $max > 100])>{!! $input($headKey, $f, $label, $example, $max, $headRecord) !!}</div>
                 @endforeach
             </div>
-            @if (filled($headRecord->title))
-                <x-admin.language-pills type="section" :model="$headRecord" class="mt-5 border-t border-slate-100 pt-4" />
-            @endif
         </x-admin.card>
 
         {{-- kartlar: yan yana --}}
@@ -66,12 +66,12 @@
                                 <span class="grid size-7 place-items-center rounded-full bg-brand-900 text-xs font-bold text-white">{{ $loop->iteration }}</span>
                                 <p class="text-sm font-semibold text-slate-900">{{ __($cardName) }}</p>
                             </div>
+                            @if (filled($cardRecord->title))
+                                <x-admin.language-pills type="section" :model="$cardRecord" class="border-b border-slate-100 pb-3" />
+                            @endif
                             @foreach ($cardFields as $f => [$label, $example, $max])
                                 {!! $input($cardKey, $f, $label, $example, $max, $cardRecord, 4) !!}
                             @endforeach
-                            @if (filled($cardRecord->title))
-                                <x-admin.language-pills type="section" :model="$cardRecord" class="border-t border-slate-100 pt-3" />
-                            @endif
                         </x-admin.card>
                     @endforeach
                 </div>

@@ -52,4 +52,15 @@ class PageTest extends TestCase
         $this->assertGreaterThan(0, $count);
         $this->assertSame($count, Page::count());
     }
+
+    public function test_blog_post_page_has_sections_and_no_own_seo(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $post = Page::where('key', 'post')->firstOrFail();
+
+        $this->actingAs($admin)->get(route('pages.edit', $post))->assertOk()->assertSee('Blog yazılarına git');
+        $this->actingAs($admin)->get(route('pages.sections', $post))->assertOk()->assertSee('Yazı içeriği')->assertDontSee('Blog yazıları');
+        $this->actingAs($admin)->patchJson(route('pages.sections.update', $post), ['order' => ['faq', 'main', 'reviews'], 'on' => ['faq', 'reviews']])->assertOk();
+        $this->assertSame(['faq', 'main', 'reviews'], array_slice(\App\Support\PageSections::config('post')['order'], 0, 3));
+    }
 }

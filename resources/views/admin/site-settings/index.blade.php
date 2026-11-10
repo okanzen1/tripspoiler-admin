@@ -18,7 +18,7 @@
         </div>
         <p class="inline-flex items-center gap-1.5 text-xs text-slate-500">
             <svg class="size-4 text-slate-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
-            {{ __('Sırayı değiştirmek için satırı soldaki tutamaçtan tutup sürükle.') }}
+            {{ __('Soldaki tutamaçtan sürükle: anasayfadaki bölümler de bu sırayla dizilir. Duyuru şeridi en üstte, partner logoları en altta sabit.') }}
             <span class="hidden font-semibold text-emerald-700" data-order-saved="site_settings_order">✓ {{ __('Sıra kaydedildi') }}</span>
         </p>
     </div>

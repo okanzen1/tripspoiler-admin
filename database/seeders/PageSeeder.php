@@ -17,6 +17,7 @@ class PageSeeder extends Seeder
             ['activities', 'Aktiviteler', '/activities'],
             ['cities', 'Şehirler', '/cities'],
             ['blog', 'Blog', '/blog'],
+            ['post', 'Blog yazısı', '/blog/…'],
             ['reviews', 'Yorumlar', '/reviews'],
             ['about', 'Hakkımızda', '/about'],
             ['contact', 'İletişim', '/contact'],

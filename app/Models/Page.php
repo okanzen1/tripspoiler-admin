@@ -21,10 +21,10 @@ class Page extends Model
         return 'en';
     }
 
-    /** SEO bu sayfada değil, her aktivitenin kendi formunda (Aktivite detayı) */
+    /** SEO bu sayfada değil, her aktivitenin / blog yazısının kendi formunda (Aktivite detayı, Blog yazısı) */
     public function hasOwnSeo(): bool
     {
-        return $this->key !== 'activity';
+        return !in_array($this->key, ['activity', 'post'], true);
     }
 
     public function isSeoComplete(): bool
@@ -42,6 +42,12 @@ class Page extends Model
             $slug = Activity::where('active', true)->orderBy('sort_order')->orderBy('id')->value('slug');
 
             return $base . '/activities' . ($slug ? '/' . $slug : '');
+        }
+        if ($this->key === 'post') {
+            $slug = \App\Models\Blog::where('active', true)->where(fn ($q) => $q->whereNull('published_at')->orWhere('published_at', '<=', now()))
+                ->orderByDesc('published_at')->value('slug');
+
+            return $base . '/blog' . ($slug ? '/' . $slug : '');
         }
 
         return $base . ($this->path === '/' ? '' : $this->path);

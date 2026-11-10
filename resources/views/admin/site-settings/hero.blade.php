@@ -260,7 +260,39 @@
                 {!! $badge(2, 'bg-violet-500') !!}
                 <div>
                     <p class="text-lg font-semibold text-slate-900">{{ __('Yazılar') }}</p>
-                    <p class="text-sm text-slate-600">{{ __('İngilizce yaz ve kaydet. Sonra aşağıdaki "Diğer dillere çevir" butonuyla 12 dile çevrilir.') }}</p>
+                    <p class="text-sm text-slate-600">{{ __('İngilizce yaz ve kaydet. Sonra hemen alttaki "Diğer dillere çevir" butonuyla 12 dile çevrilir.') }}</p>
+                </div>
+            </div>
+
+            {{-- Çeviriler (kayıt/çeviri sonrası yerinde yenilenir: data-live) --}}
+            <div class="mt-6 rounded-2xl ring-1 ring-slate-200" data-live="translations-hero-{{ $heroText->id }}">
+                <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-900">{{ __('Diğer diller') }} <span class="font-normal text-slate-500">· {{ __(':ok / :total dil güncel', ['ok' => count($textStatus) - $textPending, 'total' => count($textStatus)]) }}</span></p>
+                        <p class="text-xs text-slate-500">{{ __('İngilizceyi değiştirdiysen önce "Değişiklikleri kaydet"e bas, sonra çevir. Bir dile tıklarsan o dildeki yazıyı elle düzeltebilirsin.') }}</p>
+                    </div>
+                    @if ($textPending)
+                        <button type="submit" form="hero-translate" class="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-700">
+                            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6" /></svg>
+                            {{ __('Diğer dillere çevir (:count)', ['count' => $textPending]) }}
+                        </button>
+                    @else
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="rounded-xl bg-emerald-50 px-3.5 py-2 text-sm font-semibold text-emerald-700">✓ {{ __('Tüm diller güncel') }}</span>
+                            <x-admin.retranslate type="hero" :model="$heroText" />
+                        </div>
+                    @endif
+                </div>
+                <div class="flex flex-wrap gap-2 border-t border-slate-100 px-5 py-4">
+                    @foreach (\App\Models\Language::targets() as $language)
+                        @php $state = $textStatus[$language->code] ?? 'missing'; @endphp
+                        <a href="{{ route('translations.edit', ['hero', $heroText->id, $language->code]) }}"
+                            class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-slate-200 transition hover:bg-slate-50"
+                            title="{{ ['ok' => __('Güncel'), 'stale' => __('İngilizce değişti, yeniden çevir')][$state] ?? __('Çevrilmedi') }}">
+                            <span class="size-2 rounded-full {{ ['ok' => 'bg-emerald-500', 'stale' => 'bg-amber-500'][$state] ?? 'bg-slate-300' }}"></span>
+                            {{ $language->native_name }}
+                        </a>
+                    @endforeach
                 </div>
             </div>
 
@@ -303,37 +335,6 @@
                 </div>
             </div>
 
-            {{-- Çeviriler (kayıt/çeviri sonrası yerinde yenilenir: data-live) --}}
-            <div class="mt-6 rounded-2xl ring-1 ring-slate-200" data-live="translations-hero-{{ $heroText->id }}">
-                <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-                    <div>
-                        <p class="text-sm font-semibold text-slate-900">{{ __('Diğer diller') }} <span class="font-normal text-slate-500">· {{ __(':ok / :total dil güncel', ['ok' => count($textStatus) - $textPending, 'total' => count($textStatus)]) }}</span></p>
-                        <p class="text-xs text-slate-500">{{ __('İngilizceyi değiştirdiysen önce "Değişiklikleri kaydet"e bas, sonra çevir. Bir dile tıklarsan o dildeki yazıyı elle düzeltebilirsin.') }}</p>
-                    </div>
-                    @if ($textPending)
-                        <button type="submit" form="hero-translate" class="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-700">
-                            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6" /></svg>
-                            {{ __('Diğer dillere çevir (:count)', ['count' => $textPending]) }}
-                        </button>
-                    @else
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="rounded-xl bg-emerald-50 px-3.5 py-2 text-sm font-semibold text-emerald-700">✓ {{ __('Tüm diller güncel') }}</span>
-                            <x-admin.retranslate type="hero" :model="$heroText" />
-                        </div>
-                    @endif
-                </div>
-                <div class="flex flex-wrap gap-2 border-t border-slate-100 px-5 py-4">
-                    @foreach (\App\Models\Language::targets() as $language)
-                        @php $state = $textStatus[$language->code] ?? 'missing'; @endphp
-                        <a href="{{ route('translations.edit', ['hero', $heroText->id, $language->code]) }}"
-                            class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-slate-200 transition hover:bg-slate-50"
-                            title="{{ ['ok' => __('Güncel'), 'stale' => __('İngilizce değişti, yeniden çevir')][$state] ?? __('Çevrilmedi') }}">
-                            <span class="size-2 rounded-full {{ ['ok' => 'bg-emerald-500', 'stale' => 'bg-amber-500'][$state] ?? 'bg-slate-300' }}"></span>
-                            {{ $language->native_name }}
-                        </a>
-                    @endforeach
-                </div>
-            </div>
         </x-admin.card>
 
         {{--

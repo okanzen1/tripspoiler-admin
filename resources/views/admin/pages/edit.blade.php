@@ -23,22 +23,23 @@
 
         {{-- SEO (aktivite detayında her aktivitenin kendi formunda) --}}
         @if (!$page->hasOwnSeo())
-            <a href="{{ route('activities.index') }}" class="group relative block focus-visible:outline-none" data-card="seo">
+            @php $isPost = $page->key === 'post'; @endphp
+            <a href="{{ $isPost ? route('blogs.index') : route('activities.index') }}" class="group relative block focus-visible:outline-none" data-card="seo">
                 <x-admin.card class="flex h-full flex-col overflow-hidden transition group-hover:-translate-y-1 group-hover:shadow-xl">
                     {!! $handle !!}
                     <div class="flex aspect-[16/8] flex-col justify-center bg-slate-100 px-8 pl-12">
                         <div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/70">
-                            <p class="text-[10px] text-slate-500">tripspoiler.com/activities/…</p>
-                            <p class="mt-0.5 truncate text-sm font-medium text-blue-700">{{ __('Her aktivitenin kendi başlığı') }}</p>
-                            <p class="mt-0.5 text-[11px] text-slate-500">{{ __('Aktivite formundaki SEO adımı') }}</p>
+                            <p class="text-[10px] text-slate-500">tripspoiler.com/{{ $isPost ? 'blog' : 'activities' }}/…</p>
+                            <p class="mt-0.5 truncate text-sm font-medium text-blue-700">{{ $isPost ? __('Her yazının kendi başlığı') : __('Her aktivitenin kendi başlığı') }}</p>
+                            <p class="mt-0.5 text-[11px] text-slate-500">{{ $isPost ? __('Blog formundaki SEO adımı') : __('Aktivite formundaki SEO adımı') }}</p>
                         </div>
                     </div>
                     <div class="flex flex-1 flex-col p-6">
                         <div class="flex items-center justify-between gap-3">
                             <p class="text-lg font-semibold text-slate-900">{{ __('SEO ayarları') }}</p>
-                            <span class="text-sm font-semibold text-brand-900 transition group-hover:translate-x-1">{{ __('Aktivitelere git') }} →</span>
+                            <span class="text-sm font-semibold text-brand-900 transition group-hover:translate-x-1">{{ $isPost ? __('Blog yazılarına git') : __('Aktivitelere git') }} →</span>
                         </div>
-                        <p class="mt-1.5 flex-1 text-sm leading-relaxed text-slate-600">{{ __('Her aktivitenin Google başlığı ve açıklaması kendi düzenleme formunda girilir; burada ortak ayar yok.') }}</p>
+                        <p class="mt-1.5 flex-1 text-sm leading-relaxed text-slate-600">{{ $isPost ? __('Her yazının Google başlığı ve açıklaması kendi düzenleme formunda girilir; burada ortak ayar yok.') : __('Her aktivitenin Google başlığı ve açıklaması kendi düzenleme formunda girilir; burada ortak ayar yok.') }}</p>
                     </div>
                 </x-admin.card>
             </a>

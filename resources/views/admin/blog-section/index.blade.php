@@ -40,9 +40,10 @@
                 <span class="grid size-8 shrink-0 place-items-center rounded-full bg-violet-500 text-sm font-bold text-white">1</span>
                 <div>
                     <p class="text-lg font-semibold text-slate-900">{{ __('Bölümün başlığı') }}</p>
-                    <p class="text-sm text-slate-600">{{ __('İngilizce yaz ve kaydet; sonra aşağıdan diğer dillere çevir.') }}</p>
+                    <p class="text-sm text-slate-600">{{ __('İngilizce yaz ve kaydet; sonra hemen alttan diğer dillere çevir.') }}</p>
                 </div>
             </div>
+            {!! $translations($section, 'translate-blog') !!}
             <div class="mt-5 grid gap-6 lg:grid-cols-5">
                 <div class="space-y-4 lg:col-span-3">
                     @foreach ([
@@ -68,7 +69,6 @@
                     </div>
                 </div>
             </div>
-            {!! $translations($section, 'translate-blog') !!}
         </x-admin.card>
 
         {{-- 2: YAZILAR --}}
@@ -129,6 +129,7 @@
                     <p class="text-sm text-slate-600">{{ __('Yazıların yanındaki “e-postanı bırak” kutusu. Abone olanlar Blog aboneleri sayfasına düşer.') }}</p>
                 </div>
             </div>
+            {!! $translations($newsletter, 'translate-newsletter') !!}
             <div class="mt-5 grid gap-6 lg:grid-cols-5">
                 <div class="space-y-4 lg:col-span-3">
                     @foreach ([
@@ -152,7 +153,6 @@
                     </div>
                 </div>
             </div>
-            {!! $translations($newsletter, 'translate-newsletter') !!}
         </x-admin.card>
     </form>
 

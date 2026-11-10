@@ -22,10 +22,46 @@
 
 @section('content')
     <div class="space-y-6">
+        {{-- Site bölümü ancak yayında ve başlığı yazılı en az bir adım varken gösterir (tripspoiler StepsSection) --}}
+        @php $visibleSteps = $steps->filter(fn ($step) => $step->active && filled($step->getTranslation('title', 'en', false)))->count(); @endphp
+        <div data-live="steps-warning">
+            @if ($visibleSteps === 0)
+                <div class="flex items-start gap-3 rounded-2xl bg-amber-50 px-5 py-4 text-sm text-amber-900 ring-1 ring-amber-200">
+                    <svg class="mt-0.5 size-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" /></svg>
+                    <p><strong class="font-semibold">{{ __('Bu bölüm şu an sitede görünmüyor.') }}</strong>
+                        {{ $steps->isEmpty() ? __('Hiç adım yok: aşağıdan ya da sağ üstteki “Yeni adım” ile en az bir adım ekle.') : __('Yayında olan adım yok: aşağıdaki adımlardan en az birinin “Yayında” düğmesini aç.') }}</p>
+                </div>
+            @endif
+        </div>
 
         {{-- 1: BÖLÜM BAŞLIĞI --}}
         <x-admin.card class="p-6 sm:p-8">
             <x-admin.step-heading :title="__('Bölümün başlığı')" :description="__('İngilizce yaz ve kaydet. Sonra “Diğer dillere çevir” ile 12 dile çevrilir.')" />
+
+            {{-- çeviri durumu (formun dışında: kendi formu var; kayıt/çeviri sonrası yerinde yenilenir) --}}
+            <div class="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-5 py-4 ring-1 ring-slate-200" data-live="translations-section-{{ $section->id }}">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-sm font-semibold text-slate-900">{{ __('Diğer diller') }}</span>
+                    @foreach (\App\Models\Language::targets() as $language)
+                        @php $state = $sectionStatus[$language->code] ?? 'missing'; @endphp
+                        <a href="{{ route('translations.edit', ['section', $section->id, $language->code]) }}" class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-slate-200 hover:bg-slate-50">
+                            <span class="size-2 rounded-full {{ ['ok' => 'bg-emerald-500', 'stale' => 'bg-amber-500'][$state] ?? 'bg-slate-300' }}"></span>{{ $language->native_name }}
+                        </a>
+                    @endforeach
+                </div>
+                @if ($sectionPending)
+                    <form action="{{ route('translations.translate', ['section', $section->id]) }}" method="POST" data-translate="section:{{ $section->id }}"
+                        data-confirm-title="{{ __('Başlık diğer dillere çevrilsin mi?') }}" data-confirm="{{ __('Kaydedilmiş İngilizce yazı Google Çeviri ile çevrilir.') }}" data-confirm-button="{{ __('Evet, çevir') }}">
+                        @csrf
+                        <button type="submit" class="rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-700">{{ __('Diğer dillere çevir (:count)', ['count' => $sectionPending]) }}</button>
+                    </form>
+                @else
+                    <div class="flex flex-wrap items-center gap-2">
+                            <span class="rounded-xl bg-emerald-50 px-3.5 py-2 text-sm font-semibold text-emerald-700">✓ {{ __('Tüm diller güncel') }}</span>
+                            <x-admin.retranslate type="section" :model="$section" />
+                        </div>
+                @endif
+            </div>
 
             <form action="{{ route('steps.section') }}" method="POST" class="mt-5 grid gap-6 lg:grid-cols-5">
                 @csrf
@@ -56,30 +92,6 @@
                 </div>
             </form>
 
-            {{-- çeviri durumu (yukarıdaki formun dışında: kendi formu var; kayıt/çeviri sonrası yerinde yenilenir) --}}
-            <div class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-5 py-4 ring-1 ring-slate-200" data-live="translations-section-{{ $section->id }}">
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-sm font-semibold text-slate-900">{{ __('Diğer diller') }}</span>
-                    @foreach (\App\Models\Language::targets() as $language)
-                        @php $state = $sectionStatus[$language->code] ?? 'missing'; @endphp
-                        <a href="{{ route('translations.edit', ['section', $section->id, $language->code]) }}" class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-slate-200 hover:bg-slate-50">
-                            <span class="size-2 rounded-full {{ ['ok' => 'bg-emerald-500', 'stale' => 'bg-amber-500'][$state] ?? 'bg-slate-300' }}"></span>{{ $language->native_name }}
-                        </a>
-                    @endforeach
-                </div>
-                @if ($sectionPending)
-                    <form action="{{ route('translations.translate', ['section', $section->id]) }}" method="POST" data-translate="section:{{ $section->id }}"
-                        data-confirm-title="{{ __('Başlık diğer dillere çevrilsin mi?') }}" data-confirm="{{ __('Kaydedilmiş İngilizce yazı Google Çeviri ile çevrilir.') }}" data-confirm-button="{{ __('Evet, çevir') }}">
-                        @csrf
-                        <button type="submit" class="rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-700">{{ __('Diğer dillere çevir (:count)', ['count' => $sectionPending]) }}</button>
-                    </form>
-                @else
-                    <div class="flex flex-wrap items-center gap-2">
-                            <span class="rounded-xl bg-emerald-50 px-3.5 py-2 text-sm font-semibold text-emerald-700">✓ {{ __('Tüm diller güncel') }}</span>
-                            <x-admin.retranslate type="section" :model="$section" />
-                        </div>
-                @endif
-            </div>
         </x-admin.card>
 
         {{-- 2: ADIMLAR --}}

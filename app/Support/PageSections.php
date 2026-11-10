@@ -27,6 +27,7 @@ class PageSections
     public const MAIN = [
         'activities' => ['Aktivite listesi', 'Sayfanın asıl içeriği: filtreler, arama ve aktivite kartları. Kapatılamaz, yeri değiştirilebilir.'],
         'reviews' => ['Yorum listesi', 'Puan özeti, yıldız süzgeci ve yorumlar. Kapatılamaz, yeri değiştirilebilir.'],
+        'post' => ['Yazı içeriği', 'Yazının kendisi ve içindeki aktiviteler. Kapatılamaz, yeri değiştirilebilir.'],
         'activity' => ['Aktivite içeriği', 'Galeri, bilgiler, açıklama ve "Uygunluğu kontrol et" kutusu. Kapatılamaz, yeri değiştirilebilir.'],
     ];
 
@@ -40,6 +41,7 @@ class PageSections
     public const DEFAULTS = [
         'activities' => ['reviews', 'social'],
         'activity' => ['reviews', 'faq'],
+        'post' => ['reviews', 'faq'],
         'blog' => ['popular', 'reviews', 'social'],
         'cities' => ['popular', 'blog', 'reviews'],
         'reviews' => ['social'],
@@ -52,6 +54,12 @@ class PageSections
      * Aktivite detayında bölümler şehre göre değil, o aktiviteye göre dolar: ad ve açıklamalar farklı.
      */
     public const OVERRIDES = [
+        'post' => [
+            'popular' => ['Popüler aktiviteler', 'Yazının şehrindeki popüler aktiviteler. Yazının şehri yoksa görünmez.', false],
+            'city_entry' => ['Şehirler çağrısı', 'Büyük resimli kart; yazının şehrine göre.', false],
+            'faq' => ['Sık sorulan sorular', 'Bu yazıya yazılmış sorular (SSS › Bir blog yazısı). Soru yoksa görünmez.', false],
+            'reviews' => ['Yorumlar', 'Ziyaretçi yorumları ve puan özeti.', false],
+        ],
         'activity' => [
             'popular' => ['Benzer aktiviteler', 'Aynı şehirdeki diğer aktiviteler (bu aktivite hariç).', false],
             'blog' => ['Blog yazıları', 'Bu aktiviteye bağlanan yazılar; yoksa şehrin yazıları. Yazı yoksa görünmez.', false],
@@ -78,6 +86,10 @@ class PageSections
         // Yorumlar sayfasında "Yorumlar" bölümü tekrar olur
         if ($page === 'reviews') {
             unset($labels['reviews']);
+        }
+        // Blog yazısının altında zaten "Diğer rehberler" var
+        if ($page === 'post') {
+            unset($labels['blog']);
         }
 
         // sayfanın kendi "Nasıl çalışır"ı varsa anasayfadaki kartlarla karışmasın
@@ -150,7 +162,7 @@ class PageSections
         $saved = json_decode((string) Setting::get("page_sections_{$page}"), true);
         $defaults = self::DEFAULTS[$page] ?? [];
         $guide = array_keys(self::guideLabels($page));
-        $keys = array_values(array_diff([...array_keys(self::CONTENT), ...$guide], in_array($page, self::NO_CITY, true) ? self::CITY_ONLY : [], $page === 'reviews' ? ['reviews'] : []));
+        $keys = array_values(array_diff([...array_keys(self::CONTENT), ...$guide], in_array($page, self::NO_CITY, true) ? self::CITY_ONLY : [], $page === 'reviews' ? ['reviews'] : [], $page === 'post' ? ['blog'] : []));
         $main = isset(self::MAIN[$page]) ? ['main'] : [];
 
         $order = array_values(array_intersect($saved['order'] ?? [], [...$main, ...$keys]));
