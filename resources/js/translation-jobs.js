@@ -139,6 +139,24 @@ function dismiss(key) {
     render();
 }
 
+// Kayıt bu sayfada mı: adres aynı ya da sayfada o kaydın çeviri kutusu/butonu var
+const liveKey = (key) => `translations-${String(key).replace(':', '-')}`;
+function onThisPage(job) {
+    return samePage(job.url)
+        || !!document.querySelector(`form[data-translate="${CSS.escape(job.key)}"], [data-live="${CSS.escape(liveKey(job.key))}"]`);
+}
+
+// Çeviri bitti: sayfa yerinde yenilenir. Kutu hâlâ eskiyse (sunucu son kaydı geç gösterdiyse) birkaç kez daha dener.
+async function refreshUntilChanged(key, tries = 4) {
+    const bar = () => document.querySelector(`[data-live="${CSS.escape(liveKey(key))}"]`)?.innerHTML ?? null;
+    const before = bar();
+    for (let i = 0; i < tries; i++) {
+        await window.liveRefresh?.();
+        if (before === null || bar() !== before) return;
+        await new Promise((resolve) => setTimeout(resolve, 1500 * (i + 1)));
+    }
+}
+
 function upsert(job) {
     const before = jobs.get(job.key);
     jobs.set(job.key, { ...before, ...job });
@@ -146,7 +164,7 @@ function upsert(job) {
     if (job.status === 'done' && before?.status !== 'done') {
         markSeen(job);
         // Bu sayfanın kaydıysa çeviri durumları ve alanlar yerinde güncellensin (sayfa yenilenmez)
-        if (before && samePage(job.url)) window.liveRefresh?.();
+        if (before && onThisPage({ ...before, ...job })) refreshUntilChanged(job.key);
         setTimeout(() => jobs.get(job.key)?.status === 'done' && dismiss(job.key), 12000);
     }
 }
@@ -217,7 +235,9 @@ document.addEventListener('submit', async (e) => {
         });
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.job) {
-            upsert({ ...data.job, local: false });
+            // Cevap geç geldiyse (iş bu arada bitti) "sürüyor" durumuna geri döndürme
+            const current = jobs.get(key);
+            if (current?.status === 'running') upsert({ ...data.job, ...(current.total ? { done: current.done, total: current.total } : {}), local: false });
         } else if (res.ok && data.message) {
             upsert({ key, status: 'done', message: data.message, finished_at: serverNow() });
         } else {

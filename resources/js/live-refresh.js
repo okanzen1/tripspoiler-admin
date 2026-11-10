@@ -54,7 +54,7 @@ export async function liveRefresh(form = null, { main = false } = {}) {
 
     let doc;
     try {
-        const res = await fetch(location.href, { headers: { Accept: 'text/html', 'X-Live-Refresh': '1' }, credentials: 'same-origin' });
+        const res = await fetch(location.href, { headers: { Accept: 'text/html', 'X-Live-Refresh': '1' }, credentials: 'same-origin', cache: 'no-store' });
         if (!res.ok || res.redirected) return;
         doc = new DOMParser().parseFromString(await res.text(), 'text/html');
     } catch {
