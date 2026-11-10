@@ -18,7 +18,7 @@ class SettingKeys
         'hero_guide_id' => 'Home hero right white card: blog post id (empty = newest post).',
         'home_blog_ids' => 'Home page blog section: comma-separated blog ids (empty = newest posts).',
         'reviews_hero_cards' => 'Reviews page banner cards: empty = automatic, "0" = hidden, or comma-separated review ids (max 3).',
-        'sections_disabled' => 'Home sections hidden on the site, comma-separated from: steps, blog, features, announcements, intro, social, reviews, city_entry, partners. Empty = all visible.',
+        'sections_disabled' => 'Home sections hidden on the site, comma-separated from: steps, blog, features, announcements, intro, social, reviews, city_entry, partners, home_popular, home_faq (these two hide only the home page section). Empty = all visible.',
         'site_settings_order' => 'Order of the cards on the panel "Bölümler" page (comma-separated card keys).',
         'mailbox_signature' => 'E-mail signature used when replying from the panel mailbox.',
     ];

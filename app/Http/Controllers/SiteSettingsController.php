@@ -30,6 +30,8 @@ class SiteSettingsController extends Controller
             'featureCount' => \App\Models\Feature::active()->count(),
             'homeBlogs' => \App\Models\Blog::whereIn('id', array_filter(explode(',', (string) \App\Models\Setting::get('home_blog_ids'))))->get(),
             'steps' => \App\Models\Step::active()->orderBy('sort_order')->orderBy('id')->limit(4)->get(),
+            'popularCount' => \App\Models\Activity::where('active', true)->where('is_popular', true)->count(),
+            'homeFaqs' => \App\Models\Faq::general()->where('active', true)->orderBy('sort_order')->orderBy('id')->get(),
         ]);
     }
 
@@ -40,7 +42,9 @@ class SiteSettingsController extends Controller
     {
         abort_unless(in_array($section, \App\Support\SiteSections::KEYS, true), 404);
         $active = \App\Support\SiteSections::toggle($section);
-        $message = __($active ? 'Bölüm yayına alındı; sitede görünüyor.' : 'Bölüm gizlendi; sitenin hiçbir yerinde görünmez.');
+        $message = in_array($section, \App\Support\SiteSections::HOME_ONLY, true)
+            ? __($active ? 'Bölüm anasayfada yayına alındı.' : 'Bölüm anasayfada gizlendi; diğer sayfalar etkilenmez.')
+            : __($active ? 'Bölüm yayına alındı; sitede görünüyor.' : 'Bölüm gizlendi; sitenin hiçbir yerinde görünmez.');
 
         return $request->expectsJson() ? response()->json(['active' => $active, 'message' => $message]) : back()->with('success', $message);
     }

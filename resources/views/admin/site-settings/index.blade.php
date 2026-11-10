@@ -48,6 +48,14 @@
             $features->pluck('title')->implode(' · '),
             $featureCount ? __('✓ :count kart yayında', ['count' => $featureCount]) : __('Yayında kart yok, bölüm gizli'), $featureCount > 0,
             'bg-amber-500', '<rect x="3" y="5" width="7" height="14" rx="1.5" /><rect x="14" y="5" width="7" height="14" rx="1.5" />'];
+        $rows['home_popular'] = ['popular', route('activities.index'), 'Popüler aktiviteler', 'Anasayfadaki aktivite kartları: “Popüler” işaretli aktiviteler (aktivite formunda).',
+            '',
+            $popularCount ? __('✓ :count popüler aktivite', ['count' => $popularCount]) : __('Popüler işaretli aktivite yok, bölüm gizli'), $popularCount > 0,
+            'bg-red-500', '<path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1.5a2.5 2.5 0 0 0 0 5V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1.5a2.5 2.5 0 0 0 0-5z" />'];
+        $rows['home_faq'] = ['faq', route('faqs.index', ['scope' => 'general']), 'Sıkça sorulan sorular', 'Anasayfadaki sorular (SSS › Nerede görünecek › Anasayfa). Sırası SSS listesinden sürüklenir.',
+            $homeFaqs->pluck('question')->implode(' · '),
+            $homeFaqs->count() ? __('✓ :count soru yayında', ['count' => $homeFaqs->count()]) : __('Anasayfa sorusu yok, bölüm gizli'), $homeFaqs->count() > 0,
+            'bg-teal-500', '<circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01" />'];
         $rows['announcements'] = ['announcements', route('announcements.index'), 'Duyuru şeridi', 'Sitenin en üstünde kayan kısa yazılar (kampanya, yeni rehber…).',
             '',
             $announcementCount ? __('✓ :count duyuru yayında', ['count' => $announcementCount]) : __('Yayında duyuru yok, şerit gizli'), $announcementCount > 0,
@@ -97,6 +105,20 @@
                                         @endforeach
                                     </span>
                                     @break
+                                @case('home_popular')
+                                    <span class="absolute inset-0 flex items-center gap-1.5 overflow-hidden px-2">
+                                        @foreach (range(1, 3) as $n)
+                                            <span class="h-14 w-12 shrink-0 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200/70"><span class="block h-7 bg-slate-300"></span><span class="mx-1 mt-1.5 block h-1 rounded bg-slate-300"></span><span class="mx-1 mt-1 block h-1 w-6 rounded bg-red-400"></span></span>
+                                        @endforeach
+                                    </span>
+                                    @break
+                                @case('home_faq')
+                                    <span class="absolute inset-0 flex flex-col justify-center gap-1 px-2.5">
+                                        @foreach ($homeFaqs->take(3) as $faq)
+                                            <span class="flex items-center justify-between gap-1 rounded-md bg-white px-1.5 py-1 shadow-sm ring-1 ring-slate-200/70"><span class="truncate text-[7px] font-semibold text-slate-800">{{ $faq->question }}</span><span class="text-[8px] text-slate-400">+</span></span>
+                                        @endforeach
+                                    </span>
+                                    @break
                                 @case('announcements')
                                     <span class="absolute inset-x-0 top-3 flex h-4 items-center gap-3 overflow-hidden whitespace-nowrap bg-slate-900 px-2 text-[7px] font-semibold text-white/90">
                                         <span>● {{ __('Kayan yazı') }}</span><span>● {{ __('Kayan yazı') }}</span><span>● {{ __('Kayan yazı') }}</span>
@@ -120,7 +142,7 @@
                         <span class="min-w-0 flex-1">
                             <span class="flex flex-wrap items-baseline gap-x-2">
                                 <span class="font-semibold text-slate-900 group-hover:text-brand-900">{{ __($name) }}</span>
-                                @if ($preview && in_array($section, ['steps', 'blog', 'features'], true))
+                                @if ($preview && in_array($section, ['steps', 'blog', 'features', 'home_faq'], true))
                                     <span class="truncate text-xs text-slate-400">“{{ \Illuminate\Support\Str::limit($preview, 70) }}”</span>
                                 @endif
                             </span>
