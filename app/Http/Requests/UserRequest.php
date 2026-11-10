@@ -21,7 +21,13 @@ class UserRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
-            'email' => ['required', 'email', 'max:190', Rule::unique('users')->ignore($user)],
+            // e-posta şifreli: tekrar kontrolü parmak iziyle
+            'email' => ['required', 'email', 'max:190', function ($attribute, $value, $fail) use ($user) {
+                $other = \App\Models\User::findByEmail($value);
+                if ($other && $other->id !== $user?->id) {
+                    $fail(__('Bu e-posta adresiyle bir kullanıcı zaten var.'));
+                }
+            }],
             'role' => ['required', Rule::enum(Role::class)],
             'locale' => ['sometimes', 'required', Rule::in(array_keys(config('app.panel_locales')))],
             // Düzenlemede boş bırakılırsa şifre değişmez

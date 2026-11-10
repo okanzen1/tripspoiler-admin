@@ -28,7 +28,9 @@ class ActivityLogReport extends PanelTool
         return ActivityLog::query()
             ->when($request->get('action'), fn ($q, $v) => $q->where('action', $v))
             ->when($request->get('type'), fn ($q, $v) => $q->where('subject_type', $v))
-            ->when($request->get('user'), fn ($q, $v) => $q->where('user_name', 'like', "%{$v}%"))
+            // kişi adı şifreli: adı uyan kullanıcıların id'leriyle
+            ->when($request->get('user'), fn ($q, $v) => $q->whereIn('user_id', \App\Models\User::all()
+                ->filter(fn ($u) => str_contains(mb_strtolower($u->full_name . ' ' . $u->email), mb_strtolower($v)))->modelKeys()))
             ->when($request->get('since'), fn ($q, $v) => $q->where('created_at', '>=', \Carbon\Carbon::parse($v)->startOfDay()))
             ->latest('id')->limit(min(200, max(1, (int) ($request->get('limit') ?: 30))))->get()
             ->map(fn ($log) => array_filter([

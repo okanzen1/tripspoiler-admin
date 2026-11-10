@@ -41,11 +41,8 @@ class ActivityLogController extends Controller
             ->when($filters['type'] ?? null, fn ($q, $type) => $q->where('subject_type', $type))
             ->when($filters['from'] ?? null, fn ($q, $date) => $q->where('created_at', '>=', \Carbon\Carbon::parse($date)->startOfDay()))
             ->when($filters['to'] ?? null, fn ($q, $date) => $q->where('created_at', '<=', \Carbon\Carbon::parse($date)->endOfDay()))
-            ->when($filters['q'] ?? null, fn ($q, $term) => $q->where(fn ($w) => $w
-                ->where('subject_label', 'like', "%{$term}%")
-                ->orWhere('user_name', 'like', "%{$term}%")
-                ->orWhere('ip', 'like', "%{$term}%")
-                ->orWhere('changes', 'like', "%{$term}%")))
+            // ad, IP, kayıt adı ve değişiklikler şifreli: arama son kayıtlarda çözülerek yapılır
+            ->when($filters['q'] ?? null, fn ($q, $term) => $q->whereIn('id', ActivityLog::idsMatching($term)))
             ->latest('id')
             ->paginate(50)
             ->withQueryString();
@@ -53,7 +50,7 @@ class ActivityLogController extends Controller
         return view('admin.activity-logs.index', [
             'logs' => $logs,
             'filters' => $filters,
-            'users' => User::orderBy('first_name')->get(),
+            'users' => User::all()->sortBy(fn (User $user) => mb_strtolower($user->full_name))->values(),
             'todayCount' => ActivityLog::where('created_at', '>=', today())->count(),
             'failedCount' => ActivityLog::where('action', 'login_failed')->where('created_at', '>=', now()->subDays(7))->count(),
         ]);

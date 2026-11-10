@@ -45,10 +45,27 @@ class User extends Authenticatable implements OAuthenticatable
     protected function casts(): array
     {
         return [
+            // Kişisel veri şifreli (App\Support\Privacy); giriş ve tekrar kontrolü email_hash ile
+            'first_name' => 'encrypted',
+            'last_name' => 'encrypted',
+            'email' => 'encrypted',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => Role::class,
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(fn (self $user) => $user->email_hash = \App\Support\Privacy::hash($user->email));
+    }
+
+    /** E-postaya göre kullanıcı (e-posta şifreli olduğu için parmak iziyle) */
+    public static function findByEmail(?string $email): ?self
+    {
+        $hash = \App\Support\Privacy::hash($email);
+
+        return $hash ? static::where('email_hash', $hash)->first() : null;
     }
 
     protected function fullName(): Attribute

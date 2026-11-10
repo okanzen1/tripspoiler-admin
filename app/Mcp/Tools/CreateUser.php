@@ -30,7 +30,7 @@ class CreateUser extends PanelTool
         $data = $request->validate([
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
-            'email' => ['required', 'email', 'max:190', Rule::unique('users')],
+            'email' => ['required', 'email', 'max:190', fn ($attribute, $value, $fail) => \App\Models\User::findByEmail($value) ? $fail('A user with this email already exists.') : null],
             'role' => ['nullable', Rule::enum(Role::class)],
             'locale' => ['nullable', Rule::in(['tr', 'en'])],
             'password' => ['nullable', 'string', 'min:8'],

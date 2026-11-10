@@ -33,6 +33,12 @@ class ListRecords extends PanelTool
         if (filled($search = trim((string) $request->get('search')))) {
             $query->where(function ($q) use ($spec, $model, $search) {
                 foreach ($spec['search'] as $field) {
+                    // Şifreli alan (ad, e-posta): veritabanı arayamaz, çözülmüş halinde bakılır
+                    if (str_starts_with((string) ($model->getCasts()[$field] ?? ''), 'encrypted')) {
+                        $q->orWhereIn($model->getKeyName(), $model->newQuery()->get()
+                            ->filter(fn ($row) => str_contains(mb_strtolower((string) $row->{$field}), mb_strtolower($search)))->modelKeys());
+                        continue;
+                    }
                     $column = in_array($field, $model->translatable ?? [], true) ? "{$field}->en" : $field;
                     $q->orWhere($column, 'like', "%{$search}%");
                 }

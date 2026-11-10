@@ -20,7 +20,9 @@ class ReviewController extends Controller
         $rating = in_array((int) $request->get('rating'), [1, 2, 3, 4, 5], true) ? (int) $request->get('rating') : null;
 
         $reviews = Review::with('activity')
-            ->when($search, fn ($q) => $q->where(fn ($q) => $q->where('name', 'like', "%{$search}%")->orWhere('comment', 'like', "%{$search}%")))
+            // ad şifreli: adda arama, adı uyan yorumların id'leriyle (yorum metni açık, doğrudan aranır)
+            ->when($search, fn ($q) => $q->where(fn ($q) => $q->where('comment', 'like', "%{$search}%")
+                ->orWhereIn('id', Review::query()->get(['id', 'name'])->filter(fn (Review $r) => str_contains(mb_strtolower((string) $r->name), mb_strtolower($search)))->modelKeys())))
             ->when($status === 'pending', fn ($q) => $q->pending())
             ->when($status === 'approved', fn ($q) => $q->approved())
             ->when($activityId === 'general', fn ($q) => $q->whereNull('activity_id'))

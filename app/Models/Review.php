@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Ziyaretçi yorumu. activity_id boşsa sitenin geneli hakkında. E-posta şifreli tutulur.
+ * Ziyaretçi yorumu. activity_id boşsa sitenin geneli hakkında. Ad ve e-posta şifreli tutulur (App\Support\Privacy).
  */
 class Review extends Model
 {
@@ -16,6 +16,7 @@ class Review extends Model
     protected function casts(): array
     {
         return [
+            'name' => 'encrypted',
             'email' => 'encrypted',
             'rating' => 'integer',
             'approved' => 'boolean',
@@ -25,7 +26,7 @@ class Review extends Model
     protected static function booted(): void
     {
         static::saving(function (self $review) {
-            $review->email_hash = filled($review->email) ? hash('sha256', mb_strtolower(trim($review->email))) : null;
+            $review->email_hash = \App\Support\Privacy::hash($review->email);
         });
     }
 

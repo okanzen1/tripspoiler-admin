@@ -5,8 +5,10 @@ use Illuminate\Support\Facades\Schedule;
 // Hiçbir kayda bağlı olmayan resim dosyalarını her gece temizle (canlıda cron: * * * * * php artisan schedule:run)
 Schedule::command('media:prune')->dailyAt('04:00')->withoutOverlapping();
 
-// 1 yıldan eski işlem kayıtlarını sil (App\Models\ActivityLog::prunable)
-Schedule::command('model:prune', ['--model' => [\App\Models\ActivityLog::class]])->dailyAt('04:30');
+// Eski kayıtları sil: işlem kayıtları 1 yıl, ziyaret ve partner tıklamaları 6 ay (modellerin prunable())
+Schedule::command('model:prune', ['--model' => [\App\Models\ActivityLog::class, \App\Models\Visit::class, \App\Models\AffiliateClick::class]])->dailyAt('04:30');
+// Şifre sıfırlama kayıtları (e-posta içerir) bir saatten fazla tutulmaz
+Schedule::command('auth:clear-resets')->hourly();
 
 // Sıradaki işler (ör. Diller ve çeviri › toplu çeviri): her dakika işlenir, sırada iş yoksa hemen biter.
 // Paylaşımlı sunucuda sürekli çalışan kuyruk işçisi olmadığı için (cron: * * * * * php artisan schedule:run)

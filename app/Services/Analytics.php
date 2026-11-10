@@ -192,17 +192,17 @@ class Analytics
             // Son ziyaret ne zaman: "şu an 0" iken sebebi görünsün (gerçekten kimse yok mu, saat mi kaymış)
             'last_at' => $lastAt ? \Carbon\Carbon::parse($lastAt, self::TIMEZONE) : null,
             'now' => $now,
-            'active' => $real()->where('created_at', '>=', $since)->distinct()->count(DB::raw('COALESCE(ip, visitor_id)')),
-            'today' => $real()->where('created_at', '>=', $today)->distinct()->count(DB::raw('COALESCE(ip, visitor_id)')),
+            'active' => $real()->where('created_at', '>=', $since)->distinct()->count(DB::raw('COALESCE(ip_hash, visitor_id)')),
+            'today' => $real()->where('created_at', '>=', $today)->distinct()->count(DB::raw('COALESCE(ip_hash, visitor_id)')),
             'pages' => $real()->where('created_at', '>=', $since)
-                ->selectRaw('path, COUNT(DISTINCT COALESCE(ip, visitor_id)) as total')->groupBy('path')->orderByDesc('total')->limit(6)->get(),
+                ->selectRaw('path, COUNT(DISTINCT COALESCE(ip_hash, visitor_id)) as total')->groupBy('path')->orderByDesc('total')->limit(6)->get(),
             'visitors' => self::visitors($filters, $limit),
             'countries' => $real()->where('created_at', '>=', $now->copy()->subDays(90)->format('Y-m-d H:i:s'))->whereNotNull('country')->distinct()->orderBy('country')->pluck('country'),
         ];
     }
 
     /**
-     * Ziyaretçiler IP'ye göre (IP yoksa tarayıcı kimliğine göre) gruplanır: son görülme, sayfa ve oturum sayısı,
+     * Ziyaretçiler IP'ye göre (şifreli; parmak izi ip_hash ile, IP yoksa tarayıcı kimliğine göre) gruplanır: son görülme, sayfa ve oturum sayısı,
      * son sayfa, ilk geliş kaynağı, partner tıklamaları.
      */
     public static function visitors(array $filters = [], int $limit = 50): Collection
@@ -213,18 +213,19 @@ class Analytics
             ->when($filters['country'] ?? null, fn ($q, $country) => $q->where('country', $country))
             ->when($filters['device'] ?? null, fn ($q, $device) => $q->where('device', $device))
             ->when(trim((string) ($filters['q'] ?? '')), fn ($q, $term) => $q->where(fn ($w) => $w
-                ->where('ip', 'like', "%{$term}%")->orWhere('path', 'like', "%{$term}%")->orWhere('city', 'like', "%{$term}%")
+                // IP şifreli: tam IP yazılırsa parmak iziyle bulunur
+                ->where('ip_hash', \App\Support\Privacy::hash($term))->orWhere('path', 'like', "%{$term}%")->orWhere('city', 'like', "%{$term}%")
                 ->orWhere('referrer_host', 'like', "%{$term}%")->orWhere('utm_source', 'like', "%{$term}%")));
 
-        $groups = $query->selectRaw('COALESCE(ip, visitor_id) as who, MAX(id) as last_id, MIN(id) as first_id, COUNT(*) as views, COUNT(DISTINCT session_id) as sessions')
+        $groups = $query->selectRaw('COALESCE(ip_hash, visitor_id) as who, MAX(id) as last_id, MIN(id) as first_id, COUNT(*) as views, COUNT(DISTINCT session_id) as sessions')
             ->groupBy('who')->orderByDesc('last_id')->limit($limit)->get();
         if ($groups->isEmpty()) {
             return collect();
         }
 
         $rows = Visit::query()->whereIn('id', $groups->pluck('last_id')->merge($groups->pluck('first_id')))->get()->keyBy('id');
-        $clicks = AffiliateClick::query()->whereIn(DB::raw('COALESCE(ip, visitor_id)'), $groups->pluck('who'))
-            ->selectRaw('COALESCE(ip, visitor_id) as who, COUNT(*) as total')->groupBy('who')->pluck('total', 'who');
+        $clicks = AffiliateClick::query()->whereIn(DB::raw('COALESCE(ip_hash, visitor_id)'), $groups->pluck('who'))
+            ->selectRaw('COALESCE(ip_hash, visitor_id) as who, COUNT(*) as total')->groupBy('who')->pluck('total', 'who');
 
         return $groups->map(fn ($group) => (object) [
             'who' => $group->who,
@@ -243,7 +244,11 @@ class Analytics
      */
     public static function visitor(string $who): array
     {
-        $match = fn ($q) => $q->where(fn ($w) => $w->where('ip', $who)->orWhere(fn ($v) => $v->whereNull('ip')->where('visitor_id', $who)));
+        // Açık IP verilirse (ör. Claude aracı) parmak izine çevrilir; panel bağlantıları zaten parmak izi taşır
+        if (filter_var($who, FILTER_VALIDATE_IP)) {
+            $who = (string) \App\Support\Privacy::hash($who);
+        }
+        $match = fn ($q) => $q->where(fn ($w) => $w->where('ip_hash', $who)->orWhere(fn ($v) => $v->whereNull('ip_hash')->where('visitor_id', $who)));
         $visits = $match(Visit::query())->latest('id')->limit(1000)->get();
         $clicks = $match(AffiliateClick::query())->latest('id')->limit(500)->get();
 

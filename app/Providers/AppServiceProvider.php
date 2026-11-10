@@ -25,6 +25,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Gizlilik: oturumlara IP / tarayıcı yazılmaz; giriş şifreli e-postanın parmak iziyle (App\Support\Privacy)
+        \Illuminate\Support\Facades\Session::extend('database', fn ($app) => new \App\Support\PrivateSessionHandler(
+            $app['db']->connection($app['config']['session.connection']), $app['config']['session.table'], $app['config']['session.lifetime'], $app,
+        ));
+        \Illuminate\Support\Facades\Auth::provider('hashed-email', fn ($app, array $config) => new \App\Auth\HashedEmailUserProvider($app['hash'], $config['model']));
+
         Route::resourceVerbs(['create' => 'yeni', 'edit' => 'duzenle']);
 
         Gate::define('admin', fn (User $user) => $user->isAdmin());

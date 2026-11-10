@@ -37,7 +37,7 @@ class ReviewTest extends TestCase
         $review = Review::first();
         $this->assertSame(4, $review->rating);
         $this->assertTrue($review->activity->is($this->activity));
-        $this->assertSame(hash('sha256', 'emily@example.com'), $review->email_hash);
+        $this->assertSame(\App\Support\Privacy::hash('emily@example.com'), $review->email_hash);
         $this->assertNotSame('Emily@Example.com', \DB::table('reviews')->value('email'));
     }
 
@@ -86,5 +86,20 @@ class ReviewTest extends TestCase
         Review::create(['name' => 'X', 'rating' => 3, 'comment' => 'y']);
 
         $this->actingAs($this->editor)->get(route('reviews.index'))->assertSee('title="Yorumlar (1)"', false);
+    }
+
+    public function test_personal_data_is_never_stored_in_plain_text(): void
+    {
+        $user = \App\Models\User::factory()->create(['first_name' => 'Okan', 'last_name' => 'Özen', 'email' => 'okan@example.com']);
+        Review::create(['name' => 'Lukas Schneider', 'email' => 'lukas@example.com', 'rating' => 5, 'comment' => 'Great', 'approved' => true]);
+        \App\Models\Visit::create(['visitor_id' => str_repeat('a', 32), 'session_id' => str_repeat('b', 32), 'ip' => '180.190.98.94', 'ip_hash' => \App\Support\Privacy::hash('180.190.98.94'), 'path' => '/en', 'page_type' => 'home']);
+
+        $dump = json_encode([\DB::table('users')->get(), \DB::table('reviews')->get(), \DB::table('visits')->get()]);
+        foreach (['Okan', 'okan@example.com', 'Lukas', 'Schneider', 'lukas@example.com', '180.190.98.94'] as $plain) {
+            $this->assertStringNotContainsString($plain, $dump);
+        }
+        $this->assertSame('Lukas Schneider', Review::first()->name);
+        $this->assertTrue(\App\Models\User::findByEmail('OKAN@example.com ')->is($user));
+        $this->assertSame('180.190.98.94', \App\Models\Visit::first()->ip);
     }
 }

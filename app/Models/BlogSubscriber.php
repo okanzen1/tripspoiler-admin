@@ -28,7 +28,7 @@ class BlogSubscriber extends Model
 
     public static function hash(string $email): string
     {
-        return hash('sha256', mb_strtolower(trim($email)));
+        return (string) \App\Support\Privacy::hash($email);
     }
 
     public static function findByEmail(string $email): ?self

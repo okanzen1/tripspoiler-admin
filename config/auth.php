@@ -71,7 +71,8 @@ return [
 
     'providers' => [
         'users' => [
-            'driver' => 'eloquent',
+            // E-posta şifreli: kullanıcı parmak iziyle bulunur (App\Auth\HashedEmailUserProvider)
+            'driver' => 'hashed-email',
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
 

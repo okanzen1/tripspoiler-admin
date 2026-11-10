@@ -181,6 +181,12 @@ class ActivityLogger
                 continue;
             }
             $old = $model->getRawOriginal($field);
+            // Şifreli alan (ad, e-posta): ham değer her seferinde farklı şifreli metin; çözülmüş halleri karşılaştırılır
+            // (kayıt da şifreli saklanır: ActivityLog::$casts)
+            if (str_starts_with((string) ($model->getCasts()[$field] ?? ''), 'encrypted')) {
+                $old = $model->getOriginal($field);
+                $new = $model->getAttribute($field);
+            }
             $oldArr = is_string($old) ? json_decode($old, true) : null;
             $newArr = is_string($new) ? json_decode($new, true) : null;
 

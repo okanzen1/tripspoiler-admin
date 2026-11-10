@@ -50,7 +50,7 @@ class UserManagementTest extends TestCase
             'password_confirmation' => 'sifre1234',
         ])->assertRedirect(route('users.index'));
 
-        $user = User::where('email', 'ayse@tripspoiler.com')->first();
+        $user = User::findByEmail('ayse@tripspoiler.com');
         $this->assertSame(Role::Editor, $user->role);
         $this->assertTrue(Hash::check('sifre1234', $user->password));
     }
@@ -121,7 +121,7 @@ class UserManagementTest extends TestCase
             'avatar' => UploadedFile::fake()->image('ben.jpg', 800, 500),
         ])->assertRedirect(route('users.index'));
 
-        $user = User::where('email', 'ayse@tripspoiler.com')->first();
+        $user = User::findByEmail('ayse@tripspoiler.com');
         [$width, $height] = getimagesizefromstring(Storage::disk('media')->get($user->avatar_path));
         $this->assertSame([256, 256], [$width, $height]);
 

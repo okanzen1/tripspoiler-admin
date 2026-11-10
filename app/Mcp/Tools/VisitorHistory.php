@@ -14,7 +14,7 @@ class VisitorHistory extends PanelTool
 {
     public function schema(JsonSchema $schema): array
     {
-        return ['ip' => $schema->string()->required()];
+        return ['ip' => $schema->string()->description('Exact IP (IPs are stored encrypted, so partial IPs do not match)')->required()];
     }
 
     protected function run(Request $request): array

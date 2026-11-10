@@ -17,14 +17,12 @@ class UserController extends Controller
         $search = trim((string) $request->get('search'));
         $role = Role::tryFrom((string) $request->get('role'));
 
-        $users = User::query()
-            ->when($search, fn ($q) => $q->where(fn ($q) => $q
-                ->where('first_name', 'like', "%{$search}%")
-                ->orWhere('last_name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")))
-            ->when($role, fn ($q) => $q->where('role', $role))
-            ->orderBy('first_name')
-            ->paginate(20)
+        // Ad, soyad, e-posta şifreli: arama ve sıralama çözülmüş hallerinde (panel kullanıcısı az)
+        $all = User::query()->when($role, fn ($q) => $q->where('role', $role))->get()
+            ->when($search, fn ($users) => $users->filter(fn (User $user) => str_contains(mb_strtolower($user->full_name . ' ' . $user->email), mb_strtolower($search))))
+            ->sortBy(fn (User $user) => mb_strtolower($user->full_name))->values();
+        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage();
+        $users = (new \Illuminate\Pagination\LengthAwarePaginator($all->forPage($page, 20)->values(), $all->count(), 20, $page, ['path' => $request->url()]))
             ->withQueryString();
 
         return view('admin.users.index', compact('users', 'search', 'role'));

@@ -97,7 +97,7 @@ class AssistantTest extends TestCase
         $this->assertTrue(City::where('slug', 'izmir')->value('active'));
 
         TripSpoilerServer::tool(Tools\CreateUser::class, ['first_name' => 'Ayşe', 'last_name' => 'Yılmaz', 'email' => 'ayse@tripspoiler.com'])->assertOk()->assertSee('editor');
-        $this->assertTrue(User::where('email', 'ayse@tripspoiler.com')->exists());
+        $this->assertTrue(User::findByEmail('ayse@tripspoiler.com') !== null);
         TripSpoilerServer::tool(Tools\CreateUser::class, ['first_name' => 'A', 'last_name' => 'B', 'email' => 'ayse@tripspoiler.com'])->assertHasErrors();
 
         TripSpoilerServer::tool(Tools\AddFaq::class, ['question' => 'Open on Mondays?', 'answer' => 'Yes.', 'activity' => 'Hagia Sophia'])->assertOk();

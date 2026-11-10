@@ -18,11 +18,35 @@ class ActivityLog extends Model
 
     protected $guarded = ['id'];
 
-    protected $casts = ['changes' => 'array', 'created_at' => 'datetime'];
+    /** Kişi adı, IP, tarayıcı, kayıt adı ve değişiklikler şifreli (App\Support\Privacy) */
+    protected $casts = [
+        'user_name' => 'encrypted', 'ip' => 'encrypted', 'user_agent' => 'encrypted', 'subject_label' => 'encrypted',
+        'changes' => 'encrypted:array', 'created_at' => 'datetime',
+    ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Şifreli alanlarda arama (veritabanı LIKE yapamaz): son kayıtlar çözülüp bakılır.
+     *
+     * @return list<int>
+     */
+    public static function idsMatching(string $term, int $window = 5000): array
+    {
+        $needle = mb_strtolower(trim($term));
+        $ids = [];
+        static::query()->latest('id')->limit($window)->get(['id', 'user_name', 'ip', 'subject_label', 'changes', 'url'])
+            ->each(function (self $log) use ($needle, &$ids) {
+                $haystack = mb_strtolower(implode(' ', [$log->user_name, $log->ip, $log->subject_label, $log->url, json_encode($log->changes, JSON_UNESCAPED_UNICODE)]));
+                if (str_contains($haystack, $needle)) {
+                    $ids[] = $log->id;
+                }
+            });
+
+        return $ids;
     }
 
     public function prunable(): Builder
