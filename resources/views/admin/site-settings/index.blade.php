@@ -52,7 +52,7 @@
             '',
             $popularCount ? __('✓ :count popüler aktivite', ['count' => $popularCount]) : __('Popüler işaretli aktivite yok, bölüm gizli'), $popularCount > 0,
             'bg-red-500', '<path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1.5a2.5 2.5 0 0 0 0 5V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1.5a2.5 2.5 0 0 0 0-5z" />'];
-        $rows['home_faq'] = ['faq', route('faqs.index', ['scope' => 'general']), 'Sıkça sorulan sorular', 'Anasayfadaki sorular (SSS › Nerede görünecek › Anasayfa). Sırası SSS listesinden sürüklenir.',
+        $rows['home_faq'] = ['faq', route('faqs.texts'), 'Sıkça sorulan sorular', 'Başlık, “Aklında başka bir soru mu var?” kutusu ve anasayfa soruları.',
             $homeFaqs->pluck('question')->implode(' · '),
             $homeFaqs->count() ? __('✓ :count soru yayında', ['count' => $homeFaqs->count()]) : __('Anasayfa sorusu yok, bölüm gizli'), $homeFaqs->count() > 0,
             'bg-teal-500', '<circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01" />'];

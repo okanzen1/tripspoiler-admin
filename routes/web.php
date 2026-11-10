@@ -121,6 +121,8 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
         ->names('faqs')
         ->parameters(['sss' => 'faq']);
     Route::patch('/sss-siralama', [FaqController::class, 'reorder'])->name('faqs.reorder');
+    Route::get('/sss-yazilari', [\App\Http\Controllers\FaqTextController::class, 'edit'])->name('faqs.texts');
+    Route::put('/sss-yazilari', [\App\Http\Controllers\FaqTextController::class, 'update'])->name('faqs.texts.update');
     Route::patch('/sss/{faq}/durum', [FaqController::class, 'toggle'])->name('faqs.toggle');
 
     // Kart sayfalarının sürükle-bırak sırası (Yönetim, Site ayarları)

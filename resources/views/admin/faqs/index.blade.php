@@ -5,6 +5,9 @@
 @section('header')
     <x-admin.page-header :title="__('Sıkça sorulan sorular')" :description="__('Her sorunun sitede nerede çıktığı yanındaki etikette yazar: anasayfa, bir sayfa, bir şehir, bir aktivite ya da blog yazısı.')">
         <x-slot:icon><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01" /></x-slot:icon>
+        <a href="{{ route('faqs.texts') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-white">
+            {{ __('Bölüm yazıları') }}
+        </a>
         <a href="{{ route('faqs.create') }}"
             class="inline-flex items-center gap-2 rounded-xl bg-brand-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800">
             <x-admin.icon name="plus" /> {{ __('Yeni soru') }}

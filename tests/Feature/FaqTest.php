@@ -142,4 +142,16 @@ class FaqTest extends TestCase
         // Farklı yerdeki sorular birlikte sıralanamaz
         $this->actingAs($this->editor)->patchJson(route('faqs.reorder'), ['order' => [$a->id, $other->id]])->assertStatus(422);
     }
+
+    public function test_faq_section_texts_are_editable(): void
+    {
+        $this->actingAs($this->editor)->get(route('faqs.texts'))->assertOk()->assertSee('Still have a question?');
+        $this->actingAs($this->editor)->put(route('faqs.texts.update'), [
+            'faq' => ['title' => 'Got questions?', 'title_highlight' => 'We answer.'],
+            'faq_contact' => ['title' => 'Ask us', 'eyebrow' => 'Write'],
+        ])->assertRedirect();
+        $this->assertSame('Got questions?', \App\Models\SectionText::for('faq')->getTranslation('title', 'en', false));
+        $this->assertSame('Write', \App\Models\SectionText::for('faq_contact')->getTranslation('eyebrow', 'en', false));
+        $this->actingAs($this->editor)->get(route('faqs.texts'))->assertOk()->assertSee('Çeviriler');
+    }
 }
