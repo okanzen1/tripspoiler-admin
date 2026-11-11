@@ -197,6 +197,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('yonetim')->group(function () 
 
     Route::get('/ulkeler-ve-sehirler', [LocationController::class, 'index'])->name('locations.index');
     Route::patch('/ulkeler/{country}/durum', [CountryController::class, 'toggle'])->name('countries.toggle');
+    Route::patch('/ulkeler/{country}/para-birimi', [CountryController::class, 'currency'])->name('countries.currency');
 
     Route::resource('sehirler', CityController::class)
         ->except(['index', 'show'])

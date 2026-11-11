@@ -17,4 +17,17 @@ class CountryController extends Controller
             ? response()->json(['active' => $country->active, 'message' => $message])
             : back()->with('success', $message);
     }
+
+    /**
+     * Ülkenin para birimi (sitede döviz kuru şeridinde kullanılır).
+     */
+    public function currency(Request $request, Country $country)
+    {
+        $data = $request->validate([
+            'currency' => ['required', 'string', \Illuminate\Validation\Rule::in(array_keys(Country::currencyOptions()))],
+        ]);
+        $country->update(['currency' => $data['currency']]);
+
+        return back()->with('success', __(':name para birimi: :currency', ['name' => $country->name_tr, 'currency' => $data['currency']]));
+    }
 }

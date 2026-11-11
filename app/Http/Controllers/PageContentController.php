@@ -20,6 +20,12 @@ class PageContentController extends Controller
      * Sayfa → bloklar: anahtar => [panelde ad, açıklama, [alan => [etiket, örnek, en fazla]]]
      */
     public const BLOCKS = [
+        'rates' => [
+            'rates_note' => ['“Anlık değildir” notu', 'Çeviricinin altındaki sarı uyarı kutusu.', [
+                'title' => ['Başlık', 'Rates are not live', 60],
+                'description' => ['Metin', 'Rates are updated once a day and are for information only. Banks, exchange offices and card providers use their own rates and fees.', 400],
+            ]],
+        ],
         'privacy' => [
             'privacy_summary' => ['Kısaca kutusu', 'Başlığın sağındaki beyaz kutu.', [
                 'title' => ['Kutu başlığı', 'In short', 40],
@@ -79,6 +85,9 @@ class PageContentController extends Controller
      * Panelde bölümler: bölüm => [ad, açıklama, ikon, üst blok, [kart blokları]] (kartlar yan yana düzenlenir)
      */
     public const SECTIONS = [
+        'rates' => [
+            'rates_note' => ['“Anlık değildir” notu', 'Çeviricinin altındaki sarı uyarı kutusu: başlık ve metin.', 'info', 'rates_note', []],
+        ],
         'privacy' => [
             'privacy_summary' => ['Kısaca kutusu', 'Başlığın sağındaki beyaz kutu: başlık ve maddeler.', 'check', 'privacy_summary', []],
             'privacy_who' => ['Biz kimiz', 'Başlık ve metin.', 'shield', 'privacy_who', []],

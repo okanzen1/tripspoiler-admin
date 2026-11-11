@@ -31,6 +31,11 @@
                     </div>
                     <div class="space-y-5 md:col-span-2">
                         <x-admin.country-select :countries="$countries" :selected="$city->country_id" required />
+                        <p class="-mt-3 text-xs text-slate-500">
+                            {{ __('Para birimi ülkeden gelir:') }}
+                            <strong class="font-semibold text-slate-700">{{ $city->country->currency ?: __('seçilmemiş') }}</strong>
+                            · <a href="{{ route('locations.index', ['country' => $city->country_id]) }}" class="font-semibold text-brand-900 hover:underline">{{ __('Değiştir') }}</a>
+                        </p>
                         <x-admin.input name="name" :label="__('Şehir adı')" :value="$city->name" required />
                         <x-admin.input name="slug" :label="__('URL adı')" :value="$city->slug" data-slug-from="name"
                             :hint="__('Değiştirirsen eski link çalışmaz; yayındaki şehirde dikkatli ol.')" />

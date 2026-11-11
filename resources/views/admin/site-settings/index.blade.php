@@ -60,6 +60,11 @@
             '',
             $announcementCount ? __('✓ :count duyuru yayında', ['count' => $announcementCount]) : __('Yayında duyuru yok, şerit gizli'), $announcementCount > 0,
             'bg-emerald-500', '<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1zM16 9a4 4 0 0 1 0 6" />'];
+        $rateCurrencies = \App\Models\Country::active()->whereHas('cities', fn ($q) => $q->where('active', true))->whereNotNull('currency')->distinct()->pluck('currency');
+        $rows['rates'] = ['rates', route('locations.index'), 'Döviz kurları', 'Duyuru şeridinin altında: ziyaretçinin parası ile sitedeki ülkelerin parası (günde bir güncellenir, ücretsiz).',
+            '',
+            $rateCurrencies->count() ? __('✓ :list', ['list' => $rateCurrencies->implode(', ')]) : __('Aktif şehri olan ülke yok'), $rateCurrencies->count() > 0,
+            'bg-lime-600', '<circle cx="12" cy="12" r="9" /><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .9-3 2s1.3 1.7 3 2 3 .9 3 2-1.3 2-3 2c-1.4 0-2.5-.6-3-1.5M12 6v2M12 16v2" />'];
     @endphp
 
     <x-admin.card class="overflow-hidden">
@@ -124,6 +129,12 @@
                                         <span>● {{ __('Kayan yazı') }}</span><span>● {{ __('Kayan yazı') }}</span><span>● {{ __('Kayan yazı') }}</span>
                                     </span>
                                     <span class="absolute inset-x-0 top-7 h-4 border-b border-slate-200 bg-white"></span>
+                                    @break
+                                @case('rates')
+                                    <span class="absolute inset-x-0 top-3 h-3 bg-slate-900"></span>
+                                    <span class="absolute inset-x-0 top-6 flex h-4 items-center gap-2 overflow-hidden whitespace-nowrap border-b border-slate-200 bg-slate-50 px-2 text-[7px] font-semibold text-slate-700">
+                                        <span>1 € = 38,5 ₺</span><span>1 $ = 34,1 ₺</span><span>1 £ = 44,9 ₺</span>
+                                    </span>
                                     @break
                                 @default
                                     @php $sectionModel = \App\Models\SectionText::for($section); @endphp

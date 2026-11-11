@@ -31,6 +31,7 @@
             'about' => 'bg-teal-100 text-teal-600',
             'contact' => 'bg-emerald-100 text-emerald-600',
             'privacy' => 'bg-slate-200 text-slate-600',
+            'rates' => 'bg-lime-100 text-lime-700',
         ];
         $icons = [
             'home' => '<path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z"/>',
@@ -43,6 +44,7 @@
             'about' => '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
             'contact' => '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
             'privacy' => '<path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/>',
+            'rates' => '<path d="M7 7h11l-3-3M17 17H6l3 3"/>',
         ];
     @endphp
 

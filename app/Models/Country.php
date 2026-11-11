@@ -10,11 +10,49 @@ use Illuminate\Support\Collection;
 
 class Country extends Model
 {
-    protected $fillable = ['code', 'name', 'slug', 'active'];
+    protected $fillable = ['code', 'name', 'slug', 'currency', 'active'];
 
     protected function casts(): array
     {
         return ['active' => 'boolean'];
+    }
+
+    protected static function booted(): void
+    {
+        // Yeni ülke: para birimi boşsa ülke kodundan bulunur
+        static::creating(function (Country $country) {
+            $country->currency ??= self::defaultCurrency($country->code);
+        });
+    }
+
+    /**
+     * Ülke kodundan para birimi (DE → EUR, TR → TRY). Bulunamazsa null.
+     */
+    public static function defaultCurrency(?string $code): ?string
+    {
+        if (!$code || !preg_match('/^[A-Z]{2}$/', $code)) {
+            return null;
+        }
+        $currency = (new \NumberFormatter('en_' . $code, \NumberFormatter::CURRENCY))->getTextAttribute(\NumberFormatter::CURRENCY_CODE);
+
+        return preg_match('/^[A-Z]{3}$/', (string) $currency) && $currency !== 'XXX' ? $currency : null;
+    }
+
+    /**
+     * Seçim listesi için tüm para birimleri: kod => "EUR · Euro (€)", panel dilinde.
+     *
+     * @return array<string, string>
+     */
+    public static function currencyOptions(): array
+    {
+        $codes = self::query()->pluck('code')->map(fn ($code) => self::defaultCurrency($code))->filter()->unique()->sort()->values();
+        $names = \ResourceBundle::create(app()->getLocale(), 'ICUDATA-curr')['Currencies'] ?? null;
+
+        return $codes->mapWithKeys(function (string $currency) use ($names) {
+            $info = $names[$currency] ?? null;
+
+            return [$currency => $info ? "{$currency} · {$info[1]} ({$info[0]})" : $currency];
+        })->all();
     }
 
     public function cities(): HasMany

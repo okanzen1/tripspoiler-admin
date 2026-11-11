@@ -104,7 +104,7 @@
             @php
                 $homeLabels = [
                     'steps' => 'Nasıl çalışır', 'blog' => 'Blog bölümü', 'features' => 'Özellik kartları', 'announcements' => 'Duyuru şeridi',
-                    'intro' => 'TripSpoiler nedir', 'social' => 'Sosyal medya', 'reviews' => 'Yorumlar', 'city_entry' => 'Şehir girişi', 'partners' => 'Destekçiler',
+                    'intro' => 'TripSpoiler nedir', 'social' => 'Sosyal medya', 'reviews' => 'Yorumlar', 'city_entry' => 'Şehir girişi', 'partners' => 'Destekçiler', 'rates' => 'Döviz kurları',
                 ];
                 $homeOn = array_values(array_filter(\App\Support\SiteSections::KEYS, fn ($key) => \App\Support\SiteSections::enabled($key)));
             @endphp
@@ -187,7 +187,7 @@
                             <p class="text-lg font-semibold text-slate-900">{{ __('Sayfa içeriği') }}</p>
                             <span class="text-sm font-semibold text-brand-900 transition group-hover:translate-x-1">{{ __('Düzenle') }} →</span>
                         </div>
-                        <p class="mt-1.5 flex-1 text-sm leading-relaxed text-slate-600">{{ $page->key === 'privacy' ? __('Gizlilik metninin sekiz bölümü (12 dil).') : ($page->key === 'reviews' ? __('Liste başlığı ve “Yorum yaz” kutusunun yazıları (12 dil).') : __('Sayfadaki bütün yazılar: hikâye, adımlar, ilkeler ve kapanış (12 dil).')) }}</p>
+                        <p class="mt-1.5 flex-1 text-sm leading-relaxed text-slate-600">{{ $page->key === 'rates' ? __('“Kurlar anlık değildir” uyarı kutusu (12 dil).') : ($page->key === 'privacy' ? __('Gizlilik metninin sekiz bölümü (12 dil).') : ($page->key === 'reviews' ? __('Liste başlığı ve “Yorum yaz” kutusunun yazıları (12 dil).') : __('Sayfadaki bütün yazılar: hikâye, adımlar, ilkeler ve kapanış (12 dil).'))) }}</p>
                         <p class="mt-3 text-xs font-medium text-slate-500">{{ __(':n / :t blok yazıldı', ['n' => $written, 't' => count($contentBlocks)]) }}</p>
                     </div>
                 </x-admin.card>
@@ -223,7 +223,7 @@
                             <p class="text-lg font-semibold text-slate-900">{{ __('Hero alanı') }}</p>
                             <span class="text-sm font-semibold text-brand-900 transition group-hover:translate-x-1">{{ __('Düzenle') }} →</span>
                         </div>
-                        <p class="mt-1.5 flex-1 text-sm leading-relaxed text-slate-600">{{ match ($page->key) { 'blog' => __('Sayfanın üstü: yazılar (12 dil) ve her şehir için kemerlerdeki yazılar.'), 'cities' => __('Sayfanın üstü: yazılar (12 dil), resimler (şehir şehir, telefon dahil), görünüm ve fotoğraf üstü kartlar.'), 'contact', 'privacy' => __('Sayfanın üstündeki başlık ve açıklama (12 dil).'), 'reviews' => __('Sayfanın üstü: fotoğraf (telefon dahil), başlık, açıklama (12 dil), görünüm ve yorum kartları.'), 'about' => __('Sayfanın üstü: fotoğraf (telefon dahil), başlık ve açıklama (12 dil), görünüm.'), default => __('Sayfanın üstü: yazılar (12 dil), resimler (şehir şehir, telefon dahil) ve görünüm.') } }}</p>
+                        <p class="mt-1.5 flex-1 text-sm leading-relaxed text-slate-600">{{ match ($page->key) { 'blog' => __('Sayfanın üstü: yazılar (12 dil) ve her şehir için kemerlerdeki yazılar.'), 'cities' => __('Sayfanın üstü: yazılar (12 dil), resimler (şehir şehir, telefon dahil), görünüm ve fotoğraf üstü kartlar.'), 'contact', 'privacy', 'rates' => __('Sayfanın üstündeki başlık ve açıklama (12 dil).'), 'reviews' => __('Sayfanın üstü: fotoğraf (telefon dahil), başlık, açıklama (12 dil), görünüm ve yorum kartları.'), 'about' => __('Sayfanın üstü: fotoğraf (telefon dahil), başlık ve açıklama (12 dil), görünüm.'), default => __('Sayfanın üstü: yazılar (12 dil), resimler (şehir şehir, telefon dahil) ve görünüm.') } }}</p>
                         <p class="mt-3 text-xs font-medium {{ filled($heroText->title) ? ($heroPending ? 'text-amber-700' : 'text-emerald-700') : 'text-slate-500' }}">
                             {{ !filled($heroText->title) ? __('Varsayılan yazılar kullanılıyor') : ($heroPending ? __(':count dil çeviri bekliyor', ['count' => $heroPending]) : __('✓ Tamam, tüm diller güncel')) }}
                         </p>

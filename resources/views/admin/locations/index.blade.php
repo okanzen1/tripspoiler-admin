@@ -73,6 +73,20 @@
                         <h2 class="text-xl font-semibold text-slate-900">{{ $selected->name_tr }}</h2>
                         <p class="text-sm text-slate-500">{{ $selected->name }} · {{ $selected->code }}</p>
                     </div>
+                    {{-- Para birimi: sitede döviz kuru şeridinde bu ülkenin şehirleri için kullanılır --}}
+                    <form method="POST" action="{{ route('countries.currency', $selected) }}" class="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-1.5 ring-1 ring-slate-200">
+                        @csrf @method('PATCH')
+                        <label for="country-currency" class="text-sm font-medium text-slate-700">{{ __('Para birimi') }}</label>
+                        <select id="country-currency" name="currency" onchange="this.form.submit()"
+                            class="max-w-[14rem] rounded-lg border-0 bg-transparent py-1 pl-1 pr-7 text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-brand-900/20">
+                            @unless ($selected->currency)
+                                <option value="" disabled selected>{{ __('Seç') }}</option>
+                            @endunless
+                            @foreach (\App\Models\Country::currencyOptions() as $code => $label)
+                                <option value="{{ $code }}" @selected($selected->currency === $code)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </form>
                     <div class="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-2.5 ring-1 ring-slate-200">
                         <span class="text-sm font-medium text-slate-700" data-country-status>{{ __($selected->active ? 'Sitede görünüyor' : 'Pasif') }}</span>
                         <x-admin.toggle :action="route('countries.toggle', $selected)" :active="$selected->active" :label="__(':name aktif', ['name' => $selected->name_tr])" />
