@@ -44,6 +44,7 @@ class ActivityLogger
         'activity_image' => ['Aktivite görseli', null],
         'announcement' => ['Duyuru', 'announcements.edit'],
         'blog' => ['Blog yazısı', 'blogs.edit'],
+        'campaign' => ['Kampanya', 'campaigns.edit'],
         'blog_subscriber' => ['Bülten abonesi', null],
         'bulk_email' => ['Toplu e-posta', null],
         'city' => ['Şehir', 'cities.edit'],

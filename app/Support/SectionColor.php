@@ -14,6 +14,7 @@ class SectionColor
         'activities' => 'emerald',
         'blogs' => 'violet',
         'faqs' => 'amber',
+        'campaigns' => 'orange',
         'reviews' => 'rose',
         'mailbox' => 'blue',
         'mail-templates' => 'blue',

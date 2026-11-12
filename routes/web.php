@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BlogSectionController;
 use App\Http\Controllers\BlogSubscriberController;
@@ -162,6 +163,13 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
         ->names('announcements')
         ->parameters(['duyurular' => 'announcement']);
     Route::patch('/duyurular/{announcement}/durum', [AnnouncementController::class, 'toggle'])->name('announcements.toggle');
+
+    // Kampanyalar / indirim kodları (sitede /campaigns)
+    Route::resource('kampanyalar', CampaignController::class)
+        ->except('show')
+        ->names('campaigns')
+        ->parameters(['kampanyalar' => 'campaign']);
+    Route::patch('/kampanyalar/{campaign}/durum', [CampaignController::class, 'toggle'])->name('campaigns.toggle');
 
     // Yorumlar
     Route::resource('yorumlar', ReviewController::class)

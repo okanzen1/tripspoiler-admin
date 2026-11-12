@@ -32,6 +32,7 @@
             'contact' => 'bg-emerald-100 text-emerald-600',
             'privacy' => 'bg-slate-200 text-slate-600',
             'rates' => 'bg-lime-100 text-lime-700',
+            'campaigns' => 'bg-orange-100 text-orange-600',
         ];
         $icons = [
             'home' => '<path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z"/>',
@@ -45,6 +46,7 @@
             'contact' => '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
             'privacy' => '<path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/>',
             'rates' => '<path d="M7 7h11l-3-3M17 17H6l3 3"/>',
+            'campaigns' => '<path d="M20 12v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8M2.5 7.5h19v4.5h-19zM12 21V7.5M12 7.5H8a2.5 2.5 0 1 1 0-5c2.5 0 4 5 4 5zM12 7.5h4a2.5 2.5 0 1 0 0-5c-2.5 0-4 5-4 5z"/>',
         ];
     @endphp
 

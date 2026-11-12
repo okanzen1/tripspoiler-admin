@@ -48,6 +48,11 @@ class PageHeroTextController extends Controller
             'title_highlight' => ['Alt satır', 'Büyük başlığın altındaki soluk yazı; başlıkla birlikte bir cümle gibi okunur. Boş bırakırsan görünmez.', 'about your trip', 60],
             'description' => ['Açıklama', 'Solunda kırmızı çizgi olan kısa yazı.', 'A question about a city, an idea…', 260],
         ],
+        'campaigns' => [
+            'eyebrow' => ['Üst etiket', 'Başlığın üstündeki küçük etiket.', 'Deals', 40],
+            'title' => ['Başlık', 'Büyük başlık.', 'Travel deals & discount codes', 80],
+            'description' => ['Açıklama', 'Başlığın altındaki kısa yazı.', 'Exclusive codes from our partners…', 260],
+        ],
         'rates' => [
             'eyebrow' => ['Üst etiket', 'Başlığın üstündeki küçük kırmızı yazı.', 'Exchange rates', 40],
             'title' => ['Başlık', 'Büyük başlık.', 'Currency converter for your trip', 80],

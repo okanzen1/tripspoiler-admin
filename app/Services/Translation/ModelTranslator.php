@@ -31,6 +31,7 @@ class ModelTranslator
         'faq' => Faq::class,
         'page' => Page::class,
         'announcement' => Announcement::class,
+        'campaign' => \App\Models\Campaign::class,
         'hero' => HeroText::class,
         'feature' => Feature::class,
         'section' => SectionText::class,
@@ -271,6 +272,7 @@ class ModelTranslator
             'faq' => ['url' => route('faqs.edit', $model), 'title' => $model->getTranslation('question', 'en')],
             'page' => ['url' => route('pages.seo', $model), 'title' => $model->name . ' · SEO'],
             'announcement' => ['url' => route('announcements.edit', $model), 'title' => $model->getTranslation('text', 'en')],
+            'campaign' => ['url' => route('campaigns.edit', $model), 'title' => $model->getTranslation('title', 'en')],
             'section' => ($contentKey = collect(\App\Http\Controllers\PageContentController::SECTIONS)->search(fn ($secs) => collect($secs)->contains(fn ($d) => $d[3] === $model->key || in_array($model->key, $d[4], true))))
                     && ($contentPage = Page::where('key', $contentKey)->first())
                 ? ['url' => route('pages.content.section', [$contentPage, collect(\App\Http\Controllers\PageContentController::SECTIONS[$contentKey])->search(fn ($d) => $d[3] === $model->key || in_array($model->key, $d[4], true))]), 'title' => $contentPage->name . ' · ' . __('Sayfa içeriği')]
