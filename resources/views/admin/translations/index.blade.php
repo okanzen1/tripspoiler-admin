@@ -23,6 +23,7 @@
 @endsection
 
 @section('content')
+    <x-admin.todo-list />
     @if ($queued)
         <div class="mb-6 flex items-center gap-3 rounded-2xl bg-purple-50 px-4 py-3 text-sm text-purple-800 ring-1 ring-purple-100">
             <svg class="size-4 shrink-0 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity=".25" stroke-width="3" /><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" /></svg>
@@ -81,7 +82,7 @@
                 </div>
                 <ul class="divide-y divide-slate-100 border-t border-slate-100">
                     @foreach ($types as $type => $row)
-                        @php($percent = $row['total'] ? round($row['ok'] / $row['total'] * 100) : 100)
+                        @php($percent = $row['total'] ? (int) round($row['ok'] / $row['total'] * 100) : 100)
                         <li class="px-6 py-3.5">
                             <div class="flex items-baseline justify-between text-sm">
                                 <span class="font-medium text-slate-900">{{ __($typeNames[$type] ?? $type) }}</span>

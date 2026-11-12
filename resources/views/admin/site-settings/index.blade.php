@@ -10,6 +10,7 @@
 @endsection
 
 @section('content')
+    <x-admin.todo-list :under="[route('site-settings.index'), route('section-texts.index'), route('steps.index'), route('features.index'), route('blog-section.index')]" />
     <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div class="relative w-full max-w-md">
             <svg class="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>

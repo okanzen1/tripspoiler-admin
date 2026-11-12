@@ -12,6 +12,7 @@
 @endsection
 
 @section('content')
+    <x-admin.todo-list :types="['page', 'hero', 'section', 'step', 'feature']" />
     @php
         $cards = [
             [

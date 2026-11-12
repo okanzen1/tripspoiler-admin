@@ -18,6 +18,7 @@
 @endsection
 
 @section('content')
+    <x-admin.todo-list :types="['blog']" />
     <x-admin.card class="overflow-hidden">
         <x-admin.filter-bar :search="$search" placeholder="Başlık ya da URL ara…"
             :tabs="['name' => 'status', 'value' => $status, 'options' => ['' => ['Tümü', $totalCount], 'active' => ['Yayında', $activeCount], 'passive' => ['Taslak', $totalCount - $activeCount]]]"

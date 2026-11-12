@@ -14,6 +14,7 @@
 @endsection
 
 @section('content')
+    <x-admin.todo-list :types="['announcement']" />
     <x-admin.card class="overflow-hidden">
         @if ($announcements->isEmpty())
             <div class="px-6 py-16 text-center">

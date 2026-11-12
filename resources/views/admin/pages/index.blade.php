@@ -17,6 +17,7 @@
 @endsection
 
 @section('content')
+    <x-admin.todo-list :under="[route('pages.index'), route('site-settings.hero')]" />
     @php
         // Sayfa ikonu ve banner önizlemesi
         // her sayfanın kendi rengi (ikon kutusu)

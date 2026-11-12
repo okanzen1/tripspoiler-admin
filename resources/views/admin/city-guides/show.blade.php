@@ -19,6 +19,8 @@
 @endsection
 
 @section('content')
+    <x-admin.todo-list :under="route('city-guides.show', $city)" />
+    <x-admin.todo-list :types="['city-guide-topic']" />
     <div class="space-y-6">
         {{-- GENEL GİRİŞ --}}
         @if ($guide->exists)
@@ -117,6 +119,12 @@
                             </div>
                             <p class="mt-0.5 truncate text-sm text-slate-500">{{ $title ?: $topic->example }}</p>
                         </a>
+                        @if (\App\Support\TranslationTodo::has('city-guide-topic', $topic->id))
+                            <a href="{{ route('city-guide-topics.edit', $topic) }}" title="{{ __('Bu alanın adı (ör. Gezilecek yerler) diğer dillere çevrilmemiş') }}"
+                                class="inline-flex shrink-0 items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[11px] font-semibold text-purple-700 ring-1 ring-purple-200 transition hover:bg-purple-100">
+                                <svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M22 22l-5-10-5 10M14 18h6" /></svg>{{ __('Alan adı çevrilmedi') }} →
+                            </a>
+                        @endif
                         <a href="{{ route('city-guides.sections.edit', [$city, $section]) }}" class="hidden shrink-0 rounded-lg px-3 py-1.5 text-sm font-semibold text-brand-900 transition hover:bg-brand-50 sm:block">
                             {{ $written ? __('Düzenle') : __('Yaz') }} →
                         </a>

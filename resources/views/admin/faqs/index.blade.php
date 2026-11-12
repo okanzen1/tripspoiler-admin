@@ -16,6 +16,7 @@
 @endsection
 
 @section('content')
+    <x-admin.todo-list :types="['faq']" />
     <x-admin.card class="overflow-hidden">
         <x-admin.filter-bar :search="$search" placeholder="Soru ya da cevapta ara…"
             :tabs="['name' => 'scope', 'value' => $scope, 'options' => ['' => ['Tümü', array_sum($counts)], 'general' => ['Anasayfa', $counts['general']], 'city' => ['Aktiviteler · Şehirler · Blog', $counts['city']], 'activity' => ['Aktivite sayfası', $counts['activity']], 'blog' => ['Blog yazısı', $counts['blog']], 'other' => ['Diğer sayfalar', $counts['other']]]]"

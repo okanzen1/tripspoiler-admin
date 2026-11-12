@@ -24,6 +24,7 @@
 @endsection
 
 @section('content')
+    <x-admin.todo-list :types="['city-guide', 'city-guide-section', 'city-guide-topic']" />
     @if ($cities->isEmpty())
         <x-admin.card class="px-6 py-16 text-center">
             <p class="text-sm font-semibold text-slate-900">{{ __('Henüz yayında şehir yok') }}</p>
@@ -43,7 +44,7 @@
                                 <div>
                                     <p class="text-lg font-semibold text-slate-900">{{ $city->name }}</p>
                                     <p class="text-sm text-slate-500">{{ $city->country?->name }} · {{ __(':n aktivite', ['n' => $city->activities_count]) }}</p>
-                                    @if ($cityTodo = \App\Support\TranslationTodo::under(route('city-guides.show', $city)))
+                                    @if ($cityTodo = \App\Support\TranslationTodo::under(route('city-guides.show', $city)) + \App\Support\TranslationTodo::count('city-guide-topic'))
                                         <span class="mt-1 inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[11px] font-semibold text-purple-700 ring-1 ring-purple-200">{{ __(':count çeviri eksik', ['count' => $cityTodo]) }}</span>
                                     @endif
                                 </div>

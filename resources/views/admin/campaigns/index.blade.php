@@ -17,6 +17,7 @@
 @endsection
 
 @section('content')
+    <x-admin.todo-list :types="['campaign']" />
     @php
         $states = [
             'live' => [__('Yayında'), 'bg-emerald-50 text-emerald-700 ring-emerald-200'],

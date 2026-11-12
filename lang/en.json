@@ -747,5 +747,19 @@
     ":count çeviri eksik": ":count translations missing",
     "Çeviri eksik": "Needs translation",
     "Resmin karartması": "Image darkening",
-    "Karttaki yazı okunabilsin diye fotoğraf ne kadar koyulaşsın?": "How much should the photo be darkened so the text on the card stays readable?"
+    "Karttaki yazı okunabilsin diye fotoğraf ne kadar koyulaşsın?": "How much should the photo be darkened so the text on the card stays readable?",
+    "Çevirisi eksik olanlar (:count)": "Missing translations (:count)",
+    "Tıkla, açılan sayfada üstteki Çeviriler kutusundan çevir.": "Click, then translate from the Translations box at the top of the page.",
+    "Tümünü göster (:count)": "Show all (:count)",
+    "Alan adı çevrilmedi": "Section name not translated",
+    "Bu alanın adı (ör. Gezilecek yerler) diğer dillere çevrilmemiş": "This section's name (e.g. Things to see) isn't translated into other languages",
+    "Blog yazısı": "Blog post",
+    "Sayfa SEO": "Page SEO",
+    "Kampanya": "Campaign",
+    "Özellik kartı": "Feature card",
+    "Bölüm yazısı": "Section text",
+    "Adım": "Step",
+    "Şehir rehberi girişi": "City guide intro",
+    "Rehber yazısı": "Guide article",
+    "Rehber alanının adı": "Guide section name"
 }
