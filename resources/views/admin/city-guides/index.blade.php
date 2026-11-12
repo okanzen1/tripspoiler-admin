@@ -43,6 +43,9 @@
                                 <div>
                                     <p class="text-lg font-semibold text-slate-900">{{ $city->name }}</p>
                                     <p class="text-sm text-slate-500">{{ $city->country?->name }} · {{ __(':n aktivite', ['n' => $city->activities_count]) }}</p>
+                                    @if ($cityTodo = \App\Support\TranslationTodo::under(route('city-guides.show', $city)))
+                                        <span class="mt-1 inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[11px] font-semibold text-purple-700 ring-1 ring-purple-200">{{ __(':count çeviri eksik', ['count' => $cityTodo]) }}</span>
+                                    @endif
                                 </div>
                             </div>
                             <span class="text-sm font-semibold text-brand-900 transition group-hover:translate-x-1">{{ __('Aç') }} →</span>

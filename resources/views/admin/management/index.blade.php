@@ -19,6 +19,7 @@
                 'title' => 'Bölümler',
                 'description' => 'Anasayfadaki bölümler: blog, yorumlar, nasıl çalışır, özellik kartları, duyuru şeridi.',
                 'url' => route('site-settings.index'),
+                'todo' => \App\Support\TranslationTodo::under(route('site-settings.index'), route('section-texts.index'), route('steps.index'), route('features.index'), route('blog-section.index')),
                 'stat' => __(':count bölüm', ['count' => 8]),
                 'color' => \App\Support\SectionColor::forRoute('site-settings'),
                 'icon' => '<rect x="3" y="4" width="18" height="7" rx="1.5" /><rect x="3" y="14" width="8" height="6" rx="1.5" /><rect x="14" y="14" width="7" height="6" rx="1.5" />',
@@ -37,6 +38,7 @@
                 'title' => 'Sayfalar',
                 'description' => 'Sabit sayfaların SEO başlığı ve açıklaması.',
                 'url' => route('pages.index'),
+                'todo' => \App\Support\TranslationTodo::under(route('pages.index')),
                 'stat' => $pagesMissingSeo ? __(':count eksik', ['count' => $pagesMissingSeo]) : __('Tamam'),
                 'color' => \App\Support\SectionColor::forRoute('pages'),
                 'icon' => '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" /><path d="M14 3v5h5" />',
@@ -73,6 +75,7 @@
                 'title' => 'Diller ve çeviri',
                 'description' => 'Sitenin dilleri ve tek tuşla ücretsiz çeviri.',
                 'url' => route('translations.index'),
+                'todo' => \App\Support\TranslationTodo::total(),
                 'stat' => __(':count dil', ['count' => $activeLanguageCount]),
                 'color' => \App\Support\SectionColor::forRoute('translations'),
                 'icon' => '<path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6" />',
@@ -147,7 +150,15 @@
                             <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $card['icon'] !!}</svg>
                         </span>
                         </span>
-                        <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ \App\Support\SectionColor::classes($card['color'], 'soft') }}">{{ $card['stat'] }}</span>
+                        <span class="flex flex-wrap justify-end gap-1.5">
+                            {{-- mor: bu bölümde çevirisi unutulan kayıt sayısı --}}
+                            @if ($card['todo'] ?? 0)
+                                <span class="inline-flex items-center gap-1 rounded-full bg-purple-500 px-2.5 py-1 text-xs font-semibold text-white" title="{{ __(':count kaydın çevirisi eksik', ['count' => $card['todo']]) }}">
+                                    <svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M22 22l-5-10-5 10M14 18h6" /></svg>{{ __(':count çeviri eksik', ['count' => $card['todo']]) }}
+                                </span>
+                            @endif
+                            <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ \App\Support\SectionColor::classes($card['color'], 'soft') }}">{{ $card['stat'] }}</span>
+                        </span>
                     </div>
                     <h2 class="mt-5 text-lg font-semibold text-slate-900">{{ __($card['title']) }}</h2>
                     <p class="mt-1 flex-1 text-sm text-slate-500">{{ __($card['description']) }}</p>

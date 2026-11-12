@@ -45,6 +45,29 @@ class TranslationTest extends TestCase
         ]);
     }
 
+    public function test_translating_activity_also_translates_its_faqs_and_todo_lists_them(): void
+    {
+        $translator = app(ModelTranslator::class);
+        $translator->translate($this->activity); // aktivite güncel
+        $faq = \App\Models\Faq::create(['activity_id' => $this->activity->id, 'question' => ['en' => 'Open?'], 'answer' => ['en' => 'Yes.']]);
+        \App\Support\TranslationTodo::forget();
+
+        // aktivite kendisi güncel ama SSS'si değil: çubuk eksik gösterir, panelde sayılır
+        $this->assertSame([], $translator->pending($this->activity));
+        $this->assertSame(['de', 'tr'], $translator->fullPending($this->activity));
+        $this->assertTrue(\App\Support\TranslationTodo::has('activity', $this->activity->id));
+        $this->assertSame(1, \App\Support\TranslationTodo::area('faqs'));
+
+        $before = $this->activity->fresh()->getTranslation('name', 'de');
+        $translator->translate($this->activity->fresh());
+
+        $this->assertSame('[tr] Open?', $faq->fresh()->getTranslation('question', 'tr'));
+        $this->assertSame([], $translator->fullPending($this->activity->fresh()));
+        $this->assertSame($before, $this->activity->fresh()->getTranslation('name', 'de')); // aktivite yeniden çevrilmedi
+        $this->assertFalse(\App\Support\TranslationTodo::has('activity', $this->activity->id));
+        $this->assertSame(0, \App\Support\TranslationTodo::count("activity", "faq"));
+    }
+
     public function test_translates_missing_and_stale_languages_keeping_html_and_slug(): void
     {
         $translator = app(ModelTranslator::class);

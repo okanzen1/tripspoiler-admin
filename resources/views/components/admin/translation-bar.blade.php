@@ -5,7 +5,7 @@
     düzelteceğin sayfaya gider. Sağ üstte "Tüm dillere çevir". Slug çevrilmez (her dilde aynı adres).
 --}}
 @php
-    $status = app(\App\Services\Translation\ModelTranslator::class)->status($model);
+    $status = app(\App\Services\Translation\ModelTranslator::class)->fullStatus($model); // kayıt + SSS'leri
     $pending = count(array_filter($status, fn ($s) => $s !== 'ok'));
     $languages = \App\Models\Language::targets();
     $states = [

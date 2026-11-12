@@ -31,7 +31,7 @@ class SectionTextController extends Controller
     ];
 
     /** Resimlerinde karartma ayarı olan bölümler: bölüm => Setting anahtarı (soft | medium | strong) */
-    public const OVERLAYS = ['intro' => 'intro_overlay'];
+    public const OVERLAYS = ['intro' => 'intro_overlay', 'popular' => 'popular_overlay'];
 
     /** Bölümde kullanılan alanlar (verilmeyenlerde dördü de) */
     public const FIELDS = ['partners' => ['eyebrow', 'title', 'title_highlight'], 'popular' => []];

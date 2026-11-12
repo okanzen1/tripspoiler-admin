@@ -35,6 +35,12 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('admin', fn (User $user) => $user->isAdmin());
 
+        // "Çevirisi unutulanlar" sayaçları: içerik, çeviri ya da dil değişince yeniden hesaplanır (App\Support\TranslationTodo)
+        foreach ([...array_values(\App\Services\Translation\ModelTranslator::TYPES), \App\Models\TranslationState::class, \App\Models\Language::class] as $class) {
+            $class::saved(fn () => \App\Support\TranslationTodo::forget());
+            $class::deleted(fn () => \App\Support\TranslationTodo::forget());
+        }
+
         // Claude uygulaması bağlanırken açılan izin ekranı (OAuth, routes/ai.php)
         \Laravel\Passport\Passport::authorizationView(fn (array $parameters) => view('admin.auth.mcp-authorize', $parameters));
         \Laravel\Passport\Passport::tokensExpireIn(now()->addDays(30));

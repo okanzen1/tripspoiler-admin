@@ -96,6 +96,9 @@
                                 <span @class(['size-1.5 rounded-full', 'bg-emerald-500' => $heroDone, 'bg-slate-400' => !$heroDone])></span>{{ $heroDone ? __('Hero') : __('Hero varsayılan') }}
                             </span>
                         @endif
+                        @if ($todo = \App\Support\TranslationTodo::under(...array_column($links, 1)))
+                            <span class="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2.5 py-1 text-[11px] font-semibold text-purple-700 ring-1 ring-purple-200"><svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M22 22l-5-10-5 10M14 18h6" /></svg>{{ __(':count çeviri eksik', ['count' => $todo]) }}</span>
+                        @endif
                         @if ($sectionCount !== null)
                             <span class="inline-flex items-center rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700">{{ __(':n bölüm açık', ['n' => $sectionCount]) }}</span>
                         @endif

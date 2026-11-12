@@ -59,6 +59,7 @@
                                             <a href="{{ route('activities.edit', $activity) }}" class="line-clamp-1 font-semibold text-slate-900 hover:text-brand-900 hover:underline">{{ $activity->name }}</a>
                                             <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
                                                 <span class="rounded-md bg-slate-100 px-1.5 py-0.5 font-medium text-slate-600">{{ $activity->type->label() }}</span>
+                                                <x-admin.todo-pill type="activity" :id="$activity->id" />
                                                 @if ($activity->otherLocales())
                                                     <span class="rounded-md bg-brand-50 px-1.5 py-0.5 font-medium text-brand-900" title="{{ strtoupper(implode(', ', $activity->otherLocales())) }}">+{{ count($activity->otherLocales()) }} dil</span>
                                                 @endif

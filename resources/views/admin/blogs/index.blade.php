@@ -59,6 +59,7 @@
                                         <div class="min-w-0 max-w-lg">
                                             <a href="{{ route('blogs.edit', $blog) }}" class="line-clamp-1 font-semibold text-slate-900 hover:text-brand-900 hover:underline">{{ $blog->title }}</a>
                                             <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+                                                <x-admin.todo-pill type="blog" :id="$blog->id" />
                                                 <span>{{ $blog->readingMinutes() }} dk okuma</span>
                                                 @if ($blog->activities_count)
                                                     <span class="rounded-md bg-slate-100 px-1.5 py-0.5 font-medium text-slate-600">{{ $blog->activities_count }} aktivite</span>

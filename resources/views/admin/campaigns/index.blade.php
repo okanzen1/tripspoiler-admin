@@ -60,7 +60,7 @@
                                     <code class="rounded-md border border-dashed border-slate-300 bg-white px-2 py-0.5 text-xs font-bold tracking-wider text-slate-800">{{ $campaign->code }}</code>
                                 @endif
                             </div>
-                            <p class="mt-1.5 font-semibold text-slate-900">{{ $campaign->title }}</p>
+                            <p class="mt-1.5 font-semibold text-slate-900">{{ $campaign->title }} <x-admin.todo-pill type="campaign" :id="$campaign->id" class="ml-1 align-middle" /></p>
                             <p class="mt-0.5 text-xs text-slate-500">
                                 @if ($campaign->starts_at || $campaign->ends_at)
                                     {{ $campaign->starts_at?->translatedFormat('j M Y') ?? '…' }} – {{ $campaign->ends_at?->translatedFormat('j M Y') ?? __('süresiz') }}

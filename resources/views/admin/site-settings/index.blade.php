@@ -182,6 +182,9 @@
                         <span class="min-w-0 flex-1">
                             <span class="flex flex-wrap items-baseline gap-x-2">
                                 <span class="font-semibold text-slate-900 group-hover:text-brand-900">{{ __($name) }}</span>
+                                @if ($section !== 'home_faq' && ($todo = \App\Support\TranslationTodo::under($url)))
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[11px] font-semibold text-purple-700 ring-1 ring-purple-200"><svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M22 22l-5-10-5 10M14 18h6" /></svg>{{ __(':count çeviri eksik', ['count' => $todo]) }}</span>
+                                @endif
                                 @if ($preview && in_array($section, ['steps', 'blog', 'features', 'home_faq'], true))
                                     <span class="truncate text-xs text-slate-400">“{{ \Illuminate\Support\Str::limit($preview, 70) }}”</span>
                                 @endif

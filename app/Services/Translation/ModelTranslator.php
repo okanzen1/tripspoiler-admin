@@ -69,18 +69,70 @@ class ModelTranslator
     public function __construct(private GoogleTranslator $google) {}
 
     /**
-     * @param  list<string>|null  $locales  boşsa çevirisi eksik ya da eskimiş tüm aktif diller
+     * Kaydın içinde düzenlenen ve onunla birlikte çevrilen alt kayıtlar (ör. aktivitenin / blog yazısının SSS'leri).
+     *
+     * @return Collection<int, Model>
+     */
+    public function children(Model $model): Collection
+    {
+        return match (true) {
+            $model instanceof Activity, $model instanceof Blog => $model->faqs()->get(),
+            default => collect(),
+        };
+    }
+
+    /** Kaydın ve alt kayıtlarının birlikte durumu: bir dilde biri bile eksikse o dil eksik sayılır */
+    public function fullStatus(Model $model): array
+    {
+        $status = $this->status($model);
+        foreach ($this->children($model) as $child) {
+            foreach ($this->status($child) as $locale => $state) {
+                if ($state !== 'ok' && ($status[$locale] ?? 'ok') === 'ok') {
+                    $status[$locale] = $state;
+                }
+            }
+        }
+
+        return $status;
+    }
+
+    /** @return list<string> */
+    public function fullPending(Model $model): array
+    {
+        return array_keys(array_filter($this->fullStatus($model), fn ($state) => $state !== 'ok'));
+    }
+
+    /**
+     * Kaydı ve alt kayıtlarını (SSS'ler) çevirir.
+     *
+     * @param  list<string>|null  $locales  boşsa kayıt ya da alt kayıtlarından birinin çevirisi eksik/eskimiş olan diller
+     * @param  bool  $force  false: kaydın kendisi o dilde güncelse yeniden çevrilmez (yalnızca eksik alt kayıtlar çevrilir)
      * @return list<string>  çevrilen diller
      */
-    public function translate(Model $model, ?array $locales = null, ?callable $onLocale = null): array
+    public function translate(Model $model, ?array $locales = null, ?callable $onLocale = null, bool $force = true): array
     {
-        $locales ??= $this->pending($model);
+        if ($locales === null) {
+            $locales = $this->fullPending($model);
+            $force = false;
+        }
+        $own = $this->status($model);
+        $children = $this->children($model);
         $source = $this->source($model);
         $hash = $this->hash($model);
 
         $group = $this->group($model);
 
         foreach ($locales as $locale) {
+            // alt kayıtlar (SSS'ler): yalnızca o dilde eksik/eskimiş olanlar
+            foreach ($children as $child) {
+                if (($this->status($child)[$locale] ?? 'ok') !== 'ok') {
+                    $this->translate($child, [$locale]);
+                }
+            }
+            if (!$force && ($own[$locale] ?? 'missing') === 'ok') {
+                $onLocale && $onLocale($locale);
+                continue;
+            }
             if ($group) {
                 foreach ($this->translateGroup($model, $group, $locale) as $field => $value) {
                     filled($value) ? $model->setTranslation($field, $locale, $value) : $model->forgetTranslation($field, $locale);

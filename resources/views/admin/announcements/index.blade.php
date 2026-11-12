@@ -33,7 +33,7 @@
                                     <span class="rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600" title="{{ strtoupper(implode(', ', $announcement->otherLocales())) }}">+{{ count($announcement->otherLocales()) }} dil</span>
                                 @endif
                             </div>
-                            <p class="mt-1.5 font-semibold text-slate-900">{{ $announcement->text }}</p>
+                            <p class="mt-1.5 font-semibold text-slate-900">{{ $announcement->text }} <x-admin.todo-pill type="announcement" :id="$announcement->id" class="ml-1 align-middle" /></p>
                         </div>
                         <div class="flex shrink-0 items-center gap-1.5 pt-1">
                             <x-admin.toggle :action="route('announcements.toggle', $announcement)" :active="$announcement->active" :label="__('Yayında')" />

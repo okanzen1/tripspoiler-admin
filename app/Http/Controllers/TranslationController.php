@@ -140,7 +140,8 @@ class TranslationController extends Controller
             return response()->json(['job' => TranslationJobs::get($key)]);
         }
 
-        $locales ??= $this->translator->pending($model);
+        $force = $locales !== null;
+        $locales ??= $this->translator->fullPending($model); // kayıt + SSS'leri
         if (!$locales) {
             return response()->json(['message' => __('Tüm çeviriler zaten güncel.')]);
         }
@@ -153,11 +154,11 @@ class TranslationController extends Controller
 
         // Kullanıcı sayfadan ayrılsa da süreç devam etsin
         ignore_user_abort(true);
-        defer(function () use ($key, $model, $locales, $type, $title) {
+        defer(function () use ($key, $model, $locales, $type, $title, $force) {
             ignore_user_abort(true);
             set_time_limit(900);
             try {
-                $done = $this->translator->translate($model, $locales, fn (string $locale) => TranslationJobs::progress($key, $locale));
+                $done = $this->translator->translate($model, $locales, fn (string $locale) => TranslationJobs::progress($key, $locale), $force);
                 $names = Language::whereIn('code', $done)->pluck('native_name')->implode(', ');
                 TranslationJobs::finish($key, __('Çevrildi: :languages', ['languages' => $names]));
                 \App\Support\ActivityLogger::write('translated', \Illuminate\Support\Str::snake(class_basename($model)), $model->getKey(), (string) $title, ['Diller' => [null, $names]]);

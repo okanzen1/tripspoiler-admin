@@ -104,6 +104,7 @@
                         <a href="{{ route('city-guides.sections.edit', [$city, $section]) }}" class="group min-w-0 flex-1">
                             <div class="flex flex-wrap items-center gap-2">
                                 <p class="font-semibold text-slate-900 group-hover:text-brand-900">{{ $topic->getTranslation('name', 'tr', false) ?: $topic->name }}</p>
+                                <x-admin.todo-pill type="city-guide-section" :id="$section->id" />
                                 @if (!$written)
                                     <span class="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500">{{ __('Henüz yazılmadı') }}</span>
                                 @endif
