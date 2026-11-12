@@ -65,6 +65,14 @@
             '',
             $rateCurrencies->count() ? __('✓ :list', ['list' => $rateCurrencies->implode(', ')]) : __('Aktif şehri olan ülke yok'), $rateCurrencies->count() > 0,
             'bg-lime-600', '<circle cx="12" cy="12" r="9" /><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .9-3 2s1.3 1.7 3 2 3 .9 3 2-1.3 2-3 2c-1.4 0-2.5-.6-3-1.5M12 6v2M12 16v2" />'];
+        // Hava durumu ve iklim: şehre özel bölümler; hangi sayfada görüneceği Sayfalar › sayfa › Bölümler'den
+        $weatherPages = \App\Models\Page::whereIn('key', array_keys(\App\Support\PageSections::DEFAULTS))->get()
+            ->filter(fn ($page) => in_array('weather', \App\Support\PageSections::config($page->key)['on'], true))->pluck('name');
+        $citiesPage = \App\Models\Page::where('key', 'cities')->first();
+        $rows['weather'] = ['weather', $citiesPage ? route('pages.sections', $citiesPage) : route('pages.index'), 'Hava durumu', 'Şehrin bugünkü havası, 7 günlük tahmin, ne giyilir ve havaya göre aktiviteler. Ücretsiz, saatte bir güncellenir.',
+            '',
+            $weatherPages->isNotEmpty() ? __('✓ :pages', ['pages' => $weatherPages->implode(', ')]) : __('Hiçbir sayfada açık değil'), $weatherPages->isNotEmpty(),
+            'bg-sky-500', '<path d="M7 18a4.5 4.5 0 1 1 .9-8.9A6 6 0 0 1 19 11a3.5 3.5 0 0 1-.5 7z" />'];
     @endphp
 
     <x-admin.card class="overflow-hidden">
@@ -129,6 +137,14 @@
                                         <span>● {{ __('Kayan yazı') }}</span><span>● {{ __('Kayan yazı') }}</span><span>● {{ __('Kayan yazı') }}</span>
                                     </span>
                                     <span class="absolute inset-x-0 top-7 h-4 border-b border-slate-200 bg-white"></span>
+                                    @break
+                                @case('weather')
+                                    <span class="absolute inset-0 flex items-center gap-1.5 bg-gradient-to-br from-sky-500 to-indigo-600 px-2">
+                                        <span class="rounded-md bg-white/20 px-1.5 py-1 text-[11px] font-extrabold text-white">17°</span>
+                                        @foreach (['☀️', '⛅', '🌧️', '☁️'] as $emoji)
+                                            <span class="grid w-6 place-items-center rounded-md bg-white py-1 text-[9px] leading-none">{{ $emoji }}</span>
+                                        @endforeach
+                                    </span>
                                     @break
                                 @case('rates')
                                     <span class="absolute inset-x-0 top-3 h-3 bg-slate-900"></span>

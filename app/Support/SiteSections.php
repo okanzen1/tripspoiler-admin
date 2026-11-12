@@ -10,7 +10,7 @@ use App\Models\Setting;
  */
 class SiteSections
 {
-    public const KEYS = ['steps', 'blog', 'features', 'announcements', 'intro', 'social', 'reviews', 'city_entry', 'partners', 'home_popular', 'home_faq', 'rates'];
+    public const KEYS = ['steps', 'blog', 'features', 'announcements', 'intro', 'social', 'reviews', 'city_entry', 'partners', 'home_popular', 'home_faq', 'rates', 'weather'];
 
     /** Sadece anasayfayı etkileyenler (diğer sayfalardaki SSS / popüler aktiviteler yerinde kalır) */
     public const HOME_ONLY = ['home_popular', 'home_faq'];

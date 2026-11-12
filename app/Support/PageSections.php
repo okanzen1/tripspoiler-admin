@@ -17,6 +17,7 @@ class PageSections
         'blog' => ['Blog yazıları', 'Seçili şehrin en yeni 3 yazısı ve e-posta aboneliği. Şehirde yazı yoksa görünmez.', true],
         'city_entry' => ['Şehirler çağrısı', 'Büyük resimli kart. Seçili şehrin banner resmi ve "o şehri keşfet" düğmesiyle.', true],
         'faq' => ['Sık sorulan sorular', 'Bu sayfaya ve seçili şehre yazılmış sorular (SSS › Nerede görünecek). Soru yoksa görünmez.', true],
+        'weather' => ['Hava durumu', 'Seçili şehrin bugünkü havası ve 7 günlük tahmini, gün doğumu/batımı, ne giyilir ve bu havada yapılacak aktiviteler.', true],
         'reviews' => ['Yorumlar', 'Ziyaretçi yorumları ve puan özeti. Tüm şehirler için aynı.', false],
         'social' => ['Sosyal medya', 'Instagram ve TikTok bölümü.', false],
         'steps' => ['Nasıl çalışır', 'Adım adım anlatım kartları.', false],
@@ -39,17 +40,18 @@ class PageSections
 
     /** Ayar yapılmamışsa açık olan içerik bölümleri (sitedeki varsayılanla aynı) */
     public const DEFAULTS = [
-        'activities' => ['reviews', 'social'],
-        'activity' => ['reviews', 'faq'],
-        'post' => ['reviews', 'faq'],
-        'blog' => ['popular', 'reviews', 'social'],
-        'cities' => ['popular', 'blog', 'reviews'],
+        'activities' => ['weather', 'reviews', 'social'],
+        'activity' => ['weather', 'reviews', 'faq'],
+        'post' => ['weather', 'reviews', 'faq'],
+        'blog' => ['popular', 'weather', 'reviews', 'social'],
+        'cities' => ['popular', 'weather', 'blog', 'reviews'],
         'reviews' => ['social'],
         'about' => [],
         'contact' => [],
         'privacy' => [],
         'rates' => ['faq'],
         'campaigns' => ['faq', 'reviews'],
+        'weather' => ['faq'],
     ];
 
     /**
@@ -77,9 +79,9 @@ class PageSections
      * @return array<string, array{0: string, 1: string, 2: bool}>
      */
     /** Şehirle ilgisi olmayan sayfalar: şehre bağlı bölümler (popüler, blog, şehirler çağrısı) yok, SSS sadece sayfanın */
-    public const NO_CITY = ['contact', 'about', 'privacy', 'reviews', 'rates', 'campaigns'];
+    public const NO_CITY = ['contact', 'about', 'privacy', 'reviews', 'rates', 'campaigns', 'weather'];
 
-    public const CITY_ONLY = ['popular', 'blog', 'city_entry'];
+    public const CITY_ONLY = ['popular', 'blog', 'city_entry', 'weather'];
 
     public static function labels(string $page): array
     {
@@ -173,6 +175,10 @@ class PageSections
         $on = is_array($saved['on'] ?? null) ? $saved['on'] : [...$defaults, ...array_keys(self::FIXED)];
         // Kaydedilmiş sırada hiç olmayan rehber alanı yenidir: açık başlar
         $on = [...$on, ...array_diff($guide, $saved['order'] ?? [])];
+        // Sonradan eklenen bölüm (kayıtlı sırada yok) bu sayfanın varsayılanındaysa açık başlar (ör. şehirlerde hava durumu)
+        if (is_array($saved['order'] ?? null)) {
+            $on = [...$on, ...array_intersect($defaults, array_diff(array_keys(self::CONTENT), $saved['order']))];
+        }
 
         return ['order' => $order, 'on' => array_values(array_unique($on))];
     }

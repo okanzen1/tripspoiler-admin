@@ -6,7 +6,7 @@
     $stepFields = [
         ['name', 'slug', 'type', 'city_id'],
         ['partner_id', 'affiliate_url', 'partner_product_id'],
-        ['duration', 'audio_guide', 'description'],
+        ['duration', 'audio_guide', 'setting', 'description'],
         ['faqs', 'faqs.*'],
         ['reviews', 'reviews.*'],
         ['images', 'images.*', 'remove_images', 'cover_image_id'],
@@ -134,6 +134,21 @@
                     <span class="text-sm font-medium text-slate-800">{{ __('Sesli rehber var') }}</span>
                 </label>
             </div>
+            {{-- Mekan: hava durumu bölümündeki "Bu havada ne yapılır" önerileri için (yağmurda kapalı, güneşte açık hava) --}}
+            <fieldset>
+                <legend class="text-sm font-medium text-slate-700">{{ __('Mekan') }} <span class="font-normal text-slate-400">· {{ __('hava durumuna göre öneri için') }}</span></legend>
+                @php $setting = old('setting', $activity->setting); @endphp
+                <div class="mt-1.5 grid grid-cols-2 gap-2 md:grid-cols-4">
+                    @foreach (['' => ['Belirtilmedi', '—'], 'indoor' => ['Kapalı mekan', '🏛️'], 'outdoor' => ['Açık hava', '☀️'], 'both' => ['İkisi de', '🌤️']] as $value => [$label, $emoji])
+                        <label class="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm transition has-checked:border-brand-900 has-checked:bg-brand-50/60">
+                            <input type="radio" name="setting" value="{{ $value }}" class="sr-only" @checked((string) $setting === $value) />
+                            <span class="text-base leading-none">{{ $emoji }}</span>
+                            <span class="font-medium text-slate-800">{{ __($label) }}</span>
+                        </label>
+                    @endforeach
+                </div>
+                <p class="mt-1.5 text-xs text-slate-500">{{ __('Yağmurlu günlerde kapalı mekanlar, güneşli günlerde açık hava aktiviteleri şehrin hava durumu bölümünde önerilir.') }}</p>
+            </fieldset>
             <div>
                 <span class="block text-sm font-medium text-slate-700">{{ __('Açıklama') }}</span>
                 <div class="mt-1.5 overflow-hidden rounded-xl border border-slate-200 bg-white" data-rich-editor="description" data-upload-url="{{ route('editor-images.store') }}" data-media-url="{{ \App\Services\ImageUploader::baseUrl() }}" data-placeholder="{{ __('Aktiviteyi anlat: ne yapılır, neler dahil, buluşma noktası…') }}">

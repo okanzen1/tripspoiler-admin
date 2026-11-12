@@ -21,7 +21,7 @@ class Activity extends Model
 
     protected $fillable = [
         'city_id', 'partner_id', 'name', 'slug', 'type', 'affiliate_url', 'partner_product_id',
-        'duration', 'audio_guide', 'description', 'meta_title', 'meta_description',
+        'duration', 'audio_guide', 'setting', 'description', 'meta_title', 'meta_description',
         'is_popular', 'active', 'sort_order',
     ];
 

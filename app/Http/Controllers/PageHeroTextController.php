@@ -53,6 +53,11 @@ class PageHeroTextController extends Controller
             'title' => ['Başlık', 'Büyük başlık.', 'Travel deals & discount codes', 80],
             'description' => ['Açıklama', 'Başlığın altındaki kısa yazı.', 'Exclusive codes from our partners…', 260],
         ],
+        'weather' => [
+            'eyebrow' => ['Üst etiket', 'Başlığın üstündeki küçük etiket.', 'Weather', 40],
+            'title' => ['Başlık', 'Büyük başlık.', 'Weather in your destinations', 80],
+            'description' => ['Açıklama', 'Başlığın altındaki kısa yazı.', 'Today’s weather and the 7-day forecast for every city…', 260],
+        ],
         'rates' => [
             'eyebrow' => ['Üst etiket', 'Başlığın üstündeki küçük kırmızı yazı.', 'Exchange rates', 40],
             'title' => ['Başlık', 'Büyük başlık.', 'Currency converter for your trip', 80],
@@ -66,7 +71,7 @@ class PageHeroTextController extends Controller
     ];
 
     /** Fotoğraflı hero'su olan sayfalar (kadraj + karartma) */
-    public const VISUAL = ['activities', 'cities', 'about', 'reviews', 'blog', 'privacy', 'contact'];
+    public const VISUAL = ['activities', 'cities', 'about', 'reviews', 'blog', 'privacy', 'contact', 'weather'];
 
     public const OVERLAYS = ['soft', 'medium', 'strong'];
 

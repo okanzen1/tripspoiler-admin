@@ -43,6 +43,7 @@ class ActivityRequest extends FormRequest
             'partner_product_id' => ['nullable', 'string', 'max:100'],
             'duration' => ['nullable', 'string', 'max:50'],
             'audio_guide' => ['boolean'],
+            'setting' => ['nullable', Rule::in(['indoor', 'outdoor', 'both'])],
             'description' => ['nullable', 'string', 'max:100000'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
