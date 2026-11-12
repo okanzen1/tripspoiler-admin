@@ -18,6 +18,14 @@ class PageHeroController extends Controller
      * Sayfaya göre ölçüler ve anlatım. desktop/mobile: [önerilen, en az] (genişlik × yükseklik).
      */
     public const SPECS = [
+        'time' => [
+            'desktop' => [[2400, 1000], [1600, 600]],
+            'mobile' => [[1080, 1350], [720, 900]],
+            'ratio' => 'aspect-[12/5]',
+            'preview_width' => 'max-w-2xl',
+            'mobile_ratio' => 'aspect-[4/5]',
+            'layout' => 'Fotoğraf yerel saat sayfasının üstünü kaplar, koyulaştırılır; solda yazılar ve şehir seçici, sağda büyük canlı saat durur. Resim yüklemezsen seçili şehrin kendi banner resmi kullanılır.',
+        ],
         'weather' => [
             'desktop' => [[2400, 1000], [1600, 600]],
             'mobile' => [[1080, 1350], [720, 900]],

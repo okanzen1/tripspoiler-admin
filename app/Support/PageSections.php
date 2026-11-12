@@ -18,6 +18,7 @@ class PageSections
         'city_entry' => ['Şehirler çağrısı', 'Büyük resimli kart. Seçili şehrin banner resmi ve "o şehri keşfet" düğmesiyle.', true],
         'faq' => ['Sık sorulan sorular', 'Bu sayfaya ve seçili şehre yazılmış sorular (SSS › Nerede görünecek). Soru yoksa görünmez.', true],
         'weather' => ['Hava durumu', 'Seçili şehrin bugünkü havası ve 7 günlük tahmini, gün doğumu/batımı, ne giyilir ve bu havada yapılacak aktiviteler.', true],
+        'time' => ['Yerel saat', 'Seçili şehrin canlı saati, ziyaretçiyle saat farkı, gün doğumu/batımı ve aramak için uygun saatler.', true],
         'reviews' => ['Yorumlar', 'Ziyaretçi yorumları ve puan özeti. Tüm şehirler için aynı.', false],
         'social' => ['Sosyal medya', 'Instagram ve TikTok bölümü.', false],
         'steps' => ['Nasıl çalışır', 'Adım adım anlatım kartları.', false],
@@ -44,7 +45,7 @@ class PageSections
         'activity' => ['weather', 'reviews', 'faq'],
         'post' => ['weather', 'reviews', 'faq'],
         'blog' => ['popular', 'weather', 'reviews', 'social'],
-        'cities' => ['popular', 'weather', 'blog', 'reviews'],
+        'cities' => ['popular', 'weather', 'time', 'blog', 'reviews'],
         'reviews' => ['social'],
         'about' => [],
         'contact' => [],
@@ -52,6 +53,7 @@ class PageSections
         'rates' => ['faq'],
         'campaigns' => ['faq', 'reviews'],
         'weather' => ['faq'],
+        'time' => ['faq'],
     ];
 
     /**
@@ -79,9 +81,9 @@ class PageSections
      * @return array<string, array{0: string, 1: string, 2: bool}>
      */
     /** Şehirle ilgisi olmayan sayfalar: şehre bağlı bölümler (popüler, blog, şehirler çağrısı) yok, SSS sadece sayfanın */
-    public const NO_CITY = ['contact', 'about', 'privacy', 'reviews', 'rates', 'campaigns', 'weather'];
+    public const NO_CITY = ['contact', 'about', 'privacy', 'reviews', 'rates', 'campaigns', 'weather', 'time'];
 
-    public const CITY_ONLY = ['popular', 'blog', 'city_entry', 'weather'];
+    public const CITY_ONLY = ['popular', 'blog', 'city_entry', 'weather', 'time'];
 
     public static function labels(string $page): array
     {

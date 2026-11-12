@@ -29,26 +29,26 @@
         @method('PUT')
 
         <div class="space-y-6 xl:col-span-3">
-        @if ($hasImage)
+        @foreach ($images as $image)
             <x-admin.card class="p-6 sm:p-8">
-                <x-admin.step-heading :title="__('Resim')" :description="__('Kartın arka planındaki fotoğraf. Yatay olsun (en iyisi 2000 × 1200); büyükse otomatik küçültülür.')" />
+                <x-admin.step-heading :title="__($image['label'])" :description="__($image['hint'])" />
                 <div class="mt-5 grid gap-5 sm:grid-cols-5 sm:items-center">
                     <div class="relative aspect-[16/9] overflow-hidden rounded-2xl bg-slate-900 sm:col-span-3">
-                        <img src="{{ $imageUrl ?: config('site.url') . '/images/tripspoiler-statement.webp' }}" alt="" data-image-preview class="absolute inset-0 size-full object-cover">
+                        <img src="{{ $image['url'] ?: $image['default'] }}" alt="" data-image-preview="{{ $image['field'] }}" class="absolute inset-0 size-full object-cover">
                         <div class="absolute inset-0 bg-gradient-to-r from-slate-950/80 to-transparent"></div>
                     </div>
                     <div class="space-y-2 sm:col-span-2">
                         <label class="flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-brand-900 px-5 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800">
                             <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16" /></svg>
-                            {{ $imageUrl ? __('Resmi değiştir') : __('Resim seç') }}
-                            <input type="file" name="image" accept="image/jpeg,image/png,image/webp" class="sr-only" data-image-input>
+                            <span data-image-label="{{ $image['field'] }}">{{ $image['url'] ? __('Resmi değiştir') : __('Resim seç') }}</span>
+                            <input type="file" name="{{ $image['field'] }}" accept="image/jpeg,image/png,image/webp" class="sr-only" data-image-input="{{ $image['field'] }}">
                         </label>
-                        <p class="text-xs text-slate-500">{{ $imageUrl ? __('Panelden yüklenen resim kullanılıyor.') : __('Şu an varsayılan resim kullanılıyor.') }}</p>
-                        @error('image') <p class="text-xs font-medium text-red-600">{{ $message }}</p> @enderror
+                        <p class="text-xs text-slate-500" data-image-status="{{ $image['field'] }}">{{ $image['url'] ? __('Panelden yüklenen resim kullanılıyor.') : __('Şu an varsayılan resim kullanılıyor.') }}</p>
+                        @error($image['field']) <p class="text-xs font-medium text-red-600">{{ $message }}</p> @enderror
                     </div>
                 </div>
             </x-admin.card>
-        @endif
+        @endforeach
         <x-admin.card class="space-y-5 p-6 sm:p-8">
  @if ($key === 'partners')
                 <a href="{{ route('partners.index') }}" class="flex items-center justify-between gap-3 rounded-2xl bg-lime-50 px-4 py-3 text-sm text-lime-900 ring-1 ring-lime-200 transition hover:bg-lime-100">
@@ -93,10 +93,14 @@
 
 @push('scripts')
     <script>
-        document.querySelector('[data-image-input]')?.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) document.querySelector('[data-image-preview]').src = URL.createObjectURL(file);
-        });
+        // Seçilen resim kaydetmeden önce önizlenir
+        document.querySelectorAll('[data-image-input]').forEach((input) => input.addEventListener('change', () => {
+            const file = input.files[0];
+            const name = input.dataset.imageInput;
+            if (!file) return;
+            document.querySelector(`[data-image-preview="${name}"]`).src = URL.createObjectURL(file);
+            document.querySelector(`[data-image-status="${name}"]`).textContent = @js(__('Yeni resim seçildi; kaydetmeyi unutma.'));
+        }));
         document.querySelectorAll('[data-preview-input]').forEach(input => {
             const target = document.querySelector(`[data-preview="${input.dataset.previewInput}"]`);
             const update = () => target.textContent = input.value;

@@ -69,6 +69,12 @@
         $weatherPages = \App\Models\Page::whereIn('key', array_keys(\App\Support\PageSections::DEFAULTS))->get()
             ->filter(fn ($page) => in_array('weather', \App\Support\PageSections::config($page->key)['on'], true))->pluck('name');
         $citiesPage = \App\Models\Page::where('key', 'cities')->first();
+        $timePages = \App\Models\Page::whereIn('key', array_keys(\App\Support\PageSections::DEFAULTS))->get()
+            ->filter(fn ($page) => in_array('time', \App\Support\PageSections::config($page->key)['on'], true))->pluck('name');
+        $rows['time'] = ['time', $citiesPage ? route('pages.sections', $citiesPage) : route('pages.index'), 'Yerel saat', 'Şehrin canlı saati, ziyaretçiyle saat farkı, gün doğumu/batımı ve aramak için uygun saatler. Dış servis yok, ücretsiz.',
+            '',
+            $timePages->isNotEmpty() ? __('✓ :pages', ['pages' => $timePages->implode(', ')]) : __('Hiçbir sayfada açık değil'), $timePages->isNotEmpty(),
+            'bg-indigo-500', '<circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />'];
         $rows['weather'] = ['weather', $citiesPage ? route('pages.sections', $citiesPage) : route('pages.index'), 'Hava durumu', 'Şehrin bugünkü havası, 7 günlük tahmin, ne giyilir ve havaya göre aktiviteler. Ücretsiz, saatte bir güncellenir.',
             '',
             $weatherPages->isNotEmpty() ? __('✓ :pages', ['pages' => $weatherPages->implode(', ')]) : __('Hiçbir sayfada açık değil'), $weatherPages->isNotEmpty(),
@@ -137,6 +143,12 @@
                                         <span>● {{ __('Kayan yazı') }}</span><span>● {{ __('Kayan yazı') }}</span><span>● {{ __('Kayan yazı') }}</span>
                                     </span>
                                     <span class="absolute inset-x-0 top-7 h-4 border-b border-slate-200 bg-white"></span>
+                                    @break
+                                @case('time')
+                                    <span class="absolute inset-0 flex items-center justify-center gap-2 bg-slate-950 px-2">
+                                        <span class="font-mono text-lg font-extrabold tracking-tight text-white">14:32<span class="text-[10px] text-white/50">:08</span></span>
+                                        <span class="rounded-md bg-amber-400 px-1.5 py-0.5 text-[8px] font-extrabold text-slate-950">+2 sa</span>
+                                    </span>
                                     @break
                                 @case('weather')
                                     <span class="absolute inset-0 flex items-center gap-1.5 bg-gradient-to-br from-sky-500 to-indigo-600 px-2">
