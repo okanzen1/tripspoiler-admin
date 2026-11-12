@@ -14,7 +14,8 @@ class CampaignRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'code' => trim((string) $this->input('code')) ?: null,
+            // Kod her zaman büyük harf (Türkçe i/ı sorunu olmasın diye İngilizce kuralla: trippass → TRIPPASS)
+            'code' => strtoupper(trim((string) $this->input('code'))) ?: null,
             'url' => trim((string) $this->input('url')) ?: null,
             'starts_at' => $this->input('starts_at') ?: null,
             'ends_at' => $this->input('ends_at') ?: null,
