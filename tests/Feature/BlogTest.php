@@ -42,7 +42,7 @@ class BlogTest extends TestCase
             'cover' => UploadedFile::fake()->image('cover.jpg', 2000, 1000),
             'activity_ids' => [$this->activity->id],
             'active' => '1',
-        ])->assertRedirect(route('blogs.index'));
+        ])->assertRedirect(route('blogs.edit', 1));
 
         $blog = Blog::first();
         $this->assertSame('hagia-sophia-guide', $blog->slug);

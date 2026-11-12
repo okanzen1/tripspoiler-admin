@@ -3,7 +3,7 @@
 @section('title', 'Diller ve çeviri')
 
 @php
-    $typeNames = ['activity' => 'Aktiviteler', 'blog' => 'Blog yazıları', 'faq' => 'Sıkça sorulan sorular', 'page' => 'Sayfalar (SEO)', 'announcement' => 'Duyurular', 'hero' => 'Hero alanı yazıları', 'feature' => 'Özellik kartları', 'section' => 'Bölüm yazıları', 'step' => 'Nasıl çalışır adımları', 'city-guide' => 'Şehir rehberleri (giriş)', 'city-guide-section' => 'Şehir rehberi bölümleri', 'city-guide-topic' => 'Rehber konuları'];
+    $typeNames = ['activity' => 'Aktiviteler', 'blog' => 'Blog yazıları', 'faq' => 'Sıkça sorulan sorular', 'page' => 'Sayfalar (SEO)', 'announcement' => 'Duyurular', 'campaign' => 'Fırsatlar (kampanyalar)', 'hero' => 'Hero alanı yazıları', 'feature' => 'Özellik kartları', 'section' => 'Bölüm yazıları', 'step' => 'Nasıl çalışır adımları', 'city-guide' => 'Şehir rehberleri (giriş)', 'city-guide-section' => 'Şehir rehberi bölümleri', 'city-guide-topic' => 'Rehber konuları'];
     $totalPending = array_sum($pendingByLocale);
 @endphp
 
@@ -84,7 +84,7 @@
                         @php($percent = $row['total'] ? round($row['ok'] / $row['total'] * 100) : 100)
                         <li class="px-6 py-3.5">
                             <div class="flex items-baseline justify-between text-sm">
-                                <span class="font-medium text-slate-900">{{ __($typeNames[$type]) }}</span>
+                                <span class="font-medium text-slate-900">{{ __($typeNames[$type] ?? $type) }}</span>
                                 <span class="tabular-nums text-slate-500">{{ $row['ok'] }} / {{ $row['total'] }}</span>
                             </div>
                             <div class="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">

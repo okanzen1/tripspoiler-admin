@@ -54,6 +54,8 @@ class ActivityRequest extends FormRequest
             'remove_images' => ['nullable', 'array'],
             'remove_images.*' => ['integer'],
             'cover_image_id' => ['nullable', 'integer'],
+            'image_order' => ['nullable', 'array'],
+            'image_order.*' => ['string', 'regex:/^(id|new):\d+$/'],
             ...\App\Support\FaqSync::rules(self::MAX_FAQS),
             ...\App\Support\ReviewSync::rules(),
         ];

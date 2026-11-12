@@ -197,23 +197,40 @@
         <section data-step hidden class="space-y-5">
             <x-admin.step-heading :title="__('Görseller')" :description="__('İlk görsel kapak olur. En fazla :count görsel; JPG, PNG ya da WebP, her biri en fazla 5 MB.', ['count' => \App\Http\Requests\ActivityRequest::MAX_IMAGES])" />
 
-            @if ($editing && $activity->images->isNotEmpty())
-                <div class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+            {{-- Mevcut + yeni görseller tek ızgarada: sürükleyip sırala, ilk görsel kapak (resources/js/activity-form.js) --}}
+            <p class="text-xs font-medium text-slate-500" data-image-hint @if (!($editing && $activity->images->isNotEmpty())) hidden @endif>
+                {{ __('Görselleri sürükleyip bırakarak sırala. En baştaki görsel kapak olur.') }}
+            </p>
+            <div class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5" data-image-grid data-live="activity-images">
+                @if ($editing)
                     @foreach ($activity->images as $image)
-                        <div class="group overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200 has-[[data-remove]:checked]:opacity-40">
-                            <img src="{{ $image->url('sm') }}" alt="" loading="lazy" class="aspect-[4/3] w-full object-cover" />
+                        <div draggable="true" data-image-card="id:{{ $image->id }}"
+                            class="group relative cursor-grab overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200 transition active:cursor-grabbing has-[[data-remove]:checked]:opacity-40">
+                            <img src="{{ $image->url('sm') }}" alt="" loading="lazy" draggable="false" class="pointer-events-none aspect-[4/3] w-full object-cover" />
+                            <span data-cover-badge hidden class="absolute left-2 top-2 rounded-full bg-brand-900 px-2.5 py-1 text-[11px] font-bold text-white shadow">{{ __('Kapak') }}</span>
+                            <span data-image-number class="absolute right-2 top-2 grid size-6 place-items-center rounded-full bg-white/90 text-[11px] font-bold text-slate-700 shadow"></span>
                             <div class="flex items-center justify-between gap-2 px-3 py-2 text-xs">
-                                <label class="flex cursor-pointer items-center gap-1.5 font-medium text-slate-700">
-                                    <input type="radio" name="cover_image_id" value="{{ $image->id }}" class="size-3.5 accent-brand-900" @checked($loop->first) /> {{ __('Kapak') }}
-                                </label>
+                                <button type="button" data-make-cover class="font-semibold text-brand-900 hover:underline">{{ __('Kapak yap') }}</button>
                                 <label class="flex cursor-pointer items-center gap-1.5 font-medium text-red-600">
                                     <input type="checkbox" name="remove_images[]" value="{{ $image->id }}" data-remove class="size-3.5 accent-red-600" /> {{ __('Sil') }}
                                 </label>
                             </div>
                         </div>
                     @endforeach
+                @endif
+            </div>
+            <template data-new-image-template>
+                <div draggable="true" class="group relative cursor-grab overflow-hidden rounded-2xl bg-white ring-1 ring-brand-200 transition active:cursor-grabbing">
+                    <img alt="" draggable="false" class="pointer-events-none aspect-[4/3] w-full object-cover" />
+                    <span data-cover-badge hidden class="absolute left-2 top-2 rounded-full bg-brand-900 px-2.5 py-1 text-[11px] font-bold text-white shadow">{{ __('Kapak') }}</span>
+                    <span data-image-number class="absolute right-2 top-2 grid size-6 place-items-center rounded-full bg-white/90 text-[11px] font-bold text-slate-700 shadow"></span>
+                    <div class="flex items-center justify-between gap-2 px-3 py-2 text-xs">
+                        <span class="truncate font-medium text-brand-900" data-new-name></span>
+                        <button type="button" data-drop-new class="shrink-0 font-semibold text-red-600 hover:underline">{{ __('Çıkar') }}</button>
+                    </div>
+                    <button type="button" data-make-cover hidden></button>
                 </div>
-            @endif
+            </template>
 
             <label class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-300 bg-white px-6 py-10 text-center transition hover:border-brand-900 hover:bg-brand-50/40" data-drop-zone>
                 <span class="grid size-12 place-items-center rounded-2xl bg-brand-50 text-brand-900">
@@ -223,7 +240,6 @@
                 <span class="text-xs text-slate-500">{{ __('Birden fazla seçebilirsin') }}</span>
                 <input type="file" name="images[]" multiple accept="image/jpeg,image/png,image/webp" class="sr-only" data-image-input />
             </label>
-            <div class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5" data-image-previews></div>
             @foreach (['images', 'images.*'] as $key)
                 @error($key) <p class="text-xs font-medium text-red-600">{{ $message }}</p> @enderror
             @endforeach

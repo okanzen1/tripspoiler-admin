@@ -78,20 +78,20 @@ class MediaTest extends TestCase
         $country = Country::create(['code' => 'TR', 'name' => 'Türkiye', 'slug' => 'turkiye']);
         $city = City::create(['country_id' => $country->id, 'name' => 'Istanbul', 'slug' => 'istanbul']);
         $activity = Activity::create(['city_id' => $city->id, 'name' => ['en' => 'A'], 'slug' => 'a', 'type' => 'product']);
-        $activity->images()->create(['path' => 'activities/2026/01/used.webp']);
-        Blog::create(['title' => ['en' => 'B'], 'slug' => 'b', 'content' => ['en' => '<img src="' . ImageUploader::baseUrl() . 'content/2026/01/inline.webp">']]);
+        $activity->images()->create(['path' => 'activities/2026/01/usedusedusedusedused.webp']);
+        Blog::create(['title' => ['en' => 'B'], 'slug' => 'b', 'content' => ['en' => '<img src="' . ImageUploader::baseUrl() . 'content/2026/01/inlineinlineinlinein.webp">']]);
 
-        foreach (['activities/2026/01/used.webp', 'activities/2026/01/used-sm.webp', 'content/2026/01/inline.webp', 'content/2026/01/orphan.webp', 'blogs/2026/01/fresh.webp'] as $file) {
+        foreach (['activities/2026/01/usedusedusedusedused.webp', 'activities/2026/01/usedusedusedusedused-sm.webp', 'content/2026/01/inlineinlineinlinein.webp', 'content/2026/01/orphanorphanorphanor.webp', 'blogs/2026/01/freshfreshfreshfresh.webp'] as $file) {
             $disk->put($file, 'x');
         }
         // "fresh" yeni yüklendi (form hâlâ açık olabilir), diğerleri eski
-        foreach (['activities/2026/01/used.webp', 'activities/2026/01/used-sm.webp', 'content/2026/01/inline.webp', 'content/2026/01/orphan.webp'] as $file) {
+        foreach (['activities/2026/01/usedusedusedusedused.webp', 'activities/2026/01/usedusedusedusedused-sm.webp', 'content/2026/01/inlineinlineinlinein.webp', 'content/2026/01/orphanorphanorphanor.webp'] as $file) {
             touch($disk->path($file), now()->subDays(2)->getTimestamp());
         }
 
         $this->artisan('media:prune')->assertSuccessful();
 
-        $disk->assertMissing('content/2026/01/orphan.webp');
-        $disk->assertExists(['activities/2026/01/used.webp', 'activities/2026/01/used-sm.webp', 'content/2026/01/inline.webp', 'blogs/2026/01/fresh.webp']);
+        $disk->assertMissing('content/2026/01/orphanorphanorphanor.webp');
+        $disk->assertExists(['activities/2026/01/usedusedusedusedused.webp', 'activities/2026/01/usedusedusedusedused-sm.webp', 'content/2026/01/inlineinlineinlinein.webp', 'blogs/2026/01/freshfreshfreshfresh.webp']);
     }
 }

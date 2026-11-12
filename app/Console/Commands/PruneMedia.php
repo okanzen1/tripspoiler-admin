@@ -40,7 +40,8 @@ class PruneMedia extends Command
         $database = DB::connection()->getDatabaseName();
 
         $tables = collect(Schema::getTables())
-            ->filter(fn (array $t) => ($t['schema'] ?? $database) === $database)
+            // MySQL başka veritabanlarının tablolarını da listeler; SQLite'ta (testler) şema adı "main" olur
+            ->filter(fn (array $t) => DB::getDriverName() === 'sqlite' || ($t['schema'] ?? $database) === $database)
             ->pluck('name')
             ->reject(fn (string $name) => in_array($name, self::SKIP_TABLES, true));
 

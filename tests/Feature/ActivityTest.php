@@ -54,7 +54,7 @@ class ActivityTest extends TestCase
     {
         $this->actingAs($this->editor)->post(route('activities.store'), $this->payload([
             'images' => [UploadedFile::fake()->image('a.jpg', 2400, 1600), UploadedFile::fake()->image('b.jpg', 800, 600)],
-        ]))->assertRedirect(route('activities.index'));
+        ]))->assertRedirect(route('activities.edit', Activity::first()));
 
         $activity = Activity::first();
         $this->assertSame('hagia-sophia-skip-the-line', $activity->slug);
@@ -87,6 +87,26 @@ class ActivityTest extends TestCase
         $this->assertTrue($activity->cover->is($second));
         $this->assertModelMissing($first);
         Storage::disk('media')->assertMissing('activities/1.webp');
+    }
+
+    public function test_images_follow_dragged_order_including_new_uploads(): void
+    {
+        $activity = Activity::create(['city_id' => $this->city->id, 'name' => ['en' => 'X'], 'slug' => 'x', 'type' => 'product']);
+        $a = $activity->images()->create(['path' => 'activities/a.webp', 'sort_order' => 0]);
+        $b = $activity->images()->create(['path' => 'activities/b.webp', 'sort_order' => 1]);
+
+        $this->actingAs($this->editor)->put(route('activities.update', $activity), $this->payload([
+            'name' => 'X', 'slug' => 'x',
+            'images' => [UploadedFile::fake()->image('n0.jpg'), UploadedFile::fake()->image('n1.jpg')],
+            'image_order' => ['new:1', "id:{$b->id}", 'new:0', "id:{$a->id}"],
+        ]))->assertRedirect(route('activities.edit', $activity));
+
+        $ordered = $activity->images()->orderBy('sort_order')->get();
+        $this->assertCount(4, $ordered);
+        $this->assertTrue($ordered[1]->is($b));
+        $this->assertTrue($ordered[3]->is($a));
+        $this->assertSame([0, 1, 2, 3], $ordered->pluck('sort_order')->all());
+        $this->assertGreaterThan($ordered[2]->id, $ordered[0]->id); // kapak = ikinci yeni dosya
     }
 
     public function test_validation_and_unique_slug(): void

@@ -31,7 +31,7 @@ class FaqTest extends TestCase
     {
         $this->actingAs($this->editor)->post(route('faqs.store'), [
             'question' => 'What is TripSpoiler?', 'answer' => 'A travel guide.', 'target' => 'general', 'active' => '1',
-        ])->assertRedirect(route('faqs.index'));
+        ])->assertRedirect(route('faqs.edit', 1));
 
         $this->actingAs($this->editor)->post(route('faqs.store'), [
             'question' => 'How long is the cruise?', 'answer' => 'About 90 minutes.', 'target' => 'activity:' . $this->activity->id, 'active' => '1',

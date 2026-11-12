@@ -730,5 +730,11 @@
     "bağlantı": "link",
     "duyuru": "announcements",
     "yayında": "published",
-    "Bağlantı": "Link"
+    "Bağlantı": "Link",
+    "Soru eklendi. Şimdi yukarıdaki Çeviriler kutusundan diğer dillere çevirebilirsin.": "Question added. You can now translate it into other languages from the Translations box above.",
+    "Şimdi yukarıdaki Çeviriler kutusundan diğer dillere çevirebilirsin.": "You can now translate it into other languages from the Translations box above.",
+    "Görselleri sürükleyip bırakarak sırala. En baştaki görsel kapak olur.": "Drag and drop the images to reorder them. The first image is the cover.",
+    "Kapak yap": "Make cover",
+    "Çıkar": "Remove",
+    "Fırsatlar (kampanyalar)": "Deals (campaigns)"
 }

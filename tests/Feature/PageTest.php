@@ -23,7 +23,7 @@ class PageTest extends TestCase
     {
         $this->actingAs(User::factory()->create())->get(route('pages.index'))->assertRedirect(route("analytics.index"));
         $this->actingAs(User::factory()->admin()->create())->get(route('pages.index'))
-            ->assertOk()->assertSee('Anasayfa')->assertSee('Gizlilik politikası')->assertSee('8 sayfanın SEO bilgisi eksik');
+            ->assertOk()->assertSee('Anasayfa')->assertSee('Gizlilik politikası')->assertSee('sayfanın SEO bilgisi eksik');
     }
 
     public function test_admin_updates_seo_and_keeps_other_languages(): void

@@ -46,6 +46,6 @@ class LocaleTest extends TestCase
         $user = User::factory()->create(['locale' => 'en']);
 
         $this->actingAs($user)->post(route('faqs.store'), ['target' => 'general', 'question' => 'Q?', 'answer' => 'A.', 'active' => 1])
-            ->assertSessionHas('success', 'Question added.');
+            ->assertSessionHas('success', 'Question added. You can now translate it into other languages from the Translations box above.');
     }
 }

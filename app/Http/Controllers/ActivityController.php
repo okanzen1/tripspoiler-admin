@@ -163,21 +163,32 @@ class ActivityController extends Controller
     }
 
     /**
-     * Görseller: işaretlenenler silinir, yeniler eklenir, seçilen kapak başa alınır (sort_order 0 = kapak).
+     * Görseller: işaretlenenler silinir, yeniler eklenir. Sıra formdaki sürükle-bırak sırasıdır
+     * (image_order: "id:5" mevcut görsel, "new:0" bu kayıtta yüklenen ilk dosya); ilk görsel kapaktır (sort_order 0).
      */
     private function syncImages(Activity $activity, ActivityRequest $request): void
     {
         $activity->images()->whereIn('id', (array) $request->input('remove_images', []))->get()->each->delete();
 
-        foreach ($request->file('images', []) as $file) {
-            $activity->images()->create([...$this->uploader->activity($file), 'sort_order' => 1000]);
+        $newIds = [];
+        foreach (array_values($request->file('images', [])) as $index => $file) {
+            $newIds[$index] = $activity->images()->create([...$this->uploader->activity($file), 'sort_order' => 1000 + $index])->id;
         }
 
-        $images = $activity->images()->get();
-        $cover = $images->firstWhere('id', (int) $request->input('cover_image_id')) ?? $images->first();
+        // Formdaki sıra → görsel id'leri
+        $position = collect((array) $request->input('image_order', []))
+            ->map(function (string $token) use ($newIds) {
+                [$kind, $number] = explode(':', $token);
 
-        $images->sortBy(fn ($image) => [$image->isNot($cover), $image->sort_order, $image->id])->values()
-            ->each(fn ($image, $index) => $image->update(['sort_order' => $index]));
+                return $kind === 'new' ? ($newIds[(int) $number] ?? null) : (int) $number;
+            })
+            ->filter()->values()->flip();
+
+        $images = $activity->images()->get();
+        $cover = $images->firstWhere('id', (int) $request->input('cover_image_id'));
+
+        $images->sortBy(fn ($image) => [$position[$image->id] ?? PHP_INT_MAX, $cover && $image->isNot($cover), $image->sort_order, $image->id])->values()
+            ->each(fn ($image, $index) => $image->sort_order === $index || $image->update(['sort_order' => $index]));
     }
 
     /**
