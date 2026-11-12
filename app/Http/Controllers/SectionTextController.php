@@ -21,6 +21,9 @@ class SectionTextController extends Controller
         'city_entry' => [
             'image' => ['city_entry_image', 'Resim', 'Kartın arka planındaki fotoğraf. Yatay olsun (en iyisi 2000 × 1200); büyükse otomatik küçültülür.', 'images/tripspoiler-statement.webp'],
         ],
+        'popular' => [
+            'image' => ['popular_all_image', '“Tüm aktiviteler” kartının resmi', 'Aktivite kartlarının en sonundaki koyu kartın arka planı. Dikey ya da kare olsun (en iyisi 1200 × 1500); büyükse otomatik küçültülür.', 'images/all-activities-cover.webp'],
+        ],
         'intro' => [
             'image_cities' => ['intro_cities_image', 'Şehirler kartının resmi', 'Sağdaki “Şehirler” kartının arkasındaki fotoğraf. Yatay olsun (en iyisi 1600 × 1000).', 'images/tripspoiler-statement.webp'],
             'image_experiences' => ['intro_experiences_image', 'Deneyimler kartının resmi', 'Sağdaki “Deneyimler” kartının arkasındaki fotoğraf. Yatay olsun (en iyisi 1600 × 1000).', 'images/all-activities-cover.webp'],
@@ -31,13 +34,14 @@ class SectionTextController extends Controller
     public const OVERLAYS = ['intro' => 'intro_overlay'];
 
     /** Bölümde kullanılan alanlar (verilmeyenlerde dördü de) */
-    public const FIELDS = ['partners' => ['eyebrow', 'title', 'title_highlight']];
+    public const FIELDS = ['partners' => ['eyebrow', 'title', 'title_highlight'], 'popular' => []];
 
     public const SECTIONS = [
         'intro' => ['TripSpoiler nedir', 'Solda tanıtım yazısı, sağda dört kısayol kartı olan bölüm.'],
         'social' => ['Sosyal medya', 'Instagram ve TikTok kartlarının yanındaki yazı.'],
         'reviews' => ['Yorumlar', 'Gezgin yorumlarının solundaki başlık ve açıklama.'],
         'partners' => ['Partnerler şeridi', 'Footer’ın üstünde kayan partner logoları. Logoları Yönetim > Partnerler’den seçersin.'],
+        'popular' => ['Popüler aktiviteler', 'Aktivite kartları ve en sondaki “Tüm aktiviteler” kartı. Hangi aktivitelerin görüneceğini aktivite formundaki “Popüler” anahtarıyla seçersin.'],
         'city_entry' => ['Şehirler çağrısı', 'Büyük resimli kart: üstünde başlık, kısa yazı ve “Şehirleri keşfet” butonu.'],
     ];
 
@@ -58,22 +62,26 @@ class SectionTextController extends Controller
             'default' => config('site.url') . '/' . $image[3],
         ])->values();
 
+        $fields = self::FIELDS[$key] ?? ['eyebrow', 'title', 'title_highlight', 'description'];
+
         return view('admin.section-texts.edit', [
-            'key' => $key, 'meta' => self::SECTIONS[$key], 'model' => SectionText::for($key),
+            // Yazısı olmayan bölümde (yalnızca resim) boş kayıt açılmasın
+            'key' => $key, 'meta' => self::SECTIONS[$key], 'model' => $fields ? SectionText::for($key) : new SectionText(['key' => $key]),
             'images' => $images,
             'overlayKey' => self::OVERLAYS[$key] ?? null,
             'overlay' => in_array(\App\Models\Setting::get(self::OVERLAYS[$key] ?? ''), ['soft', 'medium', 'strong'], true) ? \App\Models\Setting::get(self::OVERLAYS[$key]) : 'medium',
-            'fields' => self::FIELDS[$key] ?? ['eyebrow', 'title', 'title_highlight', 'description'],
+            'fields' => $fields,
         ]);
     }
 
     public function update(Request $request, string $key)
     {
         abort_unless(isset(self::SECTIONS[$key]), 404);
+        $fields = self::FIELDS[$key] ?? ['eyebrow', 'title', 'title_highlight', 'description'];
 
         $data = $request->validate([
             'eyebrow' => ['nullable', 'string', 'max:40'],
-            'title' => ['required', 'string', 'max:60'],
+            'title' => [in_array('title', $fields, true) ? 'required' : 'nullable', 'string', 'max:60'],
             'title_highlight' => ['nullable', 'string', 'max:60'],
             'description' => ['nullable', 'string', 'max:260'],
             'overlay' => ['nullable', \Illuminate\Validation\Rule::in(['soft', 'medium', 'strong'])],
@@ -94,8 +102,12 @@ class SectionTextController extends Controller
         }
         unset($data['overlay']);
 
+        if (!$fields) {
+            return back()->with('success', __(':name kaydedildi.', ['name' => __(self::SECTIONS[$key][0])]));
+        }
+
         $record = SectionText::for($key);
-        foreach ($data as $field => $value) {
+        foreach (array_intersect_key($data, array_flip($fields)) as $field => $value) {
             filled($value) ? $record->setTranslation($field, 'en', trim($value)) : $record->forgetTranslation($field, 'en');
         }
         $record->save();

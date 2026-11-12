@@ -33,6 +33,7 @@
                 'bg-rose-500', '<path d="M4 6h2M4 12h2M4 18h2M9 6h11M9 12h11M9 18h11" />'],
         ];
         foreach (\App\Http\Controllers\SectionTextController::SECTIONS as $sectionKey => [$sectionName, $sectionHint]) {
+            if ($sectionKey === 'popular') continue; // aşağıdaki "Popüler aktiviteler" kartı bu sayfayı açar
             $sectionModel = \App\Models\SectionText::for($sectionKey);
             $pending = count(array_filter($translator->status($sectionModel), fn ($state) => $state !== 'ok'));
             $rows[$sectionKey] = [str_replace('_', '-', $sectionKey) . '-texts', route('section-texts.edit', $sectionKey), $sectionName, $sectionHint,
@@ -48,7 +49,7 @@
             $features->pluck('title')->implode(' · '),
             $featureCount ? __('✓ :count kart yayında', ['count' => $featureCount]) : __('Yayında kart yok, bölüm gizli'), $featureCount > 0,
             'bg-amber-500', '<rect x="3" y="5" width="7" height="14" rx="1.5" /><rect x="14" y="5" width="7" height="14" rx="1.5" />'];
-        $rows['home_popular'] = ['popular', route('activities.index'), 'Popüler aktiviteler', 'Anasayfadaki aktivite kartları: “Popüler” işaretli aktiviteler (aktivite formunda).',
+        $rows['home_popular'] = ['popular', route('section-texts.edit', 'popular'), 'Popüler aktiviteler', 'Anasayfadaki aktivite kartları: “Popüler” işaretli aktiviteler (aktivite formunda).',
             '',
             $popularCount ? __('✓ :count popüler aktivite', ['count' => $popularCount]) : __('Popüler işaretli aktivite yok, bölüm gizli'), $popularCount > 0,
             'bg-red-500', '<path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1.5a2.5 2.5 0 0 0 0 5V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1.5a2.5 2.5 0 0 0 0-5z" />'];

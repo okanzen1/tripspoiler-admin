@@ -132,8 +132,8 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
 
     // Anasayfa bölümlerinin yazıları (TripSpoiler nedir, Sosyal medya, Yorumlar)
     Route::get('/bolum-yazilari', [SectionTextController::class, 'index'])->name('section-texts.index');
-    Route::get('/bolum-yazilari/{key}', [SectionTextController::class, 'edit'])->whereIn('key', ['intro', 'social', 'reviews', 'city_entry', 'partners'])->name('section-texts.edit');
-    Route::put('/bolum-yazilari/{key}', [SectionTextController::class, 'update'])->whereIn('key', ['intro', 'social', 'reviews', 'city_entry', 'partners'])->name('section-texts.update');
+    Route::get('/bolum-yazilari/{key}', [SectionTextController::class, 'edit'])->whereIn('key', array_keys(SectionTextController::SECTIONS))->name('section-texts.edit');
+    Route::put('/bolum-yazilari/{key}', [SectionTextController::class, 'update'])->whereIn('key', array_keys(SectionTextController::SECTIONS))->name('section-texts.update');
 
     // Anasayfadaki blog bölümü
     Route::get('/blog-bolumu', [BlogSectionController::class, 'index'])->name('blog-section.index');

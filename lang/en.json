@@ -736,5 +736,11 @@
     "Görselleri sürükleyip bırakarak sırala. En baştaki görsel kapak olur.": "Drag and drop the images to reorder them. The first image is the cover.",
     "Kapak yap": "Make cover",
     "Çıkar": "Remove",
-    "Fırsatlar (kampanyalar)": "Deals (campaigns)"
+    "Fırsatlar (kampanyalar)": "Deals (campaigns)",
+    ":name kaydedildi.": ":name saved.",
+    "Popüler aktiviteler": "Popular activities",
+    "Aktivite kartları ve en sondaki “Tüm aktiviteler” kartı. Hangi aktivitelerin görüneceğini aktivite formundaki “Popüler” anahtarıyla seçersin.": "Activity cards and the “All activities” card at the end. Choose which activities appear with the “Popular” switch in the activity form.",
+    "“Tüm aktiviteler” kartının resmi": "Image of the “All activities” card",
+    "Aktivite kartlarının en sonundaki koyu kartın arka planı. Dikey ya da kare olsun (en iyisi 1200 × 1500); büyükse otomatik küçültülür.": "Background of the dark card at the end of the activity cards. Portrait or square works best (ideally 1200 × 1500); large images are resized automatically.",
+    "Kartlarda hangi aktivitelerin görüneceğini aktivite formundaki “Popüler” anahtarıyla seçersin.": "Choose which activities appear on the cards with the “Popular” switch in the activity form."
 }

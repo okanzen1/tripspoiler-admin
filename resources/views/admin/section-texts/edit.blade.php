@@ -10,7 +10,7 @@
 @section('header')
     <x-admin.page-header :title="$name" :breadcrumb="['Yönetim' => route('management.index'), 'Bölümler' => route('site-settings.index')]" :description="$hint">
         <x-slot:icon><path d="M4 6h16M4 12h10M4 18h7" /></x-slot:icon>
-        <x-admin.section-toggle :section="$key" />
+        <x-admin.section-toggle :section="$key === 'popular' ? 'home_popular' : $key" />
     </x-admin.page-header>
 @endsection
 
@@ -22,7 +22,9 @@
 @endsection
 
 @section('content')
-    <x-admin.translation-bar type="section" :model="$model" />
+    @if ($fields)
+        <x-admin.translation-bar type="section" :model="$model" />
+    @endif
 
     <form id="section-text-form" action="{{ route('section-texts.update', $key) }}" method="POST" enctype="multipart/form-data" class="grid gap-6 xl:grid-cols-5">
         @csrf
@@ -64,6 +66,13 @@
                 </div>
             </x-admin.card>
         @endif
+        @if ($key === 'popular')
+            <a href="{{ route('activities.index') }}" class="flex items-center justify-between gap-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200 transition hover:bg-amber-100">
+                <span>{{ __('Kartlarda hangi aktivitelerin görüneceğini aktivite formundaki “Popüler” anahtarıyla seçersin.') }}</span>
+                <span class="shrink-0 font-semibold">{{ __('Aktiviteler') }} →</span>
+            </a>
+        @endif
+        @if ($fields)
         <x-admin.card class="space-y-5 p-6 sm:p-8">
  @if ($key === 'partners')
                 <a href="{{ route('partners.index') }}" class="flex items-center justify-between gap-3 rounded-2xl bg-lime-50 px-4 py-3 text-sm text-lime-900 ring-1 ring-lime-200 transition hover:bg-lime-100">
@@ -91,8 +100,10 @@
                 </label>
             @endforeach
         </x-admin.card>
+        @endif
         </div>
 
+        @if ($fields)
         <div class="xl:col-span-2">
             <x-admin.card class="p-6 xl:sticky xl:top-20">
                 <p class="text-sm font-semibold text-slate-900">{{ __('Anasayfadaki hali') }}</p>
@@ -103,6 +114,7 @@
                 </div>
             </x-admin.card>
         </div>
+        @endif
     </form>
 @endsection
 
