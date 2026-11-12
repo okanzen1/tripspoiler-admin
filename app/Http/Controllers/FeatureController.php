@@ -33,7 +33,8 @@ class FeatureController extends Controller
         $feature->sort_order = (int) Feature::max('sort_order') + 1;
         $feature->save();
 
-        return redirect()->route('features.index')->with('success', __('Kart eklendi.'));
+        // Eklenen kaydın sayfasında kal: hemen diğer dillere çevrilebilsin
+        return redirect()->route('features.edit', $feature)->with('success', __('Kart eklendi.') . ' ' . __('Şimdi yukarıdaki Çeviriler kutusundan diğer dillere çevirebilirsin.'));
     }
 
     public function edit(Feature $feature)

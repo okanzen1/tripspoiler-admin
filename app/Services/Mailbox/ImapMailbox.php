@@ -139,14 +139,30 @@ class ImapMailbox implements Mailbox
         ];
     }
 
+    /**
+     * Seçili e-postaları tek komutla okundu/okunmadı yapar (eskiden her e-posta tek tek indirilip işaretleniyordu: yavaştı).
+     */
     public function setSeen(string $folder, array $uids, bool $seen): void
     {
-        foreach ($uids as $uid) {
-            $message = $this->find($folder, $uid, leaveUnread: true);
-            $seen ? $message?->setFlag('Seen') : $message?->unsetFlag('Seen');
+        $uids = array_values(array_filter(array_map('intval', $uids)));
+        if ($uids) {
+            $this->storeSeen($folder, implode(',', $uids), $seen);
         }
-
         self::forgetFolders();
+    }
+
+    public function markAllSeen(string $folder): void
+    {
+        $this->storeSeen($folder, '1:*', true);
+        self::forgetFolders();
+    }
+
+    private function storeSeen(string $folder, string $set, bool $seen): void
+    {
+        $this->folder($folder); // klasör var mı
+        $client = $this->client();
+        $client->openFolder($folder);
+        $client->getConnection()->requestAndResponse('UID STORE', [$set, ($seen ? '+' : '-') . 'FLAGS.SILENT', '(\\Seen)']);
     }
 
     public function setFlagged(string $folder, int $uid, bool $flagged): void

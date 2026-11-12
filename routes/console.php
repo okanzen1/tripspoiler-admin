@@ -18,3 +18,5 @@ Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')->every
 
 // Nabız: zamanlayıcı (cron) her dakika çalışıyor mu? Yönetim › Arka plan işleri bunu gösterir
 Schedule::call(fn () => \Illuminate\Support\Facades\Cache::forever('scheduler:last_run', now()->timestamp))->everyMinute()->name('scheduler-heartbeat');
+// Menüdeki E-posta rozeti: okunmamış sayısı 5 dakikada bir (sayfaya girmeden de doğru görünsün)
+Schedule::command('mailbox:check')->everyFiveMinutes()->withoutOverlapping();

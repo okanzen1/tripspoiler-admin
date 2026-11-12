@@ -66,6 +66,7 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
         Route::get('/yaz', 'compose')->name('compose');
         Route::post('/gonder', 'send')->name('send');
         Route::patch('/okundu', 'seen')->name('seen');
+        Route::patch('/tumu-okundu', 'seenAll')->name('seen-all');
         Route::patch('/yildiz', 'flag')->name('flag');
         Route::post('/tasi', 'move')->name('move');
         Route::delete('/sil', 'destroy')->name('destroy');

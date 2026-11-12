@@ -30,7 +30,8 @@ class AnnouncementController extends Controller
         $announcement->sort_order = (int) Announcement::max('sort_order') + 1;
         $announcement->save();
 
-        return redirect()->route('announcements.index')->with('success', __('Duyuru eklendi.'));
+        // Eklenen kaydın sayfasında kal: hemen diğer dillere çevrilebilsin
+        return redirect()->route('announcements.edit', $announcement)->with('success', __('Duyuru eklendi.') . ' ' . __('Şimdi yukarıdaki Çeviriler kutusundan diğer dillere çevirebilirsin.'));
     }
 
     public function edit(Announcement $announcement)

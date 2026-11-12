@@ -235,6 +235,17 @@ class MailboxController extends Controller
         return $this->act(fn () => $this->mailbox->setSeen($folder, $uids, $seen), __($seen ? 'Okundu olarak işaretlendi.' : 'Okunmadı olarak işaretlendi.'));
     }
 
+    /** Klasördeki bütün e-postaları okundu yap */
+    public function seenAll(Request $request): RedirectResponse
+    {
+        $folder = (string) $request->validate(['folder' => ['required', 'string', 'max:200']])['folder'];
+
+        return $this->act(function () use ($folder) {
+            $this->mailbox->markAllSeen($folder);
+            InboxUnreadCount::remember($this->mailbox->folders());
+        }, __('Hepsi okundu olarak işaretlendi.'));
+    }
+
     public function flag(Request $request): RedirectResponse
     {
         [$folder, $uid] = $this->target($request);

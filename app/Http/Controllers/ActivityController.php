@@ -80,7 +80,8 @@ class ActivityController extends Controller
             return $activity;
         });
 
-        return redirect()->route('activities.index')->with('success', __('":name" eklendi.', ['name' => $activity->name]));
+        // Eklenen kaydın sayfasında kal: hemen diğer dillere çevrilebilsin
+        return redirect()->route('activities.edit', $activity)->with('success', __('":name" eklendi.', ['name' => $activity->name]) . ' ' . __('Şimdi yukarıdaki Çeviriler kutusundan diğer dillere çevirebilirsin.'));
     }
 
     public function edit(Activity $activity)

@@ -33,33 +33,15 @@
         <input type="hidden" name="{{ $tabs['name'] }}" value="{{ $tabValue }}" />
     @endif
 
-    <div class="flex flex-wrap items-center gap-3">
+    {{-- üst satır: arama + seçmeli filtreler + temizle --}}
+    <div class="flex flex-wrap items-center gap-2">
         @if ($searchable)
-            <div class="relative min-w-56 flex-1">
+            <div class="relative min-w-56 flex-1 basis-72">
                 <x-admin.icon name="search" class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input type="search" name="search" value="{{ $search }}" placeholder="{{ __($placeholder) }}"
                     class="block h-11 w-full rounded-xl border-0 bg-slate-100/80 pl-10 pr-3 text-sm outline-none ring-1 ring-transparent transition placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-brand-900/30" />
             </div>
         @endif
-
-        @if ($tabs)
-            <div class="flex h-11 items-center rounded-xl bg-slate-100 p-1 text-sm font-medium">
-                @foreach ($tabs['options'] as $value => [$label, $count])
-                    @php($current = $tabValue === (string) $value)
-                    <a href="{{ request()->fullUrlWithQuery([$tabs['name'] => $value === '' ? null : $value, 'page' => null]) }}"
-                        @class(['flex h-full items-center gap-1.5 rounded-lg px-3.5 transition', 'bg-white text-brand-900 shadow-sm' => $current, 'text-slate-500 hover:text-slate-800' => !$current])>
-                        {{ __($label) }}
-                        @if ($count !== null)
-                            <span @class(['rounded-full px-1.5 text-xs tabular-nums', 'bg-brand-50 text-brand-900' => $current, 'text-slate-400' => !$current])>{{ $count }}</span>
-                        @endif
-                    </a>
-                @endforeach
-            </div>
-        @endif
-    </div>
-
-    @if ($filters || $dirty)
-        <div class="flex flex-wrap items-center gap-2">
             @foreach ($filters as $filter)
                 @php($on = filled($filter['value'] ?? null))
                 <label @class([
@@ -87,14 +69,30 @@
                     </a>
                 @endif
             @endforeach
-
             @if ($dirty)
                 <a href="{{ request()->fullUrlWithQuery(array_fill_keys($resetKeys, null)) }}"
-                    class="ml-auto inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-800">
+                    class="inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-800">
                     <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5" /></svg>
                     {{ __('Filtreleri temizle') }}
                 </a>
             @endif
-        </div>
-    @endif
+    </div>
+
+    {{-- alt satır: sekmeler (tam genişlik, sığmazsa yana kayar) --}}
+        @if ($tabs)
+            <div class="-mx-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div class="inline-flex h-11 min-w-full items-center gap-0.5 rounded-xl bg-slate-100 p-1 text-sm font-medium sm:min-w-0">
+                @foreach ($tabs['options'] as $value => [$label, $count])
+                    @php($current = $tabValue === (string) $value)
+                    <a href="{{ request()->fullUrlWithQuery([$tabs['name'] => $value === '' ? null : $value, 'page' => null]) }}"
+                        @class(['flex h-full shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 transition', 'bg-white text-brand-900 shadow-sm' => $current, 'text-slate-500 hover:text-slate-800' => !$current])>
+                        {{ __($label) }}
+                        @if ($count !== null)
+                            <span @class(['rounded-full px-1.5 text-xs tabular-nums', 'bg-brand-50 text-brand-900' => $current, 'text-slate-400' => !$current])>{{ $count }}</span>
+                        @endif
+                    </a>
+                @endforeach
+            </div>
+            </div>
+        @endif
 </form>

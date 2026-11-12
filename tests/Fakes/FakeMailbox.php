@@ -91,6 +91,13 @@ class FakeMailbox implements Mailbox
         }
     }
 
+    public function markAllSeen(string $folder): void
+    {
+        foreach (array_keys($this->messages[$folder] ?? []) as $uid) {
+            $this->messages[$folder][$uid]['seen'] = true;
+        }
+    }
+
     public function setFlagged(string $folder, int $uid, bool $flagged): void
     {
         $this->messages[$folder][$uid]['flagged'] = $flagged;

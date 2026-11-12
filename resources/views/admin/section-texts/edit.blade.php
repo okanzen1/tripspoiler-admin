@@ -49,6 +49,21 @@
                 </div>
             </x-admin.card>
         @endforeach
+        @if ($overlayKey)
+            {{-- resimlerin karartması (sayfa banner'larındaki gibi): yazılar okunsun diye fotoğraf ne kadar koyulaşsın --}}
+            <x-admin.card class="p-6 sm:p-8">
+                <x-admin.step-heading :title="__('Resimlerin karartması')" :description="__('Kartlardaki yazılar okunabilsin diye fotoğraflar ne kadar koyulaşsın? İki karta da uygulanır.')" />
+                <div class="mt-5 grid gap-2 sm:grid-cols-3">
+                    @foreach (['soft' => ['Az', 'Fotoğraf daha canlı.'], 'medium' => ['Orta (önerilen)', 'Hem fotoğraf hem yazı net.'], 'strong' => ['Çok', 'Parlak fotoğrafta yazıyı öne çıkarır.']] as $value => [$label, $hint])
+                        <label class="flex cursor-pointer flex-col rounded-2xl bg-white p-3 ring-1 ring-slate-200 transition hover:bg-slate-50 has-[:checked]:bg-brand-50 has-[:checked]:ring-2 has-[:checked]:ring-brand-900">
+                            <input type="radio" name="overlay" value="{{ $value }}" class="sr-only" @checked(old('overlay', $overlay) === $value)>
+                            <span class="text-sm font-semibold text-slate-900">{{ __($label) }}</span>
+                            <span class="mt-0.5 text-xs text-slate-500">{{ __($hint) }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </x-admin.card>
+        @endif
         <x-admin.card class="space-y-5 p-6 sm:p-8">
  @if ($key === 'partners')
                 <a href="{{ route('partners.index') }}" class="flex items-center justify-between gap-3 rounded-2xl bg-lime-50 px-4 py-3 text-sm text-lime-900 ring-1 ring-lime-200 transition hover:bg-lime-100">

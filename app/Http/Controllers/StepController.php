@@ -61,7 +61,8 @@ class StepController extends Controller
         $step->sort_order = (int) Step::max('sort_order') + 1;
         $step->save();
 
-        return redirect()->route('steps.index')->with('success', __('Adım eklendi.'));
+        // Eklenen kaydın sayfasında kal: hemen diğer dillere çevrilebilsin
+        return redirect()->route('steps.edit', $step)->with('success', __('Adım eklendi.') . ' ' . __('Şimdi yukarıdaki Çeviriler kutusundan diğer dillere çevirebilirsin.'));
     }
 
     public function edit(Step $step)

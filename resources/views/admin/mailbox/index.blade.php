@@ -45,6 +45,14 @@
                             <span class="font-semibold text-slate-900">{{ $folderLabel }}</span>
                             <span class="text-sm text-slate-500">{{ number_format($messages->total(), 0, ',', '.') }} e-posta</span>
                         </label>
+                        @php $folderUnseen = (int) (collect($folders)->firstWhere('path', $folder)['unseen'] ?? 0); @endphp
+                        @if ($folderUnseen > 0)
+                            {{-- seçim yapmadan klasördeki hepsini okundu yap --}}
+                            <button class="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-brand-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-800 sm:order-last" formaction="{{ route('mailbox.seen-all') }}" data-method-value="PATCH">
+                                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12.5 6.5 17 15 8M9 15l2 2 9-9" /></svg>
+                                {{ __('Tümünü okundu yap (:count)', ['count' => number_format($folderUnseen, 0, ',', '.')]) }}
+                            </button>
+                        @endif
                         <div class="hidden flex-wrap gap-1.5" data-selection-bar>
                             <button class="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50" name="seen" value="1" formaction="{{ route('mailbox.seen') }}" data-method-value="PATCH">{{ __('Okundu') }}</button>
                             <button class="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50" name="seen" value="0" formaction="{{ route('mailbox.seen') }}" data-method-value="PATCH">{{ __('Okunmadı') }}</button>

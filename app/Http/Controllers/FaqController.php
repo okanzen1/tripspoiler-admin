@@ -16,7 +16,12 @@ class FaqController extends Controller
     public function index(Request $request)
     {
         $search = trim((string) $request->get('search'));
-        $scope = in_array($request->get('scope'), ['general', 'page', 'city', 'activity', 'blog'], true) ? $request->get('scope') : null;
+        // Sekmeler: Anasayfa · Şehir sayfaları (Aktiviteler/Şehirler/Blog) · Aktivite detayı · Blog yazısı · Diğer sayfalar
+        $scope = in_array($request->get('scope'), ['general', 'city', 'activity', 'blog', 'other'], true) ? $request->get('scope') : null;
+        $cityPages = ['activities', 'cities', 'blog'];
+        $cityId = $request->integer('city') ?: null;
+        $cityScope = fn ($q) => $q->whereNull('activity_id')->whereNull('blog_id')->where(fn ($w) => $w->whereIn('page_key', $cityPages)->orWhere(fn ($c) => $c->whereNull('page_key')->whereNotNull('city_id')));
+        $otherScope = fn ($q) => $q->whereNotNull('page_key')->whereNotIn('page_key', $cityPages);
         $activityId = $request->integer('activity') ?: null;
         $blogId = $request->integer('blog') ?: null;
         $status = in_array($request->get('status'), ['active', 'passive'], true) ? $request->get('status') : null;
@@ -26,8 +31,9 @@ class FaqController extends Controller
             ->when($scope === 'general', fn ($q) => $q->general())
             ->when($scope === 'activity', fn ($q) => $q->whereNotNull('activity_id'))
             ->when($scope === 'blog', fn ($q) => $q->whereNotNull('blog_id'))
-            ->when($scope === 'city', fn ($q) => $q->whereNotNull('city_id'))
-            ->when($scope === 'page', fn ($q) => $q->whereNotNull('page_key'))
+            ->when($scope === 'city', $cityScope)
+            ->when($scope === 'other', $otherScope)
+            ->when($cityId, fn ($q) => $q->where('city_id', $cityId))
             ->when($activityId, fn ($q) => $q->where('activity_id', $activityId))
             ->when($blogId, fn ($q) => $q->where('blog_id', $blogId))
             ->when($status, fn ($q) => $q->where('active', $status === 'active'))
@@ -50,12 +56,14 @@ class FaqController extends Controller
             'status' => $status,
             'activities' => Activity::whereHas('faqs')->orderBy('sort_order')->get(),
             'blogs' => \App\Models\Blog::whereHas('faqs')->orderByDesc('published_at')->get(),
+            'cityId' => $cityId,
+            'cities' => \App\Models\City::whereIn('id', Faq::whereNotNull('city_id')->select('city_id'))->orderBy('name')->get(),
             'counts' => [
                 'general' => Faq::general()->count(),
-                'page' => Faq::whereNotNull('page_key')->count(),
-                'city' => Faq::whereNotNull('city_id')->count(),
+                'city' => $cityScope(Faq::query())->count(),
                 'activity' => Faq::whereNotNull('activity_id')->count(),
                 'blog' => Faq::whereNotNull('blog_id')->count(),
+                'other' => $otherScope(Faq::query())->count(),
             ],
         ]);
     }
@@ -76,7 +84,8 @@ class FaqController extends Controller
         $faq->sort_order = (int) $this->siblings($faq)->max('sort_order') + 1;
         $faq->save();
 
-        return redirect()->route('faqs.index')->with('success', __('Soru eklendi.'));
+        // Eklenen sorunun sayfasında kal: hemen diğer dillere çevrilebilsin
+        return redirect()->route('faqs.edit', $faq)->with('success', __('Soru eklendi. Şimdi yukarıdaki Çeviriler kutusundan diğer dillere çevirebilirsin.'));
     }
 
     public function edit(Faq $faq)
@@ -187,6 +196,7 @@ class FaqController extends Controller
             'target' => match (true) {
                 $faq->activity_id !== null => "activity:{$faq->activity_id}",
                 $faq->blog_id !== null => "blog:{$faq->blog_id}",
+                $faq->page_key !== null && $faq->city_id !== null => "page:{$faq->page_key}@{$faq->city_id}",
                 $faq->city_id !== null => "city:{$faq->city_id}",
                 $faq->page_key !== null => "page:{$faq->page_key}",
                 default => 'general',

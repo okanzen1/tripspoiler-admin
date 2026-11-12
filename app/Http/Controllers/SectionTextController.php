@@ -27,6 +27,9 @@ class SectionTextController extends Controller
         ],
     ];
 
+    /** Resimlerinde karartma ayarı olan bölümler: bölüm => Setting anahtarı (soft | medium | strong) */
+    public const OVERLAYS = ['intro' => 'intro_overlay'];
+
     /** Bölümde kullanılan alanlar (verilmeyenlerde dördü de) */
     public const FIELDS = ['partners' => ['eyebrow', 'title', 'title_highlight']];
 
@@ -58,6 +61,8 @@ class SectionTextController extends Controller
         return view('admin.section-texts.edit', [
             'key' => $key, 'meta' => self::SECTIONS[$key], 'model' => SectionText::for($key),
             'images' => $images,
+            'overlayKey' => self::OVERLAYS[$key] ?? null,
+            'overlay' => in_array(\App\Models\Setting::get(self::OVERLAYS[$key] ?? ''), ['soft', 'medium', 'strong'], true) ? \App\Models\Setting::get(self::OVERLAYS[$key]) : 'medium',
             'fields' => self::FIELDS[$key] ?? ['eyebrow', 'title', 'title_highlight', 'description'],
         ]);
     }
@@ -71,6 +76,7 @@ class SectionTextController extends Controller
             'title' => ['required', 'string', 'max:60'],
             'title_highlight' => ['nullable', 'string', 'max:60'],
             'description' => ['nullable', 'string', 'max:260'],
+            'overlay' => ['nullable', \Illuminate\Validation\Rule::in(['soft', 'medium', 'strong'])],
             ...collect(self::IMAGES[$key] ?? [])->mapWithKeys(fn ($image, $field) => [$field => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:15360']])->all(),
         ], [], ['title' => __('başlık'), ...collect(self::IMAGES[$key] ?? [])->map(fn ($image) => mb_strtolower(__($image[1])))->all()]);
 
@@ -82,6 +88,11 @@ class SectionTextController extends Controller
             }
             unset($data[$field]);
         }
+
+        if ($overlayKey = self::OVERLAYS[$key] ?? null) {
+            \App\Models\Setting::put($overlayKey, $data['overlay'] ?? 'medium');
+        }
+        unset($data['overlay']);
 
         $record = SectionText::for($key);
         foreach ($data as $field => $value) {

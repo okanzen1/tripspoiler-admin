@@ -45,6 +45,9 @@ interface Mailbox
      */
     public function setSeen(string $folder, array $uids, bool $seen): void;
 
+    /** Klasördeki bütün e-postaları okundu yapar */
+    public function markAllSeen(string $folder): void;
+
     public function setFlagged(string $folder, int $uid, bool $flagged): void;
 
     public function setAnswered(string $folder, int $uid): void;

@@ -3,7 +3,7 @@
 @section('title', 'Sıkça sorulan sorular')
 
 @section('header')
-    <x-admin.page-header :title="__('Sıkça sorulan sorular')" :description="__('Her sorunun sitede nerede çıktığı yanındaki etikette yazar: anasayfa, bir sayfa, bir şehir, bir aktivite ya da blog yazısı.')">
+    <x-admin.page-header :title="__('Sıkça sorulan sorular')" :description="__('Her sorunun sitede nerede çıktığı yanındaki etikette yazar: anasayfa, şehre göre değişen sayfalar (Aktiviteler, Şehirler, Blog), bir aktivite, bir blog yazısı ya da diğer sayfalar.')">
         <x-slot:icon><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01" /></x-slot:icon>
         <a href="{{ route('faqs.texts') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-white">
             {{ __('Bölüm yazıları') }}
@@ -18,10 +18,11 @@
 @section('content')
     <x-admin.card class="overflow-hidden">
         <x-admin.filter-bar :search="$search" placeholder="Soru ya da cevapta ara…"
-            :tabs="['name' => 'scope', 'value' => $scope, 'options' => ['' => ['Tümü', array_sum($counts)], 'general' => ['Anasayfa', $counts['general']], 'page' => ['Sayfa', $counts['page']], 'city' => ['Şehir', $counts['city']], 'activity' => ['Aktivite', $counts['activity']], 'blog' => ['Blog', $counts['blog']]]]"
+            :tabs="['name' => 'scope', 'value' => $scope, 'options' => ['' => ['Tümü', array_sum($counts)], 'general' => ['Anasayfa', $counts['general']], 'city' => ['Aktiviteler · Şehirler · Blog', $counts['city']], 'activity' => ['Aktivite sayfası', $counts['activity']], 'blog' => ['Blog yazısı', $counts['blog']], 'other' => ['Diğer sayfalar', $counts['other']]]]"
             :filters="array_values(array_filter([
-                $activities->isNotEmpty() ? ['name' => 'activity', 'label' => 'Aktivite', 'value' => $activityId, 'options' => $activities->mapWithKeys(fn ($a) => [$a->id => \Illuminate\Support\Str::limit($a->name, 45)])->all(), 'icon' => 'ticket'] : null,
-                $blogs->isNotEmpty() ? ['name' => 'blog', 'label' => 'Blog', 'value' => $blogId, 'options' => $blogs->mapWithKeys(fn ($b) => [$b->id => \Illuminate\Support\Str::limit($b->title, 45)])->all(), 'icon' => 'pen'] : null,
+                $cities->isNotEmpty() && in_array($scope, [null, 'city'], true) ? ['name' => 'city', 'label' => 'Şehir', 'value' => $cityId, 'options' => $cities->pluck('name', 'id')->all(), 'icon' => 'pin'] : null,
+                $activities->isNotEmpty() && in_array($scope, [null, 'activity'], true) ? ['name' => 'activity', 'label' => 'Aktivite', 'value' => $activityId, 'options' => $activities->mapWithKeys(fn ($a) => [$a->id => \Illuminate\Support\Str::limit($a->name, 45)])->all(), 'icon' => 'ticket'] : null,
+                $blogs->isNotEmpty() && in_array($scope, [null, 'blog'], true) ? ['name' => 'blog', 'label' => 'Blog', 'value' => $blogId, 'options' => $blogs->mapWithKeys(fn ($b) => [$b->id => \Illuminate\Support\Str::limit($b->title, 45)])->all(), 'icon' => 'pen'] : null,
                 ['name' => 'status', 'label' => 'Durum', 'value' => $status, 'options' => ['active' => __('Yayında'), 'passive' => __('Pasif')], 'icon' => 'eye'],
             ]))" />
 
@@ -47,10 +48,12 @@
                             <div class="flex flex-wrap items-center gap-2">
                                 @if ($faq->activity)
                                     <a href="{{ route('activities.edit', $faq->activity) }}" class="max-w-80 truncate rounded-md bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-900 hover:underline" title="{{ $faq->activity->name }}">{{ $faq->activity->name }}</a>
+                                @elseif ($faq->page_key && $faq->city)
+                                    <span class="rounded-md bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700">{{ $faq->page?->name ?? $faq->page_key }} · {{ $faq->city->name }}</span>
                                 @elseif ($faq->city)
-                                    <span class="rounded-md bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700">{{ __('Şehir') }} · {{ $faq->city->name }}</span>
+                                    <span class="rounded-md bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700">{{ __('Aktiviteler · Şehirler · Blog') }} · {{ $faq->city->name }}</span>
                                 @elseif ($faq->page_key)
-                                    <span class="rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">{{ __('Sayfa') }} · {{ $faq->page?->name ?? $faq->page_key }}</span>
+                                    <span @class(['rounded-md px-2 py-0.5 text-xs font-medium', 'bg-sky-50 text-sky-700' => in_array($faq->page_key, ['activities', 'cities', 'blog'], true), 'bg-amber-50 text-amber-800' => !in_array($faq->page_key, ['activities', 'cities', 'blog'], true)])>{{ $faq->page?->name ?? $faq->page_key }}{{ in_array($faq->page_key, ['activities', 'cities', 'blog'], true) ? ' · ' . __('bütün şehirler') : '' }}</span>
                                 @elseif ($faq->blog)
                                     <a href="{{ route('blogs.edit', $faq->blog) }}" class="max-w-80 truncate rounded-md bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-700 hover:underline" title="{{ $faq->blog->title }}">Blog · {{ $faq->blog->title }}</a>
                                 @else

@@ -70,7 +70,8 @@ class BlogController extends Controller
             return $blog;
         });
 
-        return redirect()->route('blogs.index')->with('success', __('":name" eklendi.', ['name' => $blog->title]));
+        // Eklenen kaydın sayfasında kal: hemen diğer dillere çevrilebilsin
+        return redirect()->route('blogs.edit', $blog)->with('success', __('":name" eklendi.', ['name' => $blog->title]) . ' ' . __('Şimdi yukarıdaki Çeviriler kutusundan diğer dillere çevirebilirsin.'));
     }
 
     public function edit(Blog $blog)
