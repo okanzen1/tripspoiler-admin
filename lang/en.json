@@ -763,5 +763,13 @@
     "Rehber yazısı": "Guide article",
     "Rehber alanının adı": "Guide section name",
     "Aynı yere yeni soru ekle": "Add another question here",
-    "Henüz blog yazısı yok. Önce bir yazı ekle; sonra burada seçebilirsin. Yazının kendi formunda da SSS ekleyebilirsin.": "There are no blog posts yet. Add a post first, then you can choose it here. You can also add FAQs in the post's own form."
+    "Henüz blog yazısı yok. Önce bir yazı ekle; sonra burada seçebilirsin. Yazının kendi formunda da SSS ekleyebilirsin.": "There are no blog posts yet. Add a post first, then you can choose it here. You can also add FAQs in the post's own form.",
+    "Toplu yapıştır: birçok soruyu tek seferde ekle": "Bulk paste: add many questions at once",
+    "Soruları ve cevapları buraya yapıştır, \"Soruları ekle\"ye bas; her biri ayrı satıra yerleşir. Şu biçimlerin hepsi olur:": "Paste the questions and answers here and press \"Add questions\"; each one goes into its own row. All of these formats work:",
+    "Soruları buraya yapıştır…": "Paste the questions here…",
+    "Toplu yapıştır": "Bulk paste",
+    "Soruları ekle": "Add questions",
+    "Soru bulunamadı. Her soru kendi satırında, cevabı altında olmalı.": "No questions found. Put each question on its own line with the answer below it.",
+    ":added soru eklendi; en fazla :max soru olabildiği için :skipped tanesi eklenemedi.": ":added questions added; :skipped could not be added because the limit is :max.",
+    ":added soru eklendi. Kontrol edip kaydet.": ":added questions added. Check them and save."
 }

@@ -8,6 +8,7 @@ import './image-upload';
 import './mailbox';
 import './activity-form';
 import './repeater';
+import './faq-bulk';
 import './dropdown';
 import './sortable-cards';
 import './page-sections';
