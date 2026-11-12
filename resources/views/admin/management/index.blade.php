@@ -96,6 +96,15 @@
                 'icon' => '<path d="M12 8v4l3 2" /><circle cx="12" cy="12" r="9" />',
             ],
             [
+                'key' => 'media-trash',
+                'title' => 'Silinen resimler',
+                'description' => 'Değiştirilen ve silinen resimler 30 gün burada bekler; tek tıkla geri alınır.',
+                'url' => route('media-trash.index'),
+                'stat' => __(':count resim', ['count' => count(\App\Support\MediaTrash::items())]),
+                'color' => \App\Support\SectionColor::forRoute('media-trash'),
+                'icon' => '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" /><path d="M10 11v6M14 11v6" />',
+            ],
+            [
                 'key' => 'queue',
                 'title' => 'Arka plan işleri',
                 'description' => 'Çeviriler ve sıradaki işler: ne sürüyor, ne bekliyor, ne başarısız oldu.',

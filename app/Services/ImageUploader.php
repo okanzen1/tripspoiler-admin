@@ -140,12 +140,13 @@ class ImageUploader
     }
 
     /**
-     * Dosyayı (ve varsa küçük kopyasını) siler. Veritabanı işlemi içindeyse işlem başarıyla bitince siler.
+     * Dosyayı (ve küçük/orta kopyalarını) çöp kutusuna taşır: 30 gün geri alınabilir (App\Support\MediaTrash).
+     * Veritabanı işlemi içindeyse işlem başarıyla bitince taşır.
      */
     public function delete(?string $path): void
     {
         if ($path) {
-            DB::afterCommit(fn () => Storage::disk('media')->delete(self::files($path)));
+            DB::afterCommit(fn () => \App\Support\MediaTrash::trash(self::files($path)));
         }
     }
 

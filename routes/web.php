@@ -189,6 +189,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('yonetim')->group(function () 
     Route::get('/', [ManagementController::class, 'index'])->name('management.index');
     Route::get('/roller', [ManagementController::class, 'roles'])->name('roles.index');
     Route::get('/islem-kaydi', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index');
+    // Silinen resimler (çöp kutusu, 30 gün)
+    Route::get('/silinen-resimler', [\App\Http\Controllers\MediaTrashController::class, 'index'])->name('media-trash.index');
+    Route::post('/silinen-resimler/geri-al', [\App\Http\Controllers\MediaTrashController::class, 'restore'])->name('media-trash.restore');
     // Arka plan işleri: cron durumu, süren çeviriler, sıradaki ve başarısız işler
     Route::get('/arka-plan-isleri', [\App\Http\Controllers\QueueController::class, 'index'])->name('queue.index');
     Route::post('/arka-plan-isleri/calistir', [\App\Http\Controllers\QueueController::class, 'run'])->middleware('throttle:10,1')->name('queue.run');

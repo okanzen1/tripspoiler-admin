@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Media diskinde hiçbir kayda bağlı olmayan dosyaları siler: kaydedilmeden bırakılan yüklemeler,
+ * Media diskinde hiçbir kayda bağlı olmayan dosyaları çöp kutusuna taşır (30 gün geri alınabilir, App\Support\MediaTrash): kaydedilmeden bırakılan yüklemeler,
  * yazıdan çıkarılan görseller vb. Son 24 saatte yüklenenlere dokunmaz (form hâlâ açık olabilir).
  *
  * "Kullanılıyor mu" sorusu tek tek tablo listesiyle değil, veritabanındaki TÜM metin sütunları
@@ -81,7 +81,8 @@ class PruneMedia extends Command
 
         $used = $used->flip();
         $disk = Storage::disk('media');
-        $files = collect($disk->allFiles());
+        // Çöp kutusundakiler taranmaz (onları aşağıda MediaTrash::purge 30 gün sonra siler)
+        $files = collect($disk->allFiles())->reject(fn (string $file) => str_starts_with($file, \App\Support\MediaTrash::DIR . '/'));
 
         // Güvenlik: diskte dosya varken veritabanında hiç referans bulunamadıysa bir terslik vardır; silme.
         if ($used->isEmpty() && $files->isNotEmpty()) {
@@ -96,13 +97,16 @@ class PruneMedia extends Command
             ->values();
 
         foreach ($orphans as $file) {
-            $this->line(($this->option('dry-run') ? 'Silinecek: ' : 'Silindi: ') . $file);
+            $this->line(($this->option('dry-run') ? 'Çöp kutusuna gidecek: ' : 'Çöp kutusuna taşındı: ') . $file);
         }
         if (!$this->option('dry-run')) {
-            $disk->delete($orphans->all());
+            // Hemen silinmez: 30 gün çöp kutusunda durur, panelden geri alınabilir
+            \App\Support\MediaTrash::trash($orphans->all());
+            $purged = \App\Support\MediaTrash::purge();
+            $purged && $this->info($purged . ' dosya 30 günü doldurduğu için çöp kutusundan kalıcı silindi.');
         }
 
-        $this->info($orphans->count() . ' sahipsiz dosya' . ($this->option('dry-run') ? ' bulundu.' : ' silindi.'));
+        $this->info($orphans->count() . ' sahipsiz dosya' . ($this->option('dry-run') ? ' bulundu.' : ' çöp kutusuna taşındı.'));
 
         return self::SUCCESS;
     }

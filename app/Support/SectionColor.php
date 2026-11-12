@@ -33,6 +33,7 @@ class SectionColor
         'redirects' => 'yellow',
         'site-settings' => 'rose',
         'activity-logs' => 'teal',
+        'media-trash' => 'rose',
         'queue' => 'blue',
     ];
 

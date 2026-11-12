@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Schedule;
 
 // Hiçbir kayda bağlı olmayan resim dosyalarını her gece temizle (canlıda cron: * * * * * php artisan schedule:run)
 Schedule::command('media:prune')->dailyAt('04:00')->withoutOverlapping();
+// Dosyası olmayan resim kayıtlarını boşalt (site boş kutu yerine varsayılan resmi gösterir)
+Schedule::command('media:clear-missing')->dailyAt('04:15')->withoutOverlapping();
 
 // Eski kayıtları sil: işlem kayıtları 1 yıl, ziyaret ve partner tıklamaları 6 ay (modellerin prunable())
 Schedule::command('model:prune', ['--model' => [\App\Models\ActivityLog::class, \App\Models\Visit::class, \App\Models\AffiliateClick::class]])->dailyAt('04:30');
