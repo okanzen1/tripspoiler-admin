@@ -41,6 +41,20 @@ class FaqTest extends TestCase
         $this->assertSame('How long is the cruise?', $this->activity->faqs()->first()->question);
     }
 
+    public function test_add_another_question_to_same_place(): void
+    {
+        $first = Faq::create(['activity_id' => $this->activity->id, 'question' => ['en' => 'First?'], 'answer' => ['en' => 'Yes.']]);
+
+        $this->actingAs($this->editor)->get(route('faqs.edit', $first))->assertSee(route('faqs.create', ['like' => $first->id]), false);
+        $this->actingAs($this->editor)->get(route('faqs.create', ['like' => $first->id]))
+            ->assertOk()->assertSee('value="activity:' . $this->activity->id . '"', false)->assertSee('data-free="1"', false);
+
+        $this->actingAs($this->editor)->post(route('faqs.store'), [
+            'question' => 'Second?', 'answer' => 'Sure.', 'target' => 'activity:' . $this->activity->id, 'active' => '1',
+        ]);
+        $this->assertSame(['First?', 'Second?'], $this->activity->faqs()->orderBy('sort_order')->get()->pluck('question')->all());
+    }
+
     public function test_list_filters_by_scope_and_search(): void
     {
         Faq::create(['question' => ['en' => 'General question'], 'answer' => ['en' => 'x']]);

@@ -761,5 +761,7 @@
     "Adım": "Step",
     "Şehir rehberi girişi": "City guide intro",
     "Rehber yazısı": "Guide article",
-    "Rehber alanının adı": "Guide section name"
+    "Rehber alanının adı": "Guide section name",
+    "Aynı yere yeni soru ekle": "Add another question here",
+    "Henüz blog yazısı yok. Önce bir yazı ekle; sonra burada seçebilirsin. Yazının kendi formunda da SSS ekleyebilirsin.": "There are no blog posts yet. Add a post first, then you can choose it here. You can also add FAQs in the post's own form."
 }

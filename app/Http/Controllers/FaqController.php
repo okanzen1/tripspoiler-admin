@@ -73,8 +73,13 @@ class FaqController extends Controller
         $faq = new Faq(['active' => true]);
         $faq->activity_id = $request->integer('activity') ?: null;
         $faq->blog_id = $request->integer('blog') ?: null;
+        // "Aynı yere yeni soru": düzenlenen sorunun görüneceği yer hazır seçili gelir, tek adımda kaydedilir
+        $like = $request->integer('like') ? Faq::find($request->integer('like')) : null;
+        if ($like) {
+            $faq->fill($like->only(['activity_id', 'blog_id', 'city_id', 'page_key']));
+        }
 
-        return view('admin.faqs.form', $this->formData($faq));
+        return view('admin.faqs.form', [...$this->formData($faq), 'copied' => (bool) $like]);
     }
 
     public function store(FaqRequest $request)

@@ -18,6 +18,13 @@
     <x-admin.page-header :title="$editing ? 'Soruyu düzenle' : 'Yeni soru'" :breadcrumb="['Sıkça sorulan sorular' => route('faqs.index')]"
         :description="$editing ? \Illuminate\Support\Str::limit($faq->question, 90) : 'Ziyaretçilerin sık sorduğu bir soruyu cevabıyla ekle.'">
         <x-slot:icon><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01" /></x-slot:icon>
+        @if ($editing)
+            {{-- arka arkaya soru eklerken listeye dönmeden: aynı yer seçili yeni soru --}}
+            <a href="{{ route('faqs.create', ['like' => $faq->id]) }}"
+                class="inline-flex items-center gap-2 rounded-xl bg-brand-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800">
+                <x-admin.icon name="plus" /> {{ __('Aynı yere yeni soru ekle') }}
+            </a>
+        @endif
     </x-admin.page-header>
 @endsection
 
@@ -27,7 +34,7 @@
     @endif
 
     <x-admin.wizard :action="$editing ? route('faqs.update', $faq) : route('faqs.store')" :method="$editing ? 'PUT' : null"
-        :steps="$steps" :start="$start === false ? 0 : $start" :free="$editing"
+        :steps="$steps" :start="$start === false ? 0 : $start" :free="$editing || ($copied ?? false)"
         :submit-label="$editing ? 'Kaydet' : 'Soruyu ekle'" :cancel-url="route('faqs.index')">
 
         <section data-step class="space-y-5">
@@ -66,7 +73,6 @@
                     'blog' => ['Bir blog yazısının sayfası', 'Sadece seçtiğin yazının en altında.', '<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>'],
                     'other' => ['Diğer sayfalar', 'Fırsatlar, Hava durumu, Yerel saat, Hakkımızda…', '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>'],
                 ];
-                if ($blogs->isEmpty()) { unset($kinds['blog']); }
                 $chip = 'cursor-pointer rounded-xl bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50 has-[:checked]:bg-brand-900 has-[:checked]:text-white has-[:checked]:ring-brand-900';
             @endphp
 
@@ -127,8 +133,13 @@
                 </select>
             </div>
 
-            {{-- 2c. blog yazısı --}}
-            @if ($blogs->isNotEmpty())
+            {{-- 2c. blog yazısı (henüz yazı yoksa önce yazı eklemesi söylenir) --}}
+            @if ($blogs->isEmpty())
+                <div data-panel="blog" class="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200">
+                    <span>{{ __('Henüz blog yazısı yok. Önce bir yazı ekle; sonra burada seçebilirsin. Yazının kendi formunda da SSS ekleyebilirsin.') }}</span>
+                    <a href="{{ route('blogs.create') }}" class="shrink-0 font-semibold hover:underline">{{ __('Yeni yazı') }} →</a>
+                </div>
+            @else
                 <div data-panel="blog" class="space-y-1.5">
                     <label for="faq-blog" class="text-sm font-semibold text-slate-800">{{ __('Hangi yazı?') }}</label>
                     <select id="faq-blog" data-pick="blog" @class([$field, 'border-slate-200'])>
