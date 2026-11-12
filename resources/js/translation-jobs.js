@@ -100,7 +100,7 @@ function card(job) {
                             <span>${job.total ? escape(t(':done / :total dil', { done: job.done, total: job.total })) : escape(t('Başlatılıyor…'))}</span>
                             <span data-job-time>${escape(elapsed(job))}</span>
                         </p>
-                        <p class="mt-1 text-[11px] text-slate-400">${escape(t('Bu arada başka işlerine devam edebilirsin.'))}</p>`
+                        <p class="mt-1 text-[11px] ${job.message ? 'font-medium text-amber-700' : 'text-slate-400'}">${escape(job.message || t('Bu arada başka işlerine devam edebilirsin.'))}</p>`
                     : `<p class="mt-1 text-xs leading-relaxed ${failed ? 'text-red-700' : 'text-slate-600'}">${escape(job.message)}</p>
                        ${action ? `<div class="mt-2.5">${action}</div>` : ''}`}
                 </div>

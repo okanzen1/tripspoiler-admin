@@ -68,6 +68,14 @@ class ModelTranslator
 
     public function __construct(private GoogleTranslator $google) {}
 
+    /** Arka plandaki çeviri her Google isteğinde "hâlâ çalışıyorum" desin (App\Support\TranslationJobs::touch) */
+    public function heartbeat(?\Closure $beat): static
+    {
+        $this->google->heartbeat = $beat;
+
+        return $this;
+    }
+
     /**
      * Kaydın içinde düzenlenen ve onunla birlikte çevrilen alt kayıtlar (ör. aktivitenin / blog yazısının SSS'leri).
      *

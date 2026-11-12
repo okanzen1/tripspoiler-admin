@@ -68,6 +68,25 @@ class TranslationTest extends TestCase
         $this->assertSame(0, \App\Support\TranslationTodo::count("activity", "faq"));
     }
 
+    public function test_panel_translation_runs_language_by_language_in_the_queue_when_cron_is_alive(): void
+    {
+        $admin = \App\Models\User::factory()->admin()->create();
+        \App\Models\Faq::create(['activity_id' => $this->activity->id, 'question' => ['en' => 'Open?'], 'answer' => ['en' => 'Yes.']]);
+        \Illuminate\Support\Facades\Cache::forever('scheduler:last_run', time()); // zamanlayıcı çalışıyor
+
+        // sync kuyruk: zincir hemen işlenir; diller sırayla (de, sonra tr), SSS'ler de
+        $this->actingAs($admin)
+            ->postJson(route('translations.translate', ['activity', $this->activity->id]), ['all' => 1])
+            ->assertOk()->assertJsonPath('job.key', 'activity:' . $this->activity->id);
+
+        $locales = array_values(array_unique(array_column($this->google->requests, 'locale')));
+        $this->assertSame(['de', 'tr'], $locales);
+        $this->assertSame('[tr] Open?', $this->activity->faqs()->first()->getTranslation('question', 'tr'));
+        $job = \App\Support\TranslationJobs::get('activity:' . $this->activity->id);
+        $this->assertSame('done', $job['status']);
+        $this->assertSame(2, $job['done']);
+    }
+
     public function test_translates_missing_and_stale_languages_keeping_html_and_slug(): void
     {
         $translator = app(ModelTranslator::class);

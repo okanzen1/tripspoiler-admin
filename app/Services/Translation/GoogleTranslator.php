@@ -33,6 +33,9 @@ class GoogleTranslator
 
     private bool $first = true;
 
+    /** Her istekte çağrılır (arka plandaki çeviri "hâlâ çalışıyorum" desin diye) */
+    public ?\Closure $heartbeat = null;
+
     /**
      * Metinleri İngilizceden çevirir; sıra korunur, boş metin boş kalır.
      *
@@ -264,8 +267,10 @@ class GoogleTranslator
         $client = $this->client ??= (new GoogleTranslate())->setSource('en')->setOptions(['timeout' => 30]);
         $client->setTarget(self::TARGETS[$locale] ?? $locale);
 
-        foreach ([0, 2, 5] as $wait) {
+        // Google çok sık istekte kısa süre engel koyar: sabırla tekrar dene
+        foreach ([0, 3, 10, 30] as $wait) {
             sleep($wait);
+            $this->heartbeat && ($this->heartbeat)();
             try {
                 return (string) $client->translate($text);
             } catch (Throwable $e) {

@@ -771,5 +771,7 @@
     "Soruları ekle": "Add questions",
     "Soru bulunamadı. Her soru kendi satırında, cevabı altında olmalı.": "No questions found. Put each question on its own line with the answer below it.",
     ":added soru eklendi; en fazla :max soru olabildiği için :skipped tanesi eklenemedi.": ":added questions added; :skipped could not be added because the limit is :max.",
-    ":added soru eklendi. Kontrol edip kaydet.": ":added questions added. Check them and save."
+    ":added soru eklendi. Kontrol edip kaydet.": ":added questions added. Check them and save.",
+    "Sıraya alındı; birazdan başlayacak.": "Queued; it will start shortly.",
+    "Google şu an meşgul; :minutes dk sonra kaldığı yerden devam edecek.": "Google is busy right now; it will continue where it left off in :minutes min."
 }

@@ -152,12 +152,33 @@ class TranslationController extends Controller
             : $owner['title'];
         $job = TranslationJobs::start($key, (string) $title, url()->previous() ?: $owner['url'], $locales);
 
+        // Zamanlayıcı (cron) çalışıyorsa: diller sırayla, birer iş olarak (sunucunun süre sınırına takılmaz,
+        // Google engellerse bekleyip devam eder). Çalışmıyorsa eskisi gibi bu istekte, cevaptan sonra.
+        if (\Illuminate\Support\Facades\Cache::get('scheduler:last_run', 0) > time() - 180) {
+            TranslationJobs::wait($key, 900, __('Sıraya alındı; birazdan başlayacak.'));
+            \Illuminate\Support\Facades\Bus::chain([
+                ...array_map(fn ($locale) => new \App\Jobs\TranslateLocale($type, (int) $model->getKey(), $locale, $key, $force), $locales),
+                new \App\Jobs\FinishTranslation($key, $locales, \Illuminate\Support\Str::snake(class_basename($model)), (int) $model->getKey(), (string) $title),
+            ])->dispatch();
+
+            return response()->json(['job' => TranslationJobs::get($key)]);
+        }
+
         // Kullanıcı sayfadan ayrılsa da süreç devam etsin
         ignore_user_abort(true);
         defer(function () use ($key, $model, $locales, $type, $title, $force) {
             ignore_user_abort(true);
             set_time_limit(900);
+            // aynı anda tek çeviri: Google çok sık istekte engel koyar; sıradakiler bekler
+            $lock = \Illuminate\Support\Facades\Cache::lock('translation-run', 900);
+            TranslationJobs::wait($key, 900, __('Sıraya alındı; birazdan başlayacak.'));
+            if (!$lock->block(840)) {
+                TranslationJobs::fail($key, __('Çeviri yarıda kaldı, tekrar dene.'));
+
+                return;
+            }
             try {
+                $this->translator->heartbeat(fn () => TranslationJobs::touch($key));
                 $done = $this->translator->translate($model, $locales, fn (string $locale) => TranslationJobs::progress($key, $locale), $force);
                 $names = Language::whereIn('code', $done)->pluck('native_name')->implode(', ');
                 TranslationJobs::finish($key, __('Çevrildi: :languages', ['languages' => $names]));
@@ -165,6 +186,9 @@ class TranslationController extends Controller
             } catch (Throwable $e) {
                 report($e);
                 TranslationJobs::fail($key, __('Çeviri yapılamadı: :error', ['error' => $e->getMessage()]));
+            } finally {
+                $this->translator->heartbeat(null);
+                $lock->release();
             }
         });
 

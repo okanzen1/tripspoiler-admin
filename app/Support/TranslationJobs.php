@@ -5,11 +5,12 @@ namespace App\Support;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Arka planda süren tek kayıt çevirileri (Google Çeviri, cevap gönderildikten sonra çalışır).
+ * Arka planda süren tek kayıt çevirileri. Zamanlayıcı (cron) çalışıyorsa sıraya alınır ve diller tek tek işlenir
+ * (App\Jobs\TranslateLocale); çalışmıyorsa cevap gönderildikten sonra aynı istekte çevrilir.
  * Panel her sayfada sağ üstte durumunu gösterir: kaç dil bitti, bitti mi, hata mı.
  *
  * İş: key ("hero:1"), title, url, total, done, current, status (running|done|failed), message,
- *     started_at, updated_at, finished_at (unix saniye)
+ *     started_at, updated_at, finished_at (unix saniye), quiet_until (bu ana kadar ses çıkmaması normal: sırada / Google beklemesi)
  */
 class TranslationJobs
 {
@@ -17,8 +18,8 @@ class TranslationJobs
 
     private const TTL = 3600;
 
-    /** Bu kadar saniye ses çıkmazsa (sunucu süreci öldüyse) iş yarıda kalmış sayılır */
-    private const STALE = 180;
+    /** Bu kadar saniye ses çıkmazsa (sunucu süreci öldüyse) iş yarıda kalmış sayılır. Çeviri her Google isteğinde ses verir. */
+    private const STALE = 240;
 
     /** Biten iş, sayfa değişse de bu kadar saniye bildirimde görünür */
     private const RECENT = 120;
@@ -26,7 +27,7 @@ class TranslationJobs
     public static function get(string $key): ?array
     {
         $job = Cache::get(self::cacheKey($key));
-        if ($job && $job['status'] === 'running' && $job['updated_at'] < time() - self::STALE) {
+        if ($job && $job['status'] === 'running' && max($job['updated_at'], $job['quiet_until'] ?? 0) < time() - self::STALE) {
             $job = ['status' => 'failed', 'message' => __('Çeviri yarıda kaldı, tekrar dene.'), 'finished_at' => $job['updated_at']] + $job;
         }
 
@@ -61,7 +62,23 @@ class TranslationJobs
     public static function progress(string $key, string $locale): void
     {
         if ($job = Cache::get(self::cacheKey($key))) {
-            self::put(['done' => $job['done'] + 1, 'current' => $locale, 'updated_at' => time()] + $job);
+            self::put(['done' => $job['done'] + 1, 'current' => $locale, 'updated_at' => time(), 'message' => null, 'quiet_until' => null] + $job);
+        }
+    }
+
+    /** Çeviri sürüyor (her Google isteğinde): iş yarıda kalmış sanılmasın. Saniyede bir kereden sık yazmaz. */
+    public static function touch(string $key): void
+    {
+        if (($job = Cache::get(self::cacheKey($key))) && $job['status'] === 'running' && $job['updated_at'] < time()) {
+            self::put(['updated_at' => time(), 'message' => null, 'quiet_until' => null] + $job);
+        }
+    }
+
+    /** Bir süre ses çıkmayacak (sırada bekliyor / Google'ın engeli kalksın diye bekleniyor); panelde mesaj görünür */
+    public static function wait(string $key, int $seconds, string $message): void
+    {
+        if ($job = Cache::get(self::cacheKey($key))) {
+            self::put(['quiet_until' => time() + $seconds, 'message' => $message, 'updated_at' => time()] + $job);
         }
     }
 
