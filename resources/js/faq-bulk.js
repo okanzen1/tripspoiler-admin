@@ -87,3 +87,20 @@ document.querySelectorAll('[data-faq-bulk]').forEach((bulk) => {
         }
     });
 });
+
+// SSS › Toplu ekle sayfası: yapıştırılan metinde kaç soru bulunduğu (ve Onay adımındaki özet)
+document.querySelectorAll('[data-faq-bulk-source]').forEach((source) => {
+    const count = source.parentElement.querySelector('[data-faq-bulk-count]');
+    const summary = source.parentElement.querySelector('[data-faq-bulk-summary]');
+    const update = () => {
+        const n = source.value.trim() ? parseFaqs(source.value).length : 0;
+        count.textContent = source.value.trim() ? (n ? t(':count soru bulundu', { count: n }) : t('Soru bulunamadı. Her soru kendi satırında, cevabı altında olmalı.')) : '';
+        count.className = 'mt-2 text-sm font-semibold ' + (n ? 'text-emerald-700' : 'text-red-600');
+        summary.value = n || '';
+        summary.dataset.label = t(':count soru', { count: n });
+        // soru bulunamazsa ileri geçilmesin
+        source.setCustomValidity(source.value.trim() && !n ? t('Soru bulunamadı. Her soru kendi satırında, cevabı altında olmalı.') : '');
+    };
+    source.addEventListener('input', update);
+    update();
+});

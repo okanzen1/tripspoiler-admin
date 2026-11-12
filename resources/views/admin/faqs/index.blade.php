@@ -8,6 +8,9 @@
         <a href="{{ route('faqs.texts') }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-white">
             {{ __('Bölüm yazıları') }}
         </a>
+        <a href="{{ route('faqs.create', ['bulk' => 1]) }}" class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-brand-900 ring-1 ring-brand-200 transition hover:bg-brand-50">
+            <x-admin.icon name="plus" /> {{ __('Toplu ekle') }}
+        </a>
         <a href="{{ route('faqs.create') }}"
             class="inline-flex items-center gap-2 rounded-xl bg-brand-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800">
             <x-admin.icon name="plus" /> {{ __('Yeni soru') }}

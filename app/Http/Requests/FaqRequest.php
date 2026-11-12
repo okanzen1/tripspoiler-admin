@@ -31,8 +31,19 @@ class FaqRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'question' => ['required', 'string', 'max:500'],
-            'answer' => ['required', 'string', 'max:5000'],
+            // "Toplu ekle": soru/cevap yerine "bulk" (yapıştırılan metin, App\Support\FaqParser)
+            'question' => ['required_without:bulk', 'nullable', 'string', 'max:500'],
+            'answer' => ['required_without:bulk', 'nullable', 'string', 'max:5000'],
+            'bulk' => ['nullable', 'string', 'max:100000', function (string $attribute, mixed $value, Closure $fail) {
+                $pairs = \App\Support\FaqParser::parse((string) $value);
+                if (!$pairs) {
+                    $fail(__('Soru bulunamadı. Her soru kendi satırında, cevabı altında olmalı.'));
+                } elseif (count($pairs) > 100) {
+                    $fail(__('Tek seferde en fazla 100 soru eklenebilir.'));
+                } elseif (collect($pairs)->contains(fn ($p) => mb_strlen($p['question']) > 500 || mb_strlen($p['answer']) > 5000)) {
+                    $fail(__('Bir soru 500, bir cevap 5000 karakterden uzun olamaz.'));
+                }
+            }],
             'target' => ['required', 'string', function (string $attribute, mixed $value, Closure $fail) {
                 [$type, $id] = array_pad(explode(':', (string) $value, 2), 2, null);
                 $exists = match ($type) {
@@ -78,6 +89,6 @@ class FaqRequest extends FormRequest
 
     public function attributes(): array
     {
-        return ['question' => __('soru'), 'answer' => __('cevap'), 'target' => __('yer')];
+        return ['question' => __('soru'), 'answer' => __('cevap'), 'target' => __('yer'), 'bulk' => __('sorular')];
     }
 }

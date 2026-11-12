@@ -55,6 +55,25 @@ class FaqTest extends TestCase
         $this->assertSame(['First?', 'Second?'], $this->activity->faqs()->orderBy('sort_order')->get()->pluck('question')->all());
     }
 
+    public function test_bulk_add_pastes_many_questions_to_one_place(): void
+    {
+        Faq::create(['activity_id' => $this->activity->id, 'question' => ['en' => 'First?'], 'answer' => ['en' => 'Yes.']]);
+        $this->actingAs($this->editor)->get(route('faqs.create', ['bulk' => 1]))->assertOk()->assertSee('name="bulk"', false);
+
+        $this->actingAs($this->editor)->post(route('faqs.store'), [
+            'bulk' => "**1. Q: How do I use a code?**\nA: Copy it.\n\n2. Q: Is it free?\nA: Yes.\nAlways.",
+            'target' => 'activity:' . $this->activity->id, 'active' => '1',
+        ])->assertRedirect(route('faqs.index'))->assertSessionHas('success');
+
+        $faqs = $this->activity->faqs()->orderBy('sort_order')->get();
+        $this->assertSame(['First?', 'How do I use a code?', 'Is it free?'], $faqs->pluck('question')->all());
+        $this->assertSame("Yes.\nAlways.", $faqs->last()->answer);
+
+        // numaralı biçim + bulunamayan metin
+        $this->assertCount(2, \App\Support\FaqParser::parse("1. Open?\n\nYes, daily.\n\n2. Price?\nFree."));
+        $this->actingAs($this->editor)->post(route('faqs.store'), ['bulk' => 'just some text', 'target' => 'general'])->assertSessionHasErrors('bulk');
+    }
+
     public function test_list_filters_by_scope_and_search(): void
     {
         Faq::create(['question' => ['en' => 'General question'], 'answer' => ['en' => 'x']]);

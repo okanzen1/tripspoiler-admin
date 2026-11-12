@@ -79,11 +79,15 @@ class FaqController extends Controller
             $faq->fill($like->only(['activity_id', 'blog_id', 'city_id', 'page_key']));
         }
 
-        return view('admin.faqs.form', [...$this->formData($faq), 'copied' => (bool) $like]);
+        return view('admin.faqs.form', [...$this->formData($faq), 'copied' => (bool) $like, 'bulk' => $request->boolean('bulk')]);
     }
 
     public function store(FaqRequest $request)
     {
+        if (filled($request->validated('bulk'))) {
+            return $this->storeMany($request);
+        }
+
         $faq = new Faq([...$request->owner(), 'active' => $request->validated('active')]);
         $this->fillText($faq, $request);
         $faq->sort_order = (int) $this->siblings($faq)->max('sort_order') + 1;
@@ -179,6 +183,37 @@ class FaqController extends Controller
     /**
      * Soru ve cevap: sadece İngilizce yazılır, diğer diller korunur.
      */
+    /**
+     * "Toplu ekle": yapıştırılan sorular aynı yere, sırayla eklenir. Zamanlayıcı (cron) çalışıyorsa her biri
+     * sıraya alınıp diğer dillere çevrilir (App\Jobs\TranslateModel).
+     */
+    private function storeMany(FaqRequest $request)
+    {
+        $pairs = \App\Support\FaqParser::parse($request->validated('bulk'));
+        $owner = $request->owner();
+        $sort = (int) $this->siblings(new Faq($owner))->max('sort_order');
+        $faqs = \Illuminate\Support\Facades\DB::transaction(fn () => array_map(function ($pair) use ($owner, $request, &$sort) {
+            $faq = new Faq([...$owner, 'active' => $request->validated('active')]);
+            $faq->setTranslation('question', 'en', $pair['question']);
+            $faq->setTranslation('answer', 'en', $pair['answer']);
+            $faq->sort_order = ++$sort;
+            $faq->save();
+
+            return $faq;
+        }, $pairs));
+
+        $queued = \Illuminate\Support\Facades\Cache::get('scheduler:last_run', 0) > time() - 180;
+        if ($queued) {
+            foreach ($faqs as $faq) {
+                \App\Jobs\TranslateModel::dispatch($faq);
+            }
+        }
+
+        return redirect()->route('faqs.index')->with('success', $queued
+            ? __(':count soru eklendi; arka planda sırayla diğer dillere çevriliyor.', ['count' => count($faqs)])
+            : __(':count soru eklendi. Listede "Çeviri eksik" olanları açıp çevirebilirsin.', ['count' => count($faqs)]));
+    }
+
     private function fillText(Faq $faq, FaqRequest $request): void
     {
         $faq->setTranslation('question', 'en', $request->validated('question'));

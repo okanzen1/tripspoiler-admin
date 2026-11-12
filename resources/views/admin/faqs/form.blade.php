@@ -2,8 +2,10 @@
 
 @php
     $editing = $faq->exists;
-    $steps = ['Soru ve cevap', 'Nerede görünecek', 'Yayın'];
-    $stepFields = [['question', 'answer'], ['target', 'target_kind'], ['active']];
+    // "Toplu ekle" (?bulk=1): soru/cevap yerine yapıştırılan metin, hepsi aynı yere eklenir (App\Support\FaqParser)
+    $bulk = !$editing && (($bulk ?? false) || old('bulk') !== null);
+    $steps = [$bulk ? 'Sorular' : 'Soru ve cevap', 'Nerede görünecek', 'Yayın'];
+    $stepFields = [$bulk ? ['bulk'] : ['question', 'answer'], ['target', 'target_kind'], ['active']];
     if (!$editing) {
         $steps[] = 'Onay';
     }
@@ -12,17 +14,21 @@
     $selectedTarget = old('target', $target);
 @endphp
 
-@section('title', $editing ? 'Soruyu düzenle' : 'Yeni soru')
+@section('title', $editing ? 'Soruyu düzenle' : ($bulk ? 'Toplu soru ekle' : 'Yeni soru'))
 
 @section('header')
-    <x-admin.page-header :title="$editing ? 'Soruyu düzenle' : 'Yeni soru'" :breadcrumb="['Sıkça sorulan sorular' => route('faqs.index')]"
-        :description="$editing ? \Illuminate\Support\Str::limit($faq->question, 90) : 'Ziyaretçilerin sık sorduğu bir soruyu cevabıyla ekle.'">
+    <x-admin.page-header :title="$editing ? 'Soruyu düzenle' : ($bulk ? 'Toplu soru ekle' : 'Yeni soru')" :breadcrumb="['Sıkça sorulan sorular' => route('faqs.index')]"
+        :description="$editing ? \Illuminate\Support\Str::limit($faq->question, 90) : ($bulk ? 'Birçok soruyu cevaplarıyla tek seferde yapıştır; hepsi seçtiğin yere eklenir.' : 'Ziyaretçilerin sık sorduğu bir soruyu cevabıyla ekle.')">
         <x-slot:icon><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01" /></x-slot:icon>
         @if ($editing)
             {{-- arka arkaya soru eklerken listeye dönmeden: aynı yer seçili yeni soru --}}
             <a href="{{ route('faqs.create', ['like' => $faq->id]) }}"
                 class="inline-flex items-center gap-2 rounded-xl bg-brand-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800">
                 <x-admin.icon name="plus" /> {{ __('Aynı yere yeni soru ekle') }}
+            </a>
+            <a href="{{ route('faqs.create', ['like' => $faq->id, 'bulk' => 1]) }}"
+                class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-brand-900 ring-1 ring-brand-200 transition hover:bg-brand-50">
+                <x-admin.icon name="plus" /> {{ __('Aynı yere toplu ekle') }}
             </a>
         @endif
     </x-admin.page-header>
@@ -35,8 +41,33 @@
 
     <x-admin.wizard :action="$editing ? route('faqs.update', $faq) : route('faqs.store')" :method="$editing ? 'PUT' : null"
         :steps="$steps" :start="$start === false ? 0 : $start" :free="$editing || ($copied ?? false)"
-        :submit-label="$editing ? 'Kaydet' : 'Soruyu ekle'" :cancel-url="route('faqs.index')">
+        :submit-label="$editing ? 'Kaydet' : ($bulk ? 'Soruları ekle' : 'Soruyu ekle')" :cancel-url="route('faqs.index')">
 
+        @if ($bulk)
+        <section data-step class="space-y-5">
+            <x-admin.step-heading :title="__('Sorular')" :description="__('Soruları ve cevapları İngilizce yapıştır; kaç soru bulunduğu altta görünür. Şu biçimlerin hepsi olur:')" />
+            <div class="grid gap-2 sm:grid-cols-2">
+                <pre class="whitespace-pre-wrap rounded-xl bg-slate-50 p-3 font-mono text-[11px] leading-relaxed text-slate-600 ring-1 ring-slate-200">1. Is the ticket refundable?
+Yes, up to 24 hours before.
+
+2. Is a guide included?
+Yes, a one-hour tour.</pre>
+                <pre class="whitespace-pre-wrap rounded-xl bg-slate-50 p-3 font-mono text-[11px] leading-relaxed text-slate-600 ring-1 ring-slate-200">Q: Is the ticket refundable?
+A: Yes, up to 24 hours before.
+
+Q: Is a guide included?
+A: Yes, a one-hour tour.</pre>
+            </div>
+            <div>
+                <label for="bulk" class="text-sm font-medium text-slate-700">{{ __('Sorular ve cevaplar') }}</label>
+                <textarea id="bulk" name="bulk" rows="14" required maxlength="100000" data-faq-bulk-source placeholder="{{ __('Soruları buraya yapıştır…') }}"
+                    @class([$field, 'resize-y leading-relaxed', 'border-slate-200' => !$errors->has('bulk'), 'border-red-300' => $errors->has('bulk')])>{{ old('bulk') }}</textarea>
+                <input type="hidden" name="bulk_count" data-faq-bulk-summary>
+                <p class="mt-2 text-sm font-semibold" data-faq-bulk-count></p>
+                @error('bulk') <p class="mt-1.5 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
+            </div>
+        </section>
+        @else
         <section data-step class="space-y-5">
             <x-admin.step-heading :title="__('Soru ve cevap')" :description="__('İngilizce yaz; kaydettikten sonra yukarıdaki Çeviriler\'den diğer dillere çevir.')" />
             <x-admin.input name="question" :label="__('Soru')" :value="$faq->question" required maxlength="500" placeholder="{{ __('Do I need to print my ticket?') }}" autocomplete="off" />
@@ -47,6 +78,7 @@
                 @error('answer') <p class="mt-1.5 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
             </div>
         </section>
+        @endif
 
         <section data-step hidden class="space-y-6" data-faq-target>
             <x-admin.step-heading :title="__('Nerede görünecek')" :description="__('Önce sayfa türünü seç, sonra gerekiyorsa şehri, aktiviteyi ya da yazıyı.')" />
@@ -214,9 +246,9 @@
 
         @unless ($editing)
             <section data-step hidden class="space-y-5">
-                <x-admin.step-heading :title="__('Onay')" :description="__('Bilgileri kontrol et, doğruysa soruyu ekle.')" />
+                <x-admin.step-heading :title="__('Onay')" :description="$bulk ? __('Bilgileri kontrol et, doğruysa soruları ekle.') : __('Bilgileri kontrol et, doğruysa soruyu ekle.')" />
                 <dl class="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
-                    @foreach (['Soru' => 'question', 'Cevap' => 'answer', 'Yer' => 'target', 'Durum' => 'active'] as $label => $name)
+                    @foreach ($bulk ? ['Sorular' => 'bulk_count', 'Yer' => 'target', 'Durum' => 'active'] : ['Soru' => 'question', 'Cevap' => 'answer', 'Yer' => 'target', 'Durum' => 'active'] as $label => $name)
                         <div class="grid grid-cols-3 gap-4 px-5 py-3.5 text-sm">
                             <dt class="text-slate-500">{{ __($label) }}</dt>
                             <dd class="col-span-2 whitespace-pre-line font-medium text-slate-900" data-summary-for="{{ $name }}">—</dd>

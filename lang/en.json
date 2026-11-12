@@ -773,5 +773,20 @@
     ":added soru eklendi; en fazla :max soru olabildiği için :skipped tanesi eklenemedi.": ":added questions added; :skipped could not be added because the limit is :max.",
     ":added soru eklendi. Kontrol edip kaydet.": ":added questions added. Check them and save.",
     "Sıraya alındı; birazdan başlayacak.": "Queued; it will start shortly.",
-    "Google şu an meşgul; :minutes dk sonra kaldığı yerden devam edecek.": "Google is busy right now; it will continue where it left off in :minutes min."
+    "Google şu an meşgul; :minutes dk sonra kaldığı yerden devam edecek.": "Google is busy right now; it will continue where it left off in :minutes min.",
+    "Toplu ekle": "Bulk add",
+    "Toplu soru ekle": "Add questions in bulk",
+    "Aynı yere toplu ekle": "Bulk add here",
+    "Birçok soruyu cevaplarıyla tek seferde yapıştır; hepsi seçtiğin yere eklenir.": "Paste many questions with their answers at once; they are all added to the place you choose.",
+    "Sorular": "Questions",
+    "Sorular ve cevaplar": "Questions and answers",
+    "sorular": "questions",
+    "Soruları ve cevapları İngilizce yapıştır; kaç soru bulunduğu altta görünür. Şu biçimlerin hepsi olur:": "Paste the questions and answers in English; the number found is shown below. All of these formats work:",
+    "Bilgileri kontrol et, doğruysa soruları ekle.": "Check the details and add the questions if they are correct.",
+    ":count soru bulundu": ":count questions found",
+    ":count soru": ":count questions",
+    "Tek seferde en fazla 100 soru eklenebilir.": "You can add up to 100 questions at once.",
+    "Bir soru 500, bir cevap 5000 karakterden uzun olamaz.": "A question can be at most 500 and an answer at most 5000 characters.",
+    ":count soru eklendi; arka planda sırayla diğer dillere çevriliyor.": ":count questions added; they are being translated into the other languages in the background.",
+    ":count soru eklendi. Listede \"Çeviri eksik\" olanları açıp çevirebilirsin.": ":count questions added. Open the ones marked \"Translation missing\" in the list to translate them."
 }
