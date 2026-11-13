@@ -27,8 +27,25 @@ class HtmlSanitizer
         $html = preg_replace_callback('#<img\b[^>]*>#i', fn ($m) => self::image($m[0]), $html) ?? '';
         // Editörün koyduğu bölünmez boşluklar (satır kırılmasın diye) normal boşluk olur
         $html = str_replace(['&nbsp;', "\u{00A0}"], ' ', $html);
+        $html = self::markdownHeadings($html);
 
         return trim($html) === '' ? null : trim($html);
+    }
+
+    /**
+     * Yapıştırılan metindeki "## Başlık" / "### Alt başlık" satırları gerçek başlık olur (h2 / h3),
+     * "**kalın**" kalın yazı olur. Böylece hazır yazı yapıştırınca başlıkları tek tek seçmek gerekmez.
+     */
+    public static function markdownHeadings(string $html): string
+    {
+        $html = preg_replace_callback('#<p>\s*(?:<(?:strong|b)>)?\s*(\#{1,4})\s+(.*?)\s*(?:</(?:strong|b)>)?\s*</p>#is', function ($m) {
+            $level = min(4, max(2, strlen($m[1]))); // "#" ve "##" → h2, "###" → h3, "####" → h4
+            $text = trim(preg_replace('#</?(?:strong|b)>#i', '', $m[2]));
+
+            return $text === '' ? $m[0] : "<h{$level}>{$text}</h{$level}>";
+        }, $html) ?? $html;
+
+        return preg_replace('#\*\*(\S(?:.*?\S)?)\*\*#s', '<strong>$1</strong>', $html) ?? $html;
     }
 
     /**
