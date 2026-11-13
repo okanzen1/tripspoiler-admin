@@ -74,6 +74,9 @@ document.querySelectorAll('[data-rich-editor]').forEach((box) => {
     const quill = new Quill(box.querySelector('div'), {
         theme: 'snow',
         placeholder: box.dataset.placeholder || t('Yazmaya başla…'),
+        // Yalnızca araç çubuğundaki biçimler: başka yerden (sohbet, web sayfası, Word) yapıştırılan arka plan rengi,
+        // yazı rengi, yazı tipi ve boyutu editöre hiç girmez; başlıklar, kalın, liste ve bağlantılar kalır
+        formats: ['header', 'bold', 'italic', 'underline', 'list', 'indent', 'link', 'blockquote', 'image'],
         modules: {
             toolbar: {
                 container: [
