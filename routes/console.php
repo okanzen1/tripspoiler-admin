@@ -20,3 +20,13 @@ Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')->every
 Schedule::call(fn () => \Illuminate\Support\Facades\Cache::forever('scheduler:last_run', now()->timestamp))->everyMinute()->name('scheduler-heartbeat');
 // Menüdeki E-posta rozeti: okunmamış sayısı 5 dakikada bir (sayfaya girmeden de doğru görünsün)
 Schedule::command('mailbox:check')->everyFiveMinutes()->withoutOverlapping();
+
+// Claude bağlantısının (OAuth, routes/ai.php) şifreleme anahtarları: güvenlik için git'e gönderilmez; sunucuda yoksa
+// zamanlayıcı bir kez oluşturur (yoksa /mcp "Server Error" verir ve Claude bağlanamaz)
+Schedule::call(function () {
+    if (!file_exists(storage_path('oauth-private.key')) || !file_exists(storage_path('oauth-public.key'))) {
+        \Illuminate\Support\Facades\Artisan::call('passport:keys', ['--force' => true]);
+    }
+    // 13 Kasım 2026'daki bağlantı denemesinden kalan zararsız "probe" kaydı
+    \Illuminate\Support\Facades\DB::table('oauth_clients')->where('name', 'probe')->where('redirect_uris', 'like', '%example.invalid%')->delete();
+})->everyMinute()->name('passport-keys')->withoutOverlapping();
