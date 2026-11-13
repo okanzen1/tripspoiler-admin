@@ -30,6 +30,9 @@ class BlogController extends Controller
             ->when($cityId === 'none', fn ($q) => $q->whereNull('city_id'))
             ->when(is_numeric($cityId), fn ($q) => $q->where('city_id', (int) $cityId))
             ->when($cover, fn ($q) => $cover === 'yes' ? $q->whereNotNull('cover_path') : $q->whereNull('cover_path'))
+            // sitedeki sırayla (şehir şehir; sıralanmamış yeni yazılar başta, sonra sürüklenen sıra, sonra en yeni)
+            ->orderBy('city_id')
+            ->orderByRaw('sort_order = 0 desc')->orderBy('sort_order')
             ->orderByDesc('published_at')
             ->orderByDesc('id')
             ->paginate(25)
@@ -40,8 +43,17 @@ class BlogController extends Controller
             ->where('created_at', '>=', now()->subDays(30)->startOfDay())
             ->selectRaw('page_id, COUNT(*) as total')->groupBy('page_id')->pluck('total', 'page_id');
 
+        // Şehir içindeki sıra numarası (filtre olsa da gerçek sıra)
+        $positions = [];
+        foreach (Blog::query()->orderBy('city_id')->orderByRaw('sort_order = 0 desc')->orderBy('sort_order')->orderByDesc('published_at')->orderByDesc('id')->get(['id', 'city_id'])->groupBy(fn ($b) => (string) $b->city_id) as $group) {
+            foreach ($group->values() as $i => $item) {
+                $positions[$item->id] = $i + 1;
+            }
+        }
+
         return view('admin.blogs.index', [
             'blogs' => $blogs,
+            'positions' => $positions,
             'views' => $views,
             'search' => $search,
             'status' => $status,
@@ -114,6 +126,38 @@ class BlogController extends Controller
         ]);
     }
 
+    /**
+     * Listede sürükle-bırak (resources/js/sortable-cards.js): aynı şehirdeki yazıların id'leri yeni sırayla.
+     * Şehirdeki bütün yazılar sitedeki sırayla 1, 2, 3… numaralanır; görünenlerin yerleri yeni sıraya dağıtılır,
+     * filtre / sayfa yüzünden görünmeyenler yerinde kalır.
+     */
+    public function reorder(Request $request)
+    {
+        $ids = array_values(array_unique(array_map('intval', $request->validate([
+            'order' => ['required', 'array', 'min:1', 'max:200'],
+            'order.*' => ['integer'],
+        ])['order'])));
+        $moved = Blog::whereIn('id', $ids)->get(['id', 'city_id']);
+        abort_if($moved->count() !== count($ids) || $moved->pluck('city_id')->unique()->count() !== 1, 422, __('Yazılar farklı şehirlerde.'));
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($ids, $moved) {
+            $cityId = $moved->first()->city_id;
+            $all = Blog::query()->when($cityId === null, fn ($q) => $q->whereNull('city_id'), fn ($q) => $q->where('city_id', $cityId))
+                ->orderByRaw('sort_order = 0 desc')->orderBy('sort_order')->orderByDesc('published_at')->orderByDesc('id')
+                ->pluck('id')->values();
+            $slots = $all->flip()->only($ids)->sort()->values();
+            $order = $all->all();
+            foreach ($ids as $i => $id) {
+                $order[$slots[$i]] = $id;
+            }
+            foreach ($order as $position => $id) {
+                Blog::whereKey($id)->update(['sort_order' => $position + 1]);
+            }
+        });
+
+        return response()->json(['ok' => true]);
+    }
+
     public function saveOrder(Request $request)
     {
         $data = $request->validate(['order' => ['array'], 'order.*' => ['integer']]);
@@ -183,7 +227,7 @@ class BlogController extends Controller
             'blog' => $blog,
             'cities' => City::with('country')->whereHas('country', fn ($q) => $q->where('active', true))
                 ->orWhere('id', $blog->city_id)->orderByDesc('active')->orderBy('name')->get(),
-            'activities' => Activity::with('city')->orderBy('city_id')->orderBy('sort_order')->get(),
+            'activities' => Activity::with(['city.country', 'partner', 'cover'])->orderBy('city_id')->orderBy('sort_order')->get(),
         ];
     }
 }

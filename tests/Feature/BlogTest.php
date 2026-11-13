@@ -31,6 +31,17 @@ class BlogTest extends TestCase
         $this->activity = Activity::create(['city_id' => $this->city->id, 'name' => ['en' => 'Hagia Sophia Tour'], 'slug' => 'hagia-sophia', 'type' => 'product']);
     }
 
+    public function test_blog_list_drag_reorder_within_city(): void
+    {
+        $admin = \App\Models\User::factory()->admin()->create();
+        $make = fn ($t, $days) => \App\Models\Blog::create(['slug' => \Illuminate\Support\Str::slug($t), 'title' => ['en' => $t], 'active' => true, 'published_at' => now()->subDays($days)]);
+        $a = $make('A', 1); $b = $make('B', 2); $c = $make('C', 3); // şehirsiz, sıralanmamış: en yeni başta
+
+        $this->actingAs($admin)->get(route('blogs.index'))->assertOk()->assertSee('data-order-url', false);
+        $this->actingAs($admin)->patchJson(route('blogs.reorder'), ['order' => [$c->id, $a->id]])->assertOk();
+        $this->assertSame(['C', 'B', 'A'], \App\Models\Blog::orderBy('sort_order')->get()->pluck('title')->all());
+    }
+
     public function test_editor_can_create_blog_with_cover_tags_and_activities(): void
     {
         $this->actingAs($this->editor)->post(route('blogs.store'), [

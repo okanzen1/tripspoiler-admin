@@ -21,6 +21,7 @@ document.querySelectorAll('[data-image-upload]').forEach((box) => {
         preview.classList.toggle('hidden', !src);
         placeholder.classList.toggle('hidden', !!src);
         remove.classList.toggle('hidden', !src);
+        box.querySelector('[data-change-chip]')?.classList.toggle('hidden', !src);
         chooseLabel.textContent = t(src ? 'Değiştir' : 'Resim seç');
         applyFocus();
     };
@@ -31,6 +32,26 @@ document.querySelectorAll('[data-image-upload]').forEach((box) => {
         flag.value = '0';
         show(URL.createObjectURL(file));
     });
+
+    // Geniş alan (shape="wide"): resim üstüne sürükleyip bırakma
+    const drop = box.querySelector('[data-drop]');
+    if (drop) {
+        ['dragenter', 'dragover'].forEach((type) => drop.addEventListener(type, (e) => {
+            if (![...(e.dataTransfer?.types ?? [])].includes('Files')) return;
+            e.preventDefault();
+            drop.dataset.over = '';
+        }));
+        ['dragleave', 'drop'].forEach((type) => drop.addEventListener(type, () => delete drop.dataset.over));
+        drop.addEventListener('drop', (e) => {
+            const file = [...(e.dataTransfer?.files ?? [])].find((f) => f.type.startsWith('image/'));
+            if (!file) return;
+            e.preventDefault();
+            const transfer = new DataTransfer();
+            transfer.items.add(file);
+            input.files = transfer.files;
+            input.dispatchEvent(new Event('change', { bubbles: true })); // küçültme (image-compress.js) + önizleme
+        });
+    }
 
     remove.addEventListener('click', () => {
         input.value = '';

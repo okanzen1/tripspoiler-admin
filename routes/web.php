@@ -116,6 +116,7 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
         ->parameters(['blog' => 'blog']);
     Route::get('/blog-siralama', [BlogController::class, 'order'])->name('blogs.order');
     Route::patch('/blog-siralama', [BlogController::class, 'saveOrder'])->name('blogs.order.save');
+    Route::patch('/blog-liste-siralama', [BlogController::class, 'reorder'])->name('blogs.reorder');
     Route::patch('/blog/{blog}/durum', [BlogController::class, 'toggle'])->name('blogs.toggle');
 
     // Sıkça sorulan sorular

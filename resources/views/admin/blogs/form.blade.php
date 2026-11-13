@@ -83,7 +83,7 @@
         {{-- 3. Kapak görseli --}}
         <section data-step hidden class="space-y-5">
             <x-admin.step-heading :title="__('Kapak görseli')" :description="__('Blog listesinde ve yazının en üstünde görünür. Yatay (ör. 1600x900) bir görsel en iyisi.')" />
-            <x-admin.image-upload name="cover" :label="__('Kapak')" :current="$blog->coverUrl()" :focus="$blog->cover_focus ?? 50" placeholder="{{ __('Görsel yok') }}" :hint="__('JPG, PNG ya da WebP · en fazla 5 MB · 1600 px\'e küçültülür')" />
+            <x-admin.image-upload name="cover" shape="wide" :label="__('Kapak')" :current="$blog->coverUrl()" :focus="$blog->cover_focus ?? 50" placeholder="{{ __('Görsel yok') }}" :hint="__('JPG, PNG ya da WebP · en fazla 5 MB · 1600 px\'e küçültülür')" />
         </section>
 
         {{-- 4. Etiketler ve aktiviteler --}}
@@ -92,26 +92,54 @@
             <x-admin.input name="tags" :label="__('Etiketler')" :value="implode(', ', (array) $blog->tags)" placeholder="{{ __('Istanbul, History, Museums') }}" autocomplete="off"
                 :hint="__('Virgülle ayır.')" />
 
-            <div class="overflow-hidden rounded-2xl ring-1 ring-slate-200" data-activity-picker>
-                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/60 px-4 py-3">
-                    <span>
-                        <span class="block text-sm font-semibold text-slate-900">{{ __('İlgili aktiviteler') }}</span>
-                        <span class="block text-xs text-slate-500"><span data-picked-count>{{ count($selectedActivities) }}</span> {{ __('seçili') }}</span>
+            <div class="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200" data-activity-picker>
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-gradient-to-r from-brand-50/70 to-white px-5 py-4">
+                    <span class="flex items-center gap-3">
+                        <span class="grid size-10 place-items-center rounded-xl bg-white text-brand-900 shadow-sm ring-1 ring-brand-100">
+                            <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16v4a2 2 0 0 0 0 4v4H4v-4a2 2 0 0 0 0-4Z" /><path d="M14 7v12" stroke-dasharray="2 2" /></svg>
+                        </span>
+                        <span>
+                            <span class="block text-sm font-semibold text-slate-900">{{ __('İlgili aktiviteler') }}</span>
+                            <span class="block text-xs text-slate-500"><span data-picked-count class="font-bold text-brand-900">{{ count($selectedActivities) }}</span> {{ __('seçili') }} · {{ __('yazının altında "ilgili turlar" olarak çıkar') }}</span>
+                        </span>
                     </span>
-                    <div class="relative w-full sm:w-72">
+                    <div class="relative w-full sm:w-80">
                         <x-admin.icon name="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input type="search" data-picker-search placeholder="{{ __('Aktivite ara…') }}" autocomplete="off"
-                            class="block w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-9 pr-3 text-sm outline-none focus:border-brand-900 focus:ring-2 focus:ring-brand-900/15" />
+                        <input type="search" data-picker-search placeholder="{{ __('Ad, ID, partner ya da ürün ID ile ara…') }}" autocomplete="off"
+                            class="block w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-brand-900 focus:ring-2 focus:ring-brand-900/15" />
                     </div>
                 </div>
-                <ul class="max-h-80 divide-y divide-slate-100 overflow-y-auto bg-white">
+                <ul class="max-h-[28rem] divide-y divide-slate-100 overflow-y-auto">
                     @forelse ($activities as $activity)
-                        <li data-search="{{ mb_strtolower($activity->name . ' ' . $activity->city->name) }}">
-                            <label class="flex cursor-pointer items-center gap-3 px-4 py-2.5 transition hover:bg-slate-50">
-                                <input type="checkbox" name="activity_ids[]" value="{{ $activity->id }}" data-label="{{ $activity->name }}" class="size-4 accent-brand-900"
+                        <li data-search="{{ mb_strtolower($activity->name . ' ' . $activity->city->name . ' #' . $activity->id . ' ' . $activity->id . ' ' . ($activity->partner?->name ?? '') . ' ' . ($activity->partner_product_id ?? '')) }}">
+                            <label class="flex cursor-pointer items-center gap-4 px-5 py-3 transition hover:bg-slate-50 has-[:checked]:bg-brand-50/70">
+                                <input type="checkbox" name="activity_ids[]" value="{{ $activity->id }}" data-label="{{ $activity->name }}" class="size-[18px] shrink-0 rounded accent-brand-900"
                                     @checked(in_array($activity->id, $selectedActivities, true)) />
-                                <span class="min-w-0 flex-1 truncate text-sm text-slate-800">{{ $activity->name }}</span>
-                                <span class="shrink-0 text-xs text-slate-400">{{ $activity->city->name }}</span>
+                                @if ($thumb = $activity->cover?->url('sm'))
+                                    <img src="{{ $thumb }}" alt="" loading="lazy" class="h-11 w-16 shrink-0 rounded-lg object-cover ring-1 ring-slate-200">
+                                @else
+                                    <span class="h-11 w-16 shrink-0 rounded-lg bg-slate-100 ring-1 ring-slate-200"></span>
+                                @endif
+                                <span class="min-w-0 flex-1">
+                                    <span class="block truncate text-sm font-semibold text-slate-900">{{ $activity->name }}</span>
+                                    <span class="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+                                        <span class="rounded-md bg-slate-100 px-1.5 py-0.5 font-bold tabular-nums text-slate-600" title="{{ __('Bizdeki ID') }}">#{{ $activity->id }}</span>
+                                        @if ($activity->partner)
+                                            <span class="inline-flex items-center gap-1 rounded-md bg-white py-0.5 pl-0.5 pr-1.5 font-semibold text-slate-700 ring-1 ring-slate-200">
+                                                <x-admin.partner-logo :partner="$activity->partner" class="size-4" /> {{ $activity->partner->name }}
+                                            </span>
+                                        @else
+                                            <span class="rounded-md bg-amber-50 px-1.5 py-0.5 font-semibold text-amber-700">{{ __('Partner yok') }}</span>
+                                        @endif
+                                        @if ($activity->partner_product_id)
+                                            <span class="rounded-md bg-violet-50 px-1.5 py-0.5 font-semibold tabular-nums text-violet-700" title="{{ __('Partnerdeki ürün ID') }}">{{ __('Ürün ID') }}: {{ $activity->partner_product_id }}</span>
+                                        @endif
+                                        @unless ($activity->active)
+                                            <span class="rounded-md bg-slate-100 px-1.5 py-0.5 font-semibold text-slate-500">{{ __('Pasif') }}</span>
+                                        @endunless
+                                    </span>
+                                </span>
+                                <span class="hidden shrink-0 items-center gap-1 text-xs text-slate-500 sm:inline-flex">{{ $activity->city->country?->flag }} {{ $activity->city->name }}</span>
                             </label>
                         </li>
                     @empty

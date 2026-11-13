@@ -60,6 +60,10 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
+        // Paylaşımlı sunucuda (Hostinger) dosya izinleri 600'de kalmayabiliyor (644 görünüyor); Passport o zaman anahtarı
+        // reddedip 500 veriyordu. Anahtarlar storage'da, web'den erişilemez: izin kontrolü kapalı.
+        \Laravel\Passport\Passport::$validateKeyPermissions = false;
+
         // Claude uygulaması bağlanırken açılan izin ekranı (OAuth, routes/ai.php)
         \Laravel\Passport\Passport::authorizationView(fn (array $parameters) => view('admin.auth.mcp-authorize', $parameters));
         \Laravel\Passport\Passport::tokensExpireIn(now()->addDays(30));

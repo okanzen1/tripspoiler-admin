@@ -796,5 +796,16 @@
     "Ara": "Search",
     "Tümünü sırayla çevir": "Translate all in order",
     ":count kayıt sırada": ":count queued",
-    ":count kayıt çeviri sırasına alındı; arka planda sırayla çevrilir, bitenler listeden düşer.": ":count records queued for translation; they are translated one by one in the background and drop off the list when done."
+    ":count kayıt çeviri sırasına alındı; arka planda sırayla çevrilir, bitenler listeden düşer.": ":count records queued for translation; they are translated one by one in the background and drop off the list when done.",
+    "Resmi buraya sürükle ya da tıkla": "Drag an image here or click",
+    "Görselin odağı": "Image focus",
+    "Resim farklı ekranlarda kırpılınca hangi tarafı görünsün?": "Which side should stay visible when the image is cropped on different screens?",
+    "Sol": "Left",
+    "Sağ": "Right",
+    "Görseli kaldır": "Remove image",
+    "yazının altında \"ilgili turlar\" olarak çıkar": "shown under the post as \"related tours\"",
+    "Ad, ID, partner ya da ürün ID ile ara…": "Search by name, ID, partner or product ID…",
+    "Bizdeki ID": "Our ID",
+    "Partnerdeki ürün ID": "Product ID at the partner",
+    "Ürün ID": "Product ID"
 }

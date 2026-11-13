@@ -1,6 +1,6 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-BHLiGGJO.css",
+    "file": "assets/app-JScWp9pD.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -15,7 +15,7 @@
     "isDynamicEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-DIlf-JD7.js",
+    "file": "assets/app-Cr4_514x.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -25,7 +25,7 @@
     ]
   },
   "resources/js/rich-editor.js": {
-    "file": "assets/rich-editor-CtikUWwL.js",
+    "file": "assets/rich-editor-D4PvmdK6.js",
     "name": "rich-editor",
     "src": "resources/js/rich-editor.js",
     "isDynamicEntry": true,

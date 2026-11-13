@@ -37,6 +37,7 @@
                 <table class="w-full text-left text-sm">
                     <thead class="border-y border-slate-100 bg-slate-50/60 text-xs text-slate-500">
                         <tr>
+                            <th class="w-14 py-3 pl-4 pr-0 text-center font-medium" title="{{ __('Sitede bu sırayla görünür (şehir içinde). Tutamaçtan sürükleyerek değiştir.') }}">{{ __('Sıra') }}</th>
                             <th class="px-6 py-3 font-medium">{{ __('Yazı') }}</th>
                             <th class="px-6 py-3 font-medium">{{ __('Şehir') }}</th>
                             <th class="px-6 py-3 font-medium">{{ __('Yayın tarihi') }}</th>
@@ -45,9 +46,19 @@
                             <th class="px-6 py-3"><span class="sr-only">{{ __('İşlemler') }}</span></th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    {{-- tutamaçtan sürükle-bırak: aynı şehirdeki yazılar arasında (resources/js/sortable-cards.js) --}}
+                    <tbody class="divide-y divide-slate-100" data-sortable-grid data-sortable-list data-order-key="blogs" data-order-url="{{ route('blogs.reorder') }}">
                         @foreach ($blogs as $blog)
-                            <tr class="transition hover:bg-slate-50/60">
+                            <tr class="bg-white transition hover:bg-slate-50/60" data-card="{{ $blog->id }}" data-group="{{ $blog->city_id ?? 'none' }}">
+                                <td class="py-3 pl-4 pr-0">
+                                    <div class="flex items-center gap-1">
+                                        <span data-drag-handle draggable="true" title="{{ __('Sürükleyerek sırala') }}"
+                                            class="grid size-7 cursor-grab place-items-center rounded-lg text-slate-300 transition hover:bg-slate-100 hover:text-slate-600 active:cursor-grabbing">
+                                            <svg class="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6" /><circle cx="15" cy="6" r="1.6" /><circle cx="9" cy="12" r="1.6" /><circle cx="15" cy="12" r="1.6" /><circle cx="9" cy="18" r="1.6" /><circle cx="15" cy="18" r="1.6" /></svg>
+                                        </span>
+                                        <span data-card-number class="min-w-5 text-center text-sm font-bold tabular-nums text-slate-500">{{ $positions[$blog->id] ?? '' }}</span>
+                                    </div>
+                                </td>
                                 <td class="px-6 py-3">
                                     <div class="flex items-center gap-3.5">
                                         @if ($url = $blog->coverUrl('sm'))
@@ -100,6 +111,7 @@
                 </table>
             </div>
             <div class="flex items-center justify-between border-t border-slate-100 px-6 py-3.5 text-sm text-slate-500">
+                <span class="hidden font-medium text-emerald-700" data-order-saved="blogs">✓ {{ __('Sıra kaydedildi') }}</span>
                 <span>{{ __('Toplam') }} <strong class="font-semibold text-slate-700">{{ $blogs->total() }}</strong> {{ __('yazı') }}</span>
                 @if ($blogs->hasPages()) {{ $blogs->links() }} @endif
             </div>
