@@ -10,18 +10,19 @@ namespace App\Support;
  */
 class FaqParser
 {
-    private const Q = '/^(?:\d+\s*[.)-]\s*)?(?:Q|S|Soru|Question)\s*[:：]\s*(.*)$/iu';
+    private const Q = '/^(?:\d+ ?[.)-] ?)?(?:Q|S|Soru|Question) ?[:：] ?(.*)$/iu';
 
-    private const A = '/^(?:A|C|Cevap|Answer)\s*[:：]\s*(.*)$/iu';
+    private const A = '/^(?:A|C|Cevap|Answer) ?[:：] ?(.*)$/iu';
 
-    private const NUM = '/^\d+\s*[.)-]\s+(.*)$/u';
+    private const NUM = '/^\d+ ?[.)-] (.*)$/u';
 
     /**
      * @return list<array{question: string, answer: string}>
      */
     public static function parse(string $text): array
     {
-        $lines = array_map(fn ($line) => trim(preg_replace('/\s+/u', ' ', str_replace('**', '', $line))), preg_split('/\R/u', $text));
+        // \x{00A0} vb.: kopyalanan metinlerdeki bölünmez boşluklar da boşluk sayılır (tarayıcıdaki ayırıcıyla aynı)
+        $lines = array_map(fn ($line) => trim(preg_replace('/[\s\x{00A0}\x{2000}-\x{200B}\x{202F}\x{FEFF}]+/u', ' ', str_replace('**', '', $line))), preg_split('/\R/u', $text));
         $mode = collect($lines)->contains(fn ($l) => preg_match(self::Q, $l)) ? 'qa'
             : (collect($lines)->filter(fn ($l) => preg_match(self::NUM, $l))->count() >= 2 ? 'num' : 'mark');
 

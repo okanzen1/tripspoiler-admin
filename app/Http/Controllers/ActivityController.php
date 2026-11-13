@@ -106,7 +106,8 @@ class ActivityController extends Controller
             $this->fill($activity, $request);
 
             // Şehir değişirse yeni şehrin sonuna eklenir
-            if ($activity->city_id !== $oldCity) {
+            // (formdan gelen şehir yazı "1", kayıttaki sayı 1: sayı olarak karşılaştır, yoksa her kayıtta en sona düşer)
+            if ((int) $activity->city_id !== (int) $oldCity) {
                 $activity->sort_order = (int) Activity::where('city_id', $activity->city_id)->max('sort_order') + 1;
             }
 

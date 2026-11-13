@@ -132,6 +132,10 @@ class ActivityTest extends TestCase
         $this->actingAs($this->editor)->patchJson(route('activities.reorder'), ['order' => [$b->id, $c->id]])->assertOk();
         $this->assertSame(['B', 'A', 'C'], Activity::orderBy('sort_order')->get()->pluck('name')->all());
 
+        // kaydetmek sırayı bozmaz (aynı şehir)
+        $this->actingAs($this->editor)->put(route('activities.update', $b), $this->payload(['name' => 'B', 'slug' => 'b']))->assertSessionHasNoErrors();
+        $this->assertSame(['B', 'A', 'C'], Activity::orderBy('sort_order')->get()->pluck('name')->all());
+
         $this->actingAs($this->editor)->patchJson(route('activities.popular', $a))->assertJson(['active' => true]);
         $this->assertTrue($a->fresh()->is_popular);
     }
