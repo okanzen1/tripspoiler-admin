@@ -810,5 +810,12 @@
     "Ürün ID": "Product ID",
     "Öne çıkan yazılar": "Featured posts",
     "Öne çıkan yazılar (üstteki 3 kemer)": "Featured posts (the 3 arches at the top)",
-    "Blog sayfasının üstündeki üç kemerde (ortadaki büyük \"Featured\") hangi yazılar dursun. Blog sayfası şehre göre açıldığı için her şehir ayrı seçilir. Boş = Blog listesindeki sıraya göre. Kapağı olmayan yazı seçilemez.": "Which posts appear in the three arches at the top of the blog page (the big one in the middle is \"Featured\"). The blog page opens per city, so each city is chosen separately. Empty = follows the blog list order. Posts without a cover cannot be chosen."
+    "Blog sayfasının üstündeki üç kemerde (ortadaki büyük \"Featured\") hangi yazılar dursun. Blog sayfası şehre göre açıldığı için her şehir ayrı seçilir. Boş = Blog listesindeki sıraya göre. Kapağı olmayan yazı seçilemez.": "Which posts appear in the three arches at the top of the blog page (the big one in the middle is \"Featured\"). The blog page opens per city, so each city is chosen separately. Empty = follows the blog list order. Posts without a cover cannot be chosen.",
+    "Sayılmayan IP'ler": "Excluded IPs",
+    "sen": "you",
+    "Yok — senin ziyaretlerin de sayılıyor.": "None — your own visits are counted too.",
+    "Beni sayma": "Don't count me",
+    ":ip yeniden sayılıyor.": ":ip is counted again.",
+    ":ip artık analitikte sayılmıyor.": ":ip is no longer counted in analytics.",
+    "Panele girdiğin her cihaz ve IP otomatik eklenir.": "Every device and IP you use to sign in to the panel is added automatically."
 }

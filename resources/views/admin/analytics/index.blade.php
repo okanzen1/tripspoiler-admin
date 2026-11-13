@@ -32,6 +32,36 @@
 @endsection
 
 @section('content')
+    {{-- Sayılmayan IP'ler: site sahibinin kendi ziyaretleri analitiği şişirmesin --}}
+    @php
+        $ignored = array_values(array_filter(array_map('trim', explode(',', (string) \App\Models\Setting::get('analytics_ignore_ips')))));
+        $myIp = request()->ip();
+    @endphp
+    <div class="mb-6 flex flex-wrap items-center gap-3 rounded-2xl bg-white p-4 text-sm ring-1 ring-slate-200">
+        <span class="grid size-9 place-items-center rounded-xl bg-slate-100 text-slate-500">
+            <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 22 12s-1.2 2.4-3.6 4.4M6.4 6.4C3.6 8.3 2 12 2 12s3.5 7 10 7c1.7 0 3.2-.5 4.5-1.2"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+        </span>
+        <span class="font-semibold text-slate-900">{{ __('Sayılmayan IP\'ler') }}</span>
+        <span class="text-xs text-slate-500">{{ __('Panele girdiğin her cihaz ve IP otomatik eklenir.') }}</span>
+        @forelse ($ignored as $ip)
+            <form method="POST" action="{{ route('analytics.ignore-ip') }}" data-no-ajax class="inline-flex items-center gap-1 rounded-full bg-slate-100 py-1 pl-3 pr-1 font-mono text-xs text-slate-700">
+                @csrf <input type="hidden" name="ip" value="{{ $ip }}"><input type="hidden" name="remove" value="1">
+                {{ $ip }}@if ($ip === $myIp) <span class="font-sans font-semibold text-emerald-700">· {{ __('sen') }}</span>@endif
+                <button type="submit" title="{{ __('Kaldır') }}" class="grid size-5 place-items-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600">×</button>
+            </form>
+        @empty
+            <span class="text-slate-500">{{ __('Yok — senin ziyaretlerin de sayılıyor.') }}</span>
+        @endforelse
+        @unless (in_array($myIp, $ignored, true))
+            <form method="POST" action="{{ route('analytics.ignore-ip') }}" data-no-ajax class="ml-auto">
+                @csrf <input type="hidden" name="ip" value="{{ $myIp }}">
+                <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-brand-900 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-brand-800">
+                    {{ __('Beni sayma') }} <span class="font-mono opacity-70">({{ $myIp }})</span>
+                </button>
+            </form>
+        @endunless
+    </div>
+
     @if ($analytics->hasDemoData())
         <div class="mb-6 flex items-start gap-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200">
             <svg class="mt-0.5 size-5 shrink-0 text-amber-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.5 2.6a1.7 1.7 0 0 1 3 0l6.3 11.5a1.7 1.7 0 0 1-1.5 2.5H3.7a1.7 1.7 0 0 1-1.5-2.5L8.5 2.6ZM10 7a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 7Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" /></svg>

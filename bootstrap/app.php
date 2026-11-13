@@ -14,7 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => App\Http\Middleware\EnsureUserHasRole::class,
         ]);
-        $middleware->web(append: [App\Http\Middleware\SetPanelLocale::class, App\Http\Middleware\AjaxRedirectToJson::class]);
+        $middleware->web(append: [App\Http\Middleware\SetPanelLocale::class, App\Http\Middleware\AjaxRedirectToJson::class, App\Http\Middleware\MarkStaffDevice::class]);
+        // Ekip çerezi site tarafından da okunur (şifresiz): analitikte sayılmaz
+        $middleware->encryptCookies(except: [App\Http\Middleware\MarkStaffDevice::COOKIE]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Gönderilen veri php.ini post_max_size'ı aşınca PHP tüm formu atar: _method (PUT) kaybolur ve 405 olur,

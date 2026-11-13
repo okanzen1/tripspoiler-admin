@@ -48,6 +48,7 @@ Route::middleware(['signed', 'throttle:20,1'])->prefix('abonelik/{subscriber}')-
 Route::middleware(['auth', 'role:admin,editor'])->group(function () {
     Route::get('/', [AnalyticsController::class, 'index'])->name('analytics.index');
     Route::get('/analitik/canli', [AnalyticsController::class, 'live'])->name('analytics.live');
+    Route::post('/analitik/sayilmayan-ip', [AnalyticsController::class, 'ignoreIp'])->name('analytics.ignore-ip');
     Route::get('/analitik/ziyaretci/{who}', [AnalyticsController::class, 'visitor'])->where('who', '[A-Za-z0-9:.%_-]+')->name('analytics.visitor');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
     // Bir kaydı (aktivite, blog, SSS, sayfa) diğer dillere çevir

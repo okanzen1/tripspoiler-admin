@@ -58,4 +58,19 @@ class AnalyticsController extends Controller
             'device' => in_array($request->query('device'), ['desktop', 'mobile', 'tablet'], true) ? $request->query('device') : null,
         ];
     }
+
+    /**
+     * Sayılmayan IP'ler (sitede bu adreslerden gelen ziyaretler analitiğe yazılmaz): "Benim IP'mi ekle" ya da kaldır.
+     */
+    public function ignoreIp(\Illuminate\Http\Request $request)
+    {
+        $data = $request->validate(['ip' => ['required', 'ip'], 'remove' => ['boolean']]);
+        $list = array_values(array_filter(array_map('trim', explode(',', (string) \App\Models\Setting::get('analytics_ignore_ips')))));
+        $list = $request->boolean('remove') ? array_values(array_diff($list, [$data['ip']])) : array_values(array_unique([...$list, $data['ip']]));
+        \App\Models\Setting::put('analytics_ignore_ips', $list ? implode(',', array_slice($list, -20)) : null);
+
+        return back()->with('success', $request->boolean('remove')
+            ? __(':ip yeniden sayılıyor.', ['ip' => $data['ip']])
+            : __(':ip artık analitikte sayılmıyor.', ['ip' => $data['ip']]));
+    }
 }
