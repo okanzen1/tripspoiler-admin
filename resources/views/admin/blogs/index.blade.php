@@ -5,6 +5,11 @@
 @section('header')
     <x-admin.page-header :title="__('Blog')" description="{{ $activeCount }} yayında · toplam {{ $totalCount }} yazı">
         <x-slot:icon><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></x-slot:icon>
+        <a href="{{ route('pages.hero-text', \App\Models\Page::where('key', 'blog')->value('id') ?? 0) }}#sehirler"
+            class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-amber-700 ring-1 ring-amber-200 transition hover:bg-amber-50">
+            <svg class="size-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6l-5.4 2.9 1.2-6-4.5-4.2 6.1-.7Z"/></svg>
+            {{ __('Öne çıkan yazılar') }}
+        </a>
         <a href="{{ route('blogs.order') }}"
             class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-white">
             <svg class="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>

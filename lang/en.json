@@ -807,5 +807,8 @@
     "Ad, ID, partner ya da ürün ID ile ara…": "Search by name, ID, partner or product ID…",
     "Bizdeki ID": "Our ID",
     "Partnerdeki ürün ID": "Product ID at the partner",
-    "Ürün ID": "Product ID"
+    "Ürün ID": "Product ID",
+    "Öne çıkan yazılar": "Featured posts",
+    "Öne çıkan yazılar (üstteki 3 kemer)": "Featured posts (the 3 arches at the top)",
+    "Blog sayfasının üstündeki üç kemerde (ortadaki büyük \"Featured\") hangi yazılar dursun. Blog sayfası şehre göre açıldığı için her şehir ayrı seçilir. Boş = Blog listesindeki sıraya göre. Kapağı olmayan yazı seçilemez.": "Which posts appear in the three arches at the top of the blog page (the big one in the middle is \"Featured\"). The blog page opens per city, so each city is chosen separately. Empty = follows the blog list order. Posts without a cover cannot be chosen."
 }

@@ -22,7 +22,7 @@
         ['yazilar', __('Yazılar')],
         $hasImages ? ['resim', __('Genel resim')] : null,
         $visual ? ['gorunum', __('Görünüm')] : null,
-        ($rowCities->isNotEmpty() || $archCities->isNotEmpty()) ? ['sehirler', __('Şehirler')] : null,
+        ($rowCities->isNotEmpty() || $archCities->isNotEmpty()) ? ['sehirler', $page->key === 'blog' ? __('Öne çıkan yazılar') : __('Şehirler')] : null,
         $reviewCards->isNotEmpty() ? ['kartlar', __('Yorum kartları')] : null,
     ]));
     $badge = fn ($n) => '<span class="grid size-8 shrink-0 place-items-center rounded-full bg-brand-900 text-sm font-bold text-white">' . $n . '</span>';
@@ -224,9 +224,9 @@
             <x-admin.card class="scroll-mt-20 overflow-hidden" id="sehirler">
                 <div class="flex items-start gap-3 p-6 sm:p-8">
                     {!! $badge(count($steps)) !!}
-                    <x-admin.step-heading :title="__('Şehirler')"
+                    <x-admin.step-heading :title="$page->key === 'blog' ? __('Öne çıkan yazılar (üstteki 3 kemer)') : __('Şehirler')"
                         :description="match ($page->key) {
-                            'blog' => __('Her şehir için sağdaki üç kemerde hangi yazı dursun. Otomatik: Blog › Sıralama\'daki ilk üç yazı. Kapağı olmayan yazı seçilemez.'),
+                            'blog' => __('Blog sayfasının üstündeki üç kemerde (ortadaki büyük "Featured") hangi yazılar dursun. Blog sayfası şehre göre açıldığı için her şehir ayrı seçilir. Boş = Blog listesindeki sıraya göre. Kapağı olmayan yazı seçilemez.'),
                             'cities' => __('Şehre özel resim (yoksa genel resim) ve fotoğrafın üstündeki iki kart. Kartlar: Otomatik = kapak resmi olan ilk konular.'),
                             default => __('Ziyaretçi o şehri seçince banner şehrin resmine döner; resmi yoksa genel resim görünür.'),
                         }" />
