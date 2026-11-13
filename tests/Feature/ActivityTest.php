@@ -117,6 +117,25 @@ class ActivityTest extends TestCase
             ->assertSessionHasErrors(['slug', 'affiliate_url', 'type']);
     }
 
+    public function test_drag_reorder_within_city_and_toggle_popular_once(): void
+    {
+        $make = fn ($name, $sort) => Activity::create(['city_id' => $this->city->id, 'slug' => \Illuminate\Support\Str::slug($name), 'type' => 'product', 'name' => ['en' => $name], 'sort_order' => $sort]);
+        $a = $make('A', 0);
+        $b = $make('B', 0); // eski kayıtlar: aynı sıra numarası
+        $c = $make('C', 0);
+
+        $this->actingAs($this->editor)->get(route('activities.index'))->assertOk()->assertSee('data-order-url', false);
+        $this->actingAs($this->editor)->patchJson(route('activities.reorder'), ['order' => [$c->id, $a->id, $b->id]])->assertOk();
+        $this->assertSame(['C', 'A', 'B'], Activity::orderBy('sort_order')->get()->pluck('name')->all());
+
+        // görünen ikisinin yeri değişir, diğeri yerinde kalır
+        $this->actingAs($this->editor)->patchJson(route('activities.reorder'), ['order' => [$b->id, $c->id]])->assertOk();
+        $this->assertSame(['B', 'A', 'C'], Activity::orderBy('sort_order')->get()->pluck('name')->all());
+
+        $this->actingAs($this->editor)->patchJson(route('activities.popular', $a))->assertJson(['active' => true]);
+        $this->assertTrue($a->fresh()->is_popular);
+    }
+
     public function test_list_filters_and_toggle(): void
     {
         $activity = Activity::create(['city_id' => $this->city->id, 'partner_id' => $this->partner->id, 'name' => ['en' => 'Bosphorus Cruise'], 'slug' => 'bosphorus-cruise', 'type' => 'product']);

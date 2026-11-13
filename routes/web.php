@@ -88,6 +88,7 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
         ->except('show')
         ->names('activities')
         ->parameters(['aktiviteler' => 'activity']);
+    Route::patch('/aktiviteler-siralama', [ActivityController::class, 'reorder'])->name('activities.reorder');
     Route::patch('/aktiviteler/{activity}/durum', [ActivityController::class, 'toggle'])->name('activities.toggle');
     Route::patch('/aktiviteler/{activity}/populer', [ActivityController::class, 'togglePopular'])->name('activities.popular');
 

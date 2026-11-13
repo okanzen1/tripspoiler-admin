@@ -52,6 +52,11 @@ function init(grid) {
         });
         handle.addEventListener('dragend', () => {
             const group = dragged?.dataset.group ?? null;
+            // Sıra numarası gösteren listeler (data-card-number): aynı gruptaki numaralar yeni sıraya dağıtılır
+            const inGroup = cards().filter((card) => group === null || card.dataset.group === group);
+            const numbers = inGroup.map((card) => card.querySelector('[data-card-number]')).filter(Boolean);
+            const values = numbers.map((el) => Number(el.textContent)).sort((a, b) => a - b);
+            numbers.forEach((el, i) => { el.textContent = values[i]; });
             dragged?.classList.remove('opacity-40');
             dragged = null;
             save(group);

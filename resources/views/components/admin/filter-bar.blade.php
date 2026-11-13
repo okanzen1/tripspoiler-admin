@@ -33,66 +33,76 @@
         <input type="hidden" name="{{ $tabs['name'] }}" value="{{ $tabValue }}" />
     @endif
 
-    {{-- üst satır: arama + seçmeli filtreler + temizle --}}
-    <div class="flex flex-wrap items-center gap-2">
-        @if ($searchable)
-            <div class="relative min-w-56 flex-1 basis-72">
-                <x-admin.icon name="search" class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input type="search" name="search" value="{{ $search }}" placeholder="{{ __($placeholder) }}"
-                    class="block h-11 w-full rounded-xl border-0 bg-slate-100/80 pl-10 pr-3 text-sm outline-none ring-1 ring-transparent transition placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-brand-900/30" />
+    {{-- üst satır: sekmeler + arama --}}
+    <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
+        @if ($tabs)
+            <div class="-mx-1 shrink-0 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div class="inline-flex h-11 min-w-full items-center gap-0.5 rounded-xl bg-slate-100 p-1 text-sm font-medium sm:min-w-0">
+                    @foreach ($tabs['options'] as $value => [$label, $count])
+                        @php($current = $tabValue === (string) $value)
+                        <a href="{{ request()->fullUrlWithQuery([$tabs['name'] => $value === '' ? null : $value, 'page' => null]) }}"
+                            @class(['flex h-full shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 transition', 'bg-white text-brand-900 shadow-sm' => $current, 'text-slate-500 hover:text-slate-800' => !$current])>
+                            {{ __($label) }}
+                            @if ($count !== null)
+                                <span @class(['rounded-full px-1.5 text-xs tabular-nums', 'bg-brand-50 text-brand-900' => $current, 'text-slate-400' => !$current])>{{ $count }}</span>
+                            @endif
+                        </a>
+                    @endforeach
+                </div>
             </div>
         @endif
+        @if ($searchable)
+            <div class="relative min-w-0 flex-1">
+                <x-admin.icon name="search" class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input type="search" name="search" value="{{ $search }}" placeholder="{{ __($placeholder) }}" enterkeyhint="search"
+                    class="block h-11 w-full rounded-xl border-0 bg-slate-100/80 pl-10 pr-20 text-sm outline-none ring-1 ring-transparent transition placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-brand-900/30" />
+                <button type="submit" class="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm ring-1 ring-slate-200 transition hover:text-brand-900">{{ __('Ara') }}</button>
+            </div>
+        @endif
+    </div>
+
+    {{-- alt satır: filtreler hap şeklinde; seçili olan koyu renk, içinde × ile kaldırılır --}}
+    @if ($filters || $dirty)
+        <div class="flex flex-wrap items-center gap-2">
             @foreach ($filters as $filter)
                 @php($on = filled($filter['value'] ?? null))
-                <label @class([
-                    'relative inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl pl-3 pr-2 text-sm ring-1 transition',
-                    'bg-brand-50 text-brand-900 ring-brand-200' => $on,
-                    'bg-white text-slate-600 ring-slate-200 hover:ring-slate-300' => !$on,
-                ])>
-                    @isset($filter['icon'])
-                        <svg @class(['size-4 shrink-0', 'text-brand-700' => $on, 'text-slate-400' => !$on]) viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $icons[$filter['icon']] ?? '' !!}</svg>
-                    @endisset
-                    <span @class(['text-xs', 'text-brand-700' => $on, 'text-slate-400' => !$on])>{{ __($filter['label']) }}</span>
-                    <select name="{{ $filter['name'] }}" onchange="this.form.submit()" aria-label="{{ __($filter['label']) }}"
-                        class="max-w-52 cursor-pointer appearance-none truncate border-0 bg-transparent py-0 pl-0 pr-5 text-sm font-semibold outline-none focus:ring-0">
-                        <option value="">{{ __('Tümü') }}</option>
-                        @foreach ($filter['options'] as $value => $label)
-                            <option value="{{ $value }}" @selected((string) ($filter['value'] ?? '') === (string) $value)>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                    <svg class="pointer-events-none absolute right-2 size-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-                </label>
-                @if ($on)
-                    <a href="{{ request()->fullUrlWithQuery([$filter['name'] => null, 'page' => null]) }}" title="{{ __('Bu filtreyi kaldır') }}" aria-label="{{ __('Bu filtreyi kaldır') }}"
-                        class="-ml-1 grid size-7 place-items-center rounded-lg text-brand-700 transition hover:bg-brand-100">
-                        <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
-                    </a>
-                @endif
+                <div @class(['inline-flex h-9 items-center rounded-full text-sm transition',
+                    'bg-brand-900 text-white shadow-sm' => $on,
+                    'bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-slate-300 hover:text-slate-900' => !$on])>
+                    <label class="relative inline-flex h-full cursor-pointer items-center gap-1.5 pl-3 pr-1">
+                        @isset($filter['icon'])
+                            <svg @class(['size-4 shrink-0', 'text-white/70' => $on, 'text-slate-400' => !$on]) viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $icons[$filter['icon']] ?? '' !!}</svg>
+                        @endisset
+                        @if ($on)
+                            <span class="text-xs text-white/70">{{ __($filter['label']) }}:</span>
+                        @endif
+                        <select name="{{ $filter['name'] }}" onchange="this.form.submit()" aria-label="{{ __($filter['label']) }}"
+                            @class(['max-w-52 cursor-pointer appearance-none truncate border-0 bg-transparent py-0 pl-0 pr-5 text-sm outline-none focus:ring-0', 'font-semibold' => $on, 'font-medium' => !$on])>
+                            {{-- seçili değilken hapın üstünde filtrenin adı yazar ("Şehir"), listede "Tümü" --}}
+                            <option value="" class="text-slate-900">{{ $on ? __('Tümü') : __($filter['label']) }}</option>
+                            @foreach ($filter['options'] as $value => $label)
+                                <option value="{{ $value }}" class="text-slate-900" @selected((string) ($filter['value'] ?? '') === (string) $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <svg @class(['pointer-events-none absolute right-1 size-3.5', 'text-white/70' => $on, 'text-slate-400' => !$on]) viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+                    </label>
+                    @if ($on)
+                        <a href="{{ request()->fullUrlWithQuery([$filter['name'] => null, 'page' => null]) }}" title="{{ __('Bu filtreyi kaldır') }}" aria-label="{{ __('Bu filtreyi kaldır') }}"
+                            class="mr-1 grid size-7 place-items-center rounded-full text-white/80 transition hover:bg-white/15 hover:text-white">
+                            <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+                        </a>
+                    @else
+                        <span class="w-2"></span>
+                    @endif
+                </div>
             @endforeach
             @if ($dirty)
                 <a href="{{ request()->fullUrlWithQuery(array_fill_keys($resetKeys, null)) }}"
-                    class="inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-800">
+                    class="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-red-600 transition hover:bg-red-50">
                     <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5" /></svg>
                     {{ __('Filtreleri temizle') }}
                 </a>
             @endif
-    </div>
-
-    {{-- alt satır: sekmeler (tam genişlik, sığmazsa yana kayar) --}}
-        @if ($tabs)
-            <div class="-mx-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div class="inline-flex h-11 min-w-full items-center gap-0.5 rounded-xl bg-slate-100 p-1 text-sm font-medium sm:min-w-0">
-                @foreach ($tabs['options'] as $value => [$label, $count])
-                    @php($current = $tabValue === (string) $value)
-                    <a href="{{ request()->fullUrlWithQuery([$tabs['name'] => $value === '' ? null : $value, 'page' => null]) }}"
-                        @class(['flex h-full shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 transition', 'bg-white text-brand-900 shadow-sm' => $current, 'text-slate-500 hover:text-slate-800' => !$current])>
-                        {{ __($label) }}
-                        @if ($count !== null)
-                            <span @class(['rounded-full px-1.5 text-xs tabular-nums', 'bg-brand-50 text-brand-900' => $current, 'text-slate-400' => !$current])>{{ $count }}</span>
-                        @endif
-                    </a>
-                @endforeach
-            </div>
-            </div>
-        @endif
+        </div>
+    @endif
 </form>

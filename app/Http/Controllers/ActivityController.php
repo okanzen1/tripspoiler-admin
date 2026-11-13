@@ -38,6 +38,7 @@ class ActivityController extends Controller
             ->when($popular, fn ($q) => $q->where('is_popular', $popular === 'yes'))
             ->orderBy('city_id')
             ->orderBy('sort_order')
+            ->orderBy('id')
             ->paginate(25)
             ->withQueryString();
 
@@ -45,8 +46,17 @@ class ActivityController extends Controller
             ->where('created_at', '>=', now()->subDays(30)->startOfDay())
             ->selectRaw('activity_id, COUNT(*) as total')->groupBy('activity_id')->pluck('total', 'activity_id');
 
+        // Şehir içindeki sıra (sitede aktiviteler bu sırayla listelenir); filtre olsa da gerçek sıra numarası
+        $positions = [];
+        foreach (Activity::orderBy('city_id')->orderBy('sort_order')->orderBy('id')->get(['id', 'city_id'])->groupBy('city_id') as $group) {
+            foreach ($group->values() as $i => $item) {
+                $positions[$item->id] = $i + 1;
+            }
+        }
+
         return view('admin.activities.index', [
             'activities' => $activities,
+            'positions' => $positions,
             'clicks' => $clicks,
             'search' => $search,
             'status' => $status,
@@ -127,6 +137,35 @@ class ActivityController extends Controller
     /**
      * Anasayfa ve şehir sayfasındaki "En popüler" bölümünde gösterilsin mi.
      */
+    /**
+     * Sürükle-bırak sırası (resources/js/sortable-cards.js): aynı şehirdeki aktivitelerin id'leri yeni sırayla.
+     * Önce şehirdeki bütün aktiviteler 1, 2, 3… diye numaralanır (eski kayıtlarda aynı numara olabilir), sonra
+     * listede görünenlerin numaraları yeni sıraya dağıtılır; filtre / sayfa yüzünden görünmeyenler yerinde kalır.
+     */
+    public function reorder(Request $request)
+    {
+        $ids = array_values(array_unique(array_map('intval', $request->validate([
+            'order' => ['required', 'array', 'min:1', 'max:200'],
+            'order.*' => ['integer'],
+        ])['order'])));
+        $moved = Activity::whereIn('id', $ids)->get(['id', 'city_id']);
+        abort_if($moved->count() !== count($ids) || $moved->pluck('city_id')->unique()->count() !== 1, 422, __('Aktiviteler farklı şehirlerde.'));
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($ids, $moved) {
+            $all = Activity::where('city_id', $moved->first()->city_id)->orderBy('sort_order')->orderBy('id')->pluck('id')->values();
+            $slots = $all->flip()->only($ids)->sort()->values(); // görünenlerin şehirdeki yerleri
+            $order = $all->all();
+            foreach ($ids as $i => $id) {
+                $order[$slots[$i]] = $id;
+            }
+            foreach ($order as $position => $id) {
+                Activity::whereKey($id)->update(['sort_order' => $position + 1]);
+            }
+        });
+
+        return response()->json(['ok' => true]);
+    }
+
     public function togglePopular(Request $request, Activity $activity)
     {
         $activity->update(['is_popular' => !$activity->is_popular]);

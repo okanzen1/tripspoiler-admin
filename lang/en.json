@@ -788,5 +788,10 @@
     "Tek seferde en fazla 100 soru eklenebilir.": "You can add up to 100 questions at once.",
     "Bir soru 500, bir cevap 5000 karakterden uzun olamaz.": "A question can be at most 500 and an answer at most 5000 characters.",
     ":count soru eklendi; arka planda sırayla diğer dillere çevriliyor.": ":count questions added; they are being translated into the other languages in the background.",
-    ":count soru eklendi. Listede \"Çeviri eksik\" olanları açıp çevirebilirsin.": ":count questions added. Open the ones marked \"Translation missing\" in the list to translate them."
+    ":count soru eklendi. Listede \"Çeviri eksik\" olanları açıp çevirebilirsin.": ":count questions added. Open the ones marked \"Translation missing\" in the list to translate them.",
+    "Sitede bu sırayla görünür (şehir içinde). Tutamaçtan sürükleyerek değiştir.": "Shown on the site in this order (within the city). Drag the handle to change it.",
+    "Sürükleyerek sırala": "Drag to reorder",
+    "Sıra kaydedildi": "Order saved",
+    "Aktiviteler farklı şehirlerde.": "The activities are in different cities.",
+    "Ara": "Search"
 }

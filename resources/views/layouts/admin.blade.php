@@ -305,6 +305,9 @@
                 const form = e.target;
                 if (!(form instanceof HTMLFormElement)) return;
                 if (form.dataset.noAjax !== undefined) return;
+                // Aktif/pasif anahtarları ve yıldızlar kendi işini yapar (resources/js/toggle.js); burada ikinci kez gönderilirse
+                // kayıt iki kez değişir (yıldız geri döner) ve sayfa yenilenip başa kayar
+                if (form.matches('[data-toggle]')) return;
                 const action = form.action || '';
                 // Yerel/dil değiştirme ve çıkış formları normal çalışsın
                 if (action.includes('/dil') || action.includes('/logout') || action.includes('/cevir')) return;
