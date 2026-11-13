@@ -41,6 +41,25 @@ class AppServiceProvider extends ServiceProvider
             $class::deleted(fn () => \App\Support\TranslationTodo::forget());
         }
 
+        // Claude bağlantısının (OAuth) şifreleme anahtarları git'e gönderilmez: sunucuda yoksa ilk istekte bir kez oluşturulur
+        // (yoksa /mcp ve /oauth/authorize "500 Server Error" verir). Zamanlayıcı da aynısını yapar (routes/console.php).
+        if (!file_exists(storage_path('oauth-private.key')) || !file_exists(storage_path('oauth-public.key'))) {
+            try {
+                \Illuminate\Support\Facades\Cache::lock('passport-keys', 30)->get(function () {
+                    // php artisan passport:keys ile aynısı (o komut web isteğinde yok)
+                    if (!file_exists(storage_path('oauth-private.key'))) {
+                        $key = \phpseclib4\Crypt\RSA::createKey(4096);
+                        file_put_contents(storage_path('oauth-public.key'), (string) $key->getPublicKey());
+                        file_put_contents(storage_path('oauth-private.key'), (string) $key);
+                        @chmod(storage_path('oauth-public.key'), 0660);
+                        @chmod(storage_path('oauth-private.key'), 0600);
+                    }
+                });
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
         // Claude uygulaması bağlanırken açılan izin ekranı (OAuth, routes/ai.php)
         \Laravel\Passport\Passport::authorizationView(fn (array $parameters) => view('admin.auth.mcp-authorize', $parameters));
         \Laravel\Passport\Passport::tokensExpireIn(now()->addDays(30));
