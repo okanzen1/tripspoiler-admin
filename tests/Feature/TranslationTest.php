@@ -87,6 +87,18 @@ class TranslationTest extends TestCase
         $this->assertSame(2, $job['done']);
     }
 
+    public function test_todo_box_queues_all_listed_records(): void
+    {
+        $admin = \App\Models\User::factory()->admin()->create();
+        $faq = \App\Models\Faq::create(['question' => ['en' => 'Open?'], 'answer' => ['en' => 'Yes.']]);
+        \Illuminate\Support\Facades\Queue::fake();
+
+        $this->actingAs($admin)->get(route('faqs.index'))->assertSee(route('translations.list'), false)->assertSee('faq:' . $faq->id, false);
+        $this->actingAs($admin)->post(route('translations.list'), ['items' => ['faq:' . $faq->id, 'activity:' . $this->activity->id, 'nope:1']])
+            ->assertSessionHas('success');
+        \Illuminate\Support\Facades\Queue::assertPushed(\App\Jobs\TranslateModel::class, 2);
+    }
+
     public function test_translates_missing_and_stale_languages_keeping_html_and_slug(): void
     {
         $translator = app(ModelTranslator::class);

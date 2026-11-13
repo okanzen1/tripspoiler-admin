@@ -793,5 +793,8 @@
     "Sürükleyerek sırala": "Drag to reorder",
     "Sıra kaydedildi": "Order saved",
     "Aktiviteler farklı şehirlerde.": "The activities are in different cities.",
-    "Ara": "Search"
+    "Ara": "Search",
+    "Tümünü sırayla çevir": "Translate all in order",
+    ":count kayıt sırada": ":count queued",
+    ":count kayıt çeviri sırasına alındı; arka planda sırayla çevrilir, bitenler listeden düşer.": ":count records queued for translation; they are translated one by one in the background and drop off the list when done."
 }

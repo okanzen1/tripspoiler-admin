@@ -90,6 +90,29 @@ class TranslationController extends Controller
     }
 
     /**
+     * "Çevirisi eksik olanlar" kutusundaki "Tümünü sırayla çevir": listedeki kayıtlar (type:id) çeviri sırasına alınır;
+     * zamanlayıcı (cron) her dakika sıradakileri tek tek çevirir (App\Jobs\TranslateModel).
+     */
+    public function translateList(Request $request)
+    {
+        $keys = $request->validate(['items' => ['required', 'array', 'max:500'], 'items.*' => ['string', 'max:60']])['items'];
+
+        $count = 0;
+        foreach (array_unique($keys) as $key) {
+            [$type, $id] = array_pad(explode(':', $key, 2), 2, null);
+            $model = isset(ModelTranslator::TYPES[$type]) ? ModelTranslator::TYPES[$type]::find((int) $id) : null;
+            if ($model && $this->translator->pending($model)) {
+                TranslateModel::dispatch($model); // eksik / eskimiş diller, çalıştığı anda hesaplanır
+                $count++;
+            }
+        }
+
+        return back()->with('success', $count
+            ? __(':count kayıt çeviri sırasına alındı; arka planda sırayla çevrilir, bitenler listeden düşer.', ['count' => $count])
+            : __('Tüm çeviriler zaten güncel.'));
+    }
+
+    /**
      * Tek kaydı hemen çevirir. locale verilirse sadece o dil (güncel olsa da yeniden), "all" = tüm diller yeniden,
      * hiçbiri yoksa eksik ve eskimiş diller.
      */

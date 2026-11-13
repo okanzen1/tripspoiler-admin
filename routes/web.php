@@ -249,6 +249,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('yonetim')->group(function () 
 
     Route::get('/diller-ve-ceviri', [TranslationController::class, 'index'])->name('translations.index');
     Route::post('/diller-ve-ceviri/toplu', [TranslationController::class, 'translateAll'])->name('translations.all');
+    Route::post('/diller-ve-ceviri/liste', [TranslationController::class, 'translateList'])->name('translations.list');
     Route::patch('/diller/{language}/durum', [TranslationController::class, 'toggleLanguage'])->name('languages.toggle');
 
     Route::get('/yonlendirmeler', [RedirectController::class, 'index'])->name('redirects.index');
