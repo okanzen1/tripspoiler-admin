@@ -4,6 +4,26 @@
     $editing = $link->exists;
     $field = 'mt-1.5 block w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-900 focus:ring-4 focus:ring-brand-900/10';
     $err = fn ($name) => $errors->has($name) ? 'border-red-300' : 'border-slate-200';
+    // kart resmi için grafikere / yapay zekâya verilecek tarif
+    $brief = <<<'TXT'
+Merhaba, TripSpoiler sitesindeki bir kart için arka plan görseli lazım.
+
+Ölçü: 1200 × 1500 px, dikey (4:5). JPG ya da WebP, 5 MB altı.
+
+Görselin üstüne sitede yazı ve düğme geliyor, o yüzden:
+- Görselde hiç yazı, logo, filigran olmasın (yazılar sitede 12 dilde ayrıca çıkıyor).
+- Ana konu (şehrin simgesi: ör. İstanbul için Ayasofya / Sultanahmet silueti, Boğaz, vapurlar) üst ve orta kısımda olsun.
+- Alt %40'lık kısım sakin ve görece koyu olsun (su, gölgeli sokak, gökyüzü); üstüne beyaz yazı ve beyaz bir düğme gelecek.
+- Sol üst köşeye partner logosu (beyaz kutu içinde), sağ üst köşeye küçük bir ok ikonu geliyor; bu iki köşe sade kalsın.
+- Kart telefonda daha dar görünüyor; yanlardan biraz kırpılabilir, önemli bir şey en kenarlarda olmasın.
+- Sıcak, canlı, gerçekçi fotoğraf havası; gün batımı / altın saat ışığı tercihimiz.
+- Yakından yüzü görünen kişi olmasın (telif ve izin sorunu olmasın).
+
+Teslim: 1200 × 1500 px tek görsel, istersen aynı görselin biraz farklı kadrajlı ikinci bir versiyonu.
+TXT;
+    $prompt = <<<'TXT'
+Vertical travel photo, 4:5 aspect ratio, 1200x1500 px. A wide, vibrant view of Istanbul at golden hour: Hagia Sophia and the Blue Mosque skyline with the Bosphorus and ferries, warm sunset light. Main subject in the upper and middle part of the frame; the lower 40% is calmer and darker (water or shadowed streets) so white text can sit on top. Leave the top-left corner simple. No text, no logos, no watermarks, no people's faces in close-up. Photorealistic, high detail, rich colors.
+TXT;
 @endphp
 
 @section('title', $editing ? 'Bağlantıyı düzenle' : 'Yeni bağlantı')
@@ -81,6 +101,28 @@
             <x-admin.image-upload name="image" :label="__('Kart resmi (isteğe bağlı)')" :current="$link->imageUrl('md')" :focus="$link->image_focus ?? 50" placeholder="{{ __('Resim yok') }}"
                 :hint="__('Dikey resim: 1200 × 1500 px (4:5). Yazılar resmin alt yarısına gelir, ana konu üst-orta kısımda olsun. Kaydırıcı: kart darken resmin hangi tarafı görünsün. JPG, PNG ya da WebP · en fazla 5 MB')" />
             @error('image') <span class="block text-xs font-medium text-red-600">{{ $message }}</span> @enderror
+            {{-- grafikere / yapay zekâya verilecek tarif (kopyalanabilir) --}}
+            <details class="group rounded-xl bg-slate-50 ring-1 ring-slate-200">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-slate-700">
+                    <span class="inline-flex items-center gap-2">
+                        <svg class="size-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                        {{ __('Grafikere / yapay zekâya ne söyleyeyim?') }}
+                    </span>
+                    <svg class="size-4 text-slate-400 transition group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+                </summary>
+                <div class="space-y-4 border-t border-slate-200 px-4 py-4">
+                    @foreach ([[__('Grafiker için (Türkçe)'), 'brief'], [__('Yapay zekâ resim aracı için (İngilizce komut)'), 'prompt']] as [$title, $key])
+                        <div>
+                            <div class="flex items-center justify-between gap-2">
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">{{ $title }}</p>
+                                <button type="button" data-copy-brief="{{ $key }}" class="rounded-lg bg-white px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200 transition hover:bg-emerald-50">{{ __('Kopyala') }}</button>
+                            </div>
+                            <pre data-brief="{{ $key }}" class="mt-1.5 max-h-56 overflow-auto whitespace-pre-wrap rounded-lg bg-white p-3 font-sans text-xs leading-relaxed text-slate-700 ring-1 ring-slate-200">{{ $key === 'brief' ? $brief : $prompt }}</pre>
+                        </div>
+                    @endforeach
+                    <p class="text-xs text-slate-500">{{ __('Başka şehir için İstanbul ve simgelerini değiştir (ör. Roma: Kolezyum ve Roma çatıları).') }}</p>
+                </div>
+            </details>
 
             <label class="flex items-center gap-3">
                 <input type="hidden" name="active" value="0">
@@ -123,6 +165,10 @@
             };
             form.addEventListener('input', sync);
             sync();
+            document.querySelectorAll('[data-copy-brief]').forEach((btn) => btn.addEventListener('click', async () => {
+                const text = document.querySelector(`[data-brief="${btn.dataset.copyBrief}"]`).textContent.trim();
+                try { await navigator.clipboard.writeText(text); const t = btn.textContent; btn.textContent = '✓'; setTimeout(() => btn.textContent = t, 1500); } catch {}
+            }));
         })();
     </script>
 @endpush
