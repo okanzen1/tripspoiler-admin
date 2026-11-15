@@ -5,6 +5,11 @@
 @section('header')
     <x-admin.page-header :title="__('Aktiviteler')" description="{{ $activeCount }} yayında · toplam {{ $totalCount }} aktivite">
         <x-slot:icon><path d="M4 7h16v4a2 2 0 0 0 0 4v4H4v-4a2 2 0 0 0 0-4Z" /><path d="M14 7v12" stroke-dasharray="2 2" /></x-slot:icon>
+        <a href="{{ route('partner-links.index') }}" title="{{ __('Listenin sonunda partnerin şehir sayfasına giden kartlar') }}"
+            class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-200 transition hover:bg-emerald-50">
+            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" /></svg>
+            {{ __('Partner bağlantıları') }}
+        </a>
         <a href="{{ route('activities.create') }}"
             class="inline-flex items-center gap-2 rounded-xl bg-brand-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800">
             <x-admin.icon name="plus" /> {{ __('Yeni aktivite') }}

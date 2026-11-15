@@ -26,6 +26,7 @@ class ClearMissingMedia extends Command
         'partners' => ['logo_path'],
         'users' => ['avatar_path'],
         'city_guide_sections' => ['image_path'],
+        'partner_links' => ['image_path'],
     ];
 
     /** Resim tutan ayarlar */

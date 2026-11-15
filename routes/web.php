@@ -92,6 +92,11 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
     Route::patch('/aktiviteler-siralama', [ActivityController::class, 'reorder'])->name('activities.reorder');
     Route::patch('/aktiviteler/{activity}/durum', [ActivityController::class, 'toggle'])->name('activities.toggle');
     Route::patch('/aktiviteler/{activity}/populer', [ActivityController::class, 'togglePopular'])->name('activities.popular');
+    // Partner bağlantıları: aktivite listesinin sonundaki "Aradığını bulamadın mı?" kartları
+    Route::resource('partner-baglantilari', \App\Http\Controllers\PartnerLinkController::class)
+        ->except('show')->names('partner-links')->parameters(['partner-baglantilari' => 'partnerLink']);
+    Route::patch('/partner-baglantilari/{partnerLink}/durum', [\App\Http\Controllers\PartnerLinkController::class, 'toggle'])->name('partner-links.toggle');
+    Route::patch('/partner-baglantilari/{partnerLink}/sira', [\App\Http\Controllers\PartnerLinkController::class, 'move'])->name('partner-links.move');
 
     // Blog
     // Şehir rehberi: alanlar (sabit adresler {city}'den önce) ve şehir başına içerik

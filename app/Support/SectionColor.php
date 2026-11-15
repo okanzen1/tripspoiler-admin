@@ -13,6 +13,7 @@ class SectionColor
         'analytics-settings' => 'sky',
         'analytics' => 'sky',
         'activities' => 'emerald',
+        'partner-links' => 'emerald',
         'blogs' => 'violet',
         'faqs' => 'amber',
         'campaigns' => 'orange',
