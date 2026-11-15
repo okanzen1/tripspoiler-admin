@@ -77,4 +77,5 @@
             </tbody>
         </table>
     </div>
-<span class="hidden" data-live-count>{{ $live['visitors']->count() }}</span>
+<span class="hidden" data-live-count>{{ $live['visitors']->count() >= 50 ? __('son 50') : $live['visitors']->count() }}</span>
+<span class="hidden" data-live-active-count>{{ $live['active'] }}</span>

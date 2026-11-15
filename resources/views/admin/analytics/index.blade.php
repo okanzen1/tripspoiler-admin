@@ -133,10 +133,17 @@
                         <p class="text-xs text-slate-500"><strong class="font-semibold text-indigo-700">{{ $periodLabel }}</strong> · {{ __('Aynı IP tek satırda · satıra tıkla, o ziyaretçinin gezdiği her şeyi gör · botlar sayılmaz') }}</p>
                         </div>
                     </div>
-                    <p class="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-100">
-                        <span class="size-1.5 animate-pulse rounded-full bg-emerald-500"></span>
-                        {{ __('Canlı') }} · <span data-live-shown>{{ $live['visitors']->count() }}</span> {{ __('ziyaretçi') }}
-                    </p>
+                    <div class="flex flex-wrap items-center gap-2">
+                        {{-- listedeki (filtrelenen dönemdeki) ziyaretçi sayısı; liste en fazla 50 kişi gösterir --}}
+                        <p class="rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 ring-1 ring-indigo-100" title="{{ __('Seçili dönemde listelenen ziyaretçi') }}">
+                            <span data-live-shown>{{ $live['visitors']->count() >= 50 ? __('son 50') : $live['visitors']->count() }}</span> {{ __('ziyaretçi listede') }}
+                        </p>
+                        {{-- gerçekten canlı: son 5 dakikada sitede olanlar (filtreden bağımsız) --}}
+                        <p class="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-100" title="{{ __('Son 5 dakikada sitede olanlar') }}">
+                            <span class="size-1.5 animate-pulse rounded-full bg-emerald-500"></span>
+                            {{ __('Şu an sitede') }}: <span data-live-active>{{ $live['active'] }}</span>
+                        </p>
+                    </div>
                 </div>
 
             </div>
@@ -292,6 +299,7 @@
                         if (target) target.innerHTML = part.innerHTML;
                     });
                     root.querySelector('[data-live-shown]').textContent = table.querySelector('[data-live-count]')?.textContent ?? '0';
+                    root.querySelector('[data-live-active]').textContent = table.querySelector('[data-live-active-count]')?.textContent ?? '0';
                 } catch { /* bir sonraki turda tekrar */ }
             };
             setInterval(refresh, 10000);
