@@ -16,6 +16,7 @@
             'tone' => 'from-emerald-50 aria-selected:border-emerald-500 aria-selected:ring-emerald-500', 'tile' => 'bg-emerald-500', 'icon' => '<path d="M19 5 5 19" /><circle cx="6.5" cy="6.5" r="2.5" /><circle cx="17.5" cy="17.5" r="2.5" />'],
     ];
     $typeNames = ['home' => 'Anasayfa', 'city' => 'Şehir', 'activity' => 'Aktivite', 'blog' => 'Blog', 'other' => 'Diğer'];
+    $typeTones = ['home' => 'bg-sky-100 text-sky-700', 'city' => 'bg-cyan-100 text-cyan-700', 'activity' => 'bg-emerald-100 text-emerald-700', 'blog' => 'bg-violet-100 text-violet-700', 'other' => 'bg-slate-100 text-slate-600'];
 @endphp
 
 @section('header')
@@ -69,13 +70,18 @@
 
         <x-admin.card class="mt-5 overflow-hidden">
             {{-- başlık + filtreler (yenilenen tablonun dışında: seçimler kaybolmasın) --}}
-            <div class="border-b border-slate-100 px-6 pb-4 pt-6">
+            <div class="border-b border-sky-100 bg-gradient-to-r from-sky-50/80 via-white to-indigo-50/60 px-6 pb-4 pt-6">
                 <div class="flex flex-wrap items-end justify-between gap-2">
-                    <div>
+                    <div class="flex items-center gap-3">
+                        <span class="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-sky-500 to-indigo-500 text-white shadow-sm">
+                            <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.8-3.4 3.4-5.5 6.5-5.5s5.7 2.1 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.9.8 3.1 2.6 3.5 5.2" /></svg>
+                        </span>
+                        <div>
                         <h2 class="text-sm font-semibold text-slate-900">{{ __('Ziyaretçiler') }}</h2>
                         <p class="text-xs text-slate-500">{{ __('Aynı IP tek satırda · satıra tıkla, o ziyaretçinin gezdiği her şeyi gör · botlar sayılmaz') }}</p>
+                        </div>
                     </div>
-                    <p class="flex items-center gap-1.5 text-[11px] text-slate-400">
+                    <p class="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-100">
                         <span class="size-1.5 animate-pulse rounded-full bg-emerald-500"></span>
                         {{ __('Canlı') }} · <span data-live-shown>{{ $live['visitors']->count() }}</span> {{ __('ziyaretçi') }}
                     </p>
@@ -94,7 +100,7 @@
                         @foreach (\App\Services\Analytics::LIVE_RANGES as $value => $label)
                             <label class="cursor-pointer">
                                 <input type="radio" name="when" value="{{ $value }}" class="peer sr-only" @checked($liveFilters['range'] === $value)>
-                                <span class="block rounded-lg px-3 py-1 text-xs font-semibold text-slate-500 transition hover:text-slate-800 peer-checked:bg-white peer-checked:text-slate-900 peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500">{{ __(str_replace('Son ', '', $label)) }}</span>
+                                <span class="block rounded-lg px-3 py-1 text-xs font-semibold text-slate-500 transition hover:text-slate-800 peer-checked:bg-sky-500 peer-checked:text-white peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500">{{ __(str_replace('Son ', '', $label)) }}</span>
                             </label>
                         @endforeach
                     </div>
@@ -111,7 +117,7 @@
                         @foreach (['' => ['Hepsi', null], 'desktop' => ['Bilgisayar', '<rect x="2.5" y="4.5" width="19" height="12" rx="2" /><path d="M8 20h8M12 16.5V20" />'], 'mobile' => ['Telefon', '<rect x="7" y="2.5" width="10" height="19" rx="2" /><path d="M11 18.5h2" />'], 'tablet' => ['Tablet', '<rect x="4.5" y="2.5" width="15" height="19" rx="2" /><path d="M11 18.5h2" />']] as $value => [$label, $icon])
                             <label class="cursor-pointer" title="{{ __($label) }}">
                                 <input type="radio" name="device" value="{{ $value }}" class="peer sr-only" @checked(($liveFilters['device'] ?? '') === $value)>
-                                <span class="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-500 transition hover:text-slate-800 peer-checked:bg-white peer-checked:text-slate-900 peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500">
+                                <span class="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-500 transition hover:text-slate-800 peer-checked:bg-violet-500 peer-checked:text-white peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500">
                                     @if ($icon)
                                         <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $icon !!}</svg>
                                         <span class="hidden xl:inline">{{ __($label) }}</span>
@@ -177,11 +183,16 @@
         </div>
 
         {{-- Günlük grafik --}}
-        <x-admin.card class="mt-5 p-6">
+        <x-admin.card class="mt-5 bg-gradient-to-br from-white via-white to-amber-50/60 p-6">
             <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-sm font-semibold text-slate-900" data-chart-title>{{ __('Affiliate tıklama') }}</h2>
-                    <p class="text-xs text-slate-500">{{ __('Günlük') }}</p>
+                <div class="flex items-center gap-3">
+                    <span class="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm">
+                        <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8" /><path d="M15 7h6v6" /></svg>
+                    </span>
+                    <div>
+                        <h2 class="text-sm font-semibold text-slate-900" data-chart-title>{{ __('Affiliate tıklama') }}</h2>
+                        <p class="text-xs text-slate-500">{{ __('Günlük') }} · {{ __('Üstteki kartlara tıklayarak değiştir') }}</p>
+                    </div>
                 </div>
             </div>
             <div class="relative mt-4 h-72">
@@ -193,15 +204,20 @@
 
         {{-- En çok tıklama getiren sayfalar --}}
         <x-admin.card class="mt-5 overflow-hidden">
-            <div class="flex items-center justify-between px-6 pt-6">
-                <div>
-                    <h2 class="text-sm font-semibold text-slate-900">{{ __('En çok tıklama getiren sayfalar') }}</h2>
-                    <p class="text-xs text-slate-500">{{ __('Hangi sayfa ziyaretçiyi partnere gönderiyor') }}</p>
+            <div class="flex items-center justify-between bg-gradient-to-r from-rose-50/80 via-white to-amber-50/60 px-6 pb-4 pt-6">
+                <div class="flex items-center gap-3">
+                    <span class="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 text-white shadow-sm">
+                        <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4ZM17 6h2a2 2 0 0 1 0 4h-2M7 6H5a2 2 0 0 0 0 4h2" /></svg>
+                    </span>
+                    <div>
+                        <h2 class="text-sm font-semibold text-slate-900">{{ __('En çok tıklama getiren sayfalar') }}</h2>
+                        <p class="text-xs text-slate-500">{{ __('Hangi sayfa ziyaretçiyi partnere gönderiyor') }}</p>
+                    </div>
                 </div>
             </div>
-            <div class="mt-4 overflow-x-auto">
+            <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
-                    <thead class="border-y border-slate-100 bg-slate-50/60 text-xs text-slate-500">
+                    <thead class="border-y border-rose-100 bg-rose-50/40 text-xs font-semibold text-rose-900/60">
                         <tr>
                             <th class="px-6 py-3 font-medium">{{ __('Sayfa') }}</th>
                             <th class="px-6 py-3 text-right font-medium">{{ __('Görüntüleme') }}</th>
@@ -211,17 +227,17 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @forelse ($topPages as $page)
-                            <tr class="hover:bg-slate-50/60">
+                            <tr class="transition hover:bg-amber-50/50">
                                 <td class="max-w-md px-6 py-3.5">
                                     <div class="flex items-center gap-2.5">
                                         @if ($page->type)
-                                            <span class="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600">{{ __($typeNames[$page->type] ?? $page->type) }}</span>
+                                            <span class="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold {{ $typeTones[$page->type] ?? 'bg-slate-100 text-slate-600' }}">{{ __($typeNames[$page->type] ?? $page->type) }}</span>
                                         @endif
                                         <span class="truncate font-medium text-slate-800" title="{{ $page->path }}">{{ $page->path }}</span>
                                     </div>
                                 </td>
                                 <td class="px-6 py-3.5 text-right tabular-nums text-slate-600">{{ $fmt($page->views) }}</td>
-                                <td class="px-6 py-3.5 text-right font-semibold tabular-nums text-slate-900">{{ $fmt($page->clicks) }}</td>
+                                <td class="px-6 py-3.5 text-right"><span class="rounded-full bg-amber-100 px-2.5 py-0.5 font-bold tabular-nums text-amber-800">{{ $fmt($page->clicks) }}</span></td>
                                 <td class="px-6 py-3.5 text-right tabular-nums text-slate-600">{{ $page->ctr === null ? '—' : '%' . number_format($page->ctr, 1, ',', '.') }}</td>
                             </tr>
                         @empty
