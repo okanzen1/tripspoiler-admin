@@ -76,16 +76,77 @@
                     </label>
                 </div>
 
-                {{-- şehir kutucukları: yalnızca "Seçtiğim şehirler" işaretliyken --}}
-                <div class="mt-3 hidden flex-wrap gap-2 group-has-[#city-scope-cities:checked]:flex">
-                    @foreach ($cities as $city)
-                        <label class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-700 transition hover:border-slate-300 has-[:checked]:border-brand-900 has-[:checked]:bg-brand-900 has-[:checked]:text-white">
-                            <input type="checkbox" name="city_ids[]" value="{{ $city->id }}" class="sr-only" @checked(in_array($city->id, $selectedCities, true)) />
-                            <span>{{ $city->country->flag }}</span>
-                            <span class="font-medium">{{ $city->name }}</span>
-                        </label>
-                    @endforeach
+                {{-- şehir seçici: yalnızca "Seçtiğim şehirler" işaretliyken. Seçilenler üstte etiket, altta aramalı liste --}}
+                <div data-city-picker class="mt-3 hidden group-has-[#city-scope-cities:checked]:block">
+                    <div data-city-chips class="mb-2 flex flex-wrap gap-2"></div>
+                    <div class="relative">
+                        <x-admin.icon name="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input type="search" data-city-search placeholder="{{ __('Şehir ara ve seç…') }}" autocomplete="off"
+                            class="block w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm outline-none focus:border-brand-900 focus:ring-2 focus:ring-brand-900/15" />
+                    </div>
+                    <ul data-city-list hidden class="mt-1.5 max-h-64 divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
+                        @foreach ($cities as $city)
+                            <li data-search="{{ mb_strtolower($city->name . ' ' . ($city->country->name ?? '')) }}">
+                                <label class="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50">
+                                    <input type="checkbox" name="city_ids[]" value="{{ $city->id }}" data-label="{{ $city->country->flag }} {{ $city->name }}" class="sr-only"
+                                        @checked(in_array($city->id, $selectedCities, true)) />
+                                    <span>{{ $city->country->flag }}</span>
+                                    <span class="font-medium">{{ $city->name }}</span>
+                                </label>
+                            </li>
+                        @endforeach
+                        <li data-city-empty hidden class="px-4 py-3 text-sm text-slate-400">{{ __('Şehir bulunamadı.') }}</li>
+                    </ul>
                 </div>
+                <script>
+                    (() => {
+                        const picker = document.querySelector('[data-city-picker]');
+                        const chips = picker.querySelector('[data-city-chips]');
+                        const search = picker.querySelector('[data-city-search]');
+                        const list = picker.querySelector('[data-city-list]');
+                        const empty = picker.querySelector('[data-city-empty]');
+                        const boxes = [...list.querySelectorAll('input[type=checkbox]')];
+
+                        // seçilenler üstte etiket (× ile kaldırılır), listede seçilenler gizli; aramaya göre süzülür
+                        const render = () => {
+                            chips.replaceChildren(...boxes.filter((b) => b.checked).map((b) => {
+                                const chip = document.createElement('button');
+                                chip.type = 'button';
+                                chip.className = 'inline-flex items-center gap-1.5 rounded-full bg-brand-900 py-1.5 pl-3.5 pr-2.5 text-sm font-medium text-white transition hover:bg-brand-800';
+                                chip.textContent = b.dataset.label;
+                                const x = document.createElement('span');
+                                x.className = 'text-white/70';
+                                x.textContent = '×';
+                                chip.append(x);
+                                chip.addEventListener('click', () => { b.checked = false; render(); });
+                                return chip;
+                            }));
+                            const q = search.value.trim().toLocaleLowerCase('tr');
+                            let shown = 0;
+                            boxes.forEach((b) => {
+                                const li = b.closest('li');
+                                li.hidden = b.checked || !li.dataset.search.includes(q);
+                                if (!li.hidden) shown++;
+                            });
+                            empty.hidden = shown > 0;
+                        };
+
+                        search.addEventListener('focus', () => { list.hidden = false; });
+                        search.addEventListener('input', () => { list.hidden = false; render(); });
+                        search.addEventListener('keydown', (e) => {
+                            if (e.key === 'Escape') { list.hidden = true; }
+                            // Enter: listedeki ilk şehri seçer (form gönderilmez)
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const first = boxes.find((b) => !b.closest('li').hidden);
+                                if (first) { first.checked = true; search.value = ''; render(); }
+                            }
+                        });
+                        boxes.forEach((b) => b.addEventListener('change', () => { search.value = ''; render(); search.focus(); }));
+                        document.addEventListener('click', (e) => { if (!picker.contains(e.target)) list.hidden = true; });
+                        render();
+                    })();
+                </script>
                 @error('city_ids') <p class="mt-1.5 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
                 @error('city_ids.*') <p class="mt-1.5 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
             </fieldset>
