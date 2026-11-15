@@ -24,7 +24,7 @@ class SaveBlogPost extends PanelTool
             'title' => $schema->string()->description('Required when creating'),
             'excerpt' => $schema->string()->description('1–2 sentence summary shown in the blog list'),
             'content_html' => $schema->string(),
-            'city' => $schema->string()->description('City name or id (optional)'),
+            'cities' => $schema->array()->items($schema->string())->description('Cities (names or ids) the post is published in. Empty array = general post, shown in every city.'),
             'tags' => $schema->array()->items($schema->string()),
             'cover_image_url' => $schema->string(),
             'related_activities' => $schema->array()->items($schema->string())->description('Activity ids, slugs or names'),
@@ -42,7 +42,7 @@ class SaveBlogPost extends PanelTool
             'title' => [$creating ? 'required' : 'sometimes', 'string', 'max:255'],
             'excerpt' => ['nullable', 'string', 'max:500'],
             'content_html' => ['nullable', 'string', 'max:200000'],
-            'city' => ['nullable'],
+            'cities' => ['nullable', 'array', 'max:50'],
             'tags' => ['nullable', 'array', 'max:20'],
             'tags.*' => ['string', 'max:50'],
             'cover_image_url' => ['nullable', 'url'],
@@ -61,8 +61,11 @@ class SaveBlogPost extends PanelTool
                 filled($value) ? $blog->setTranslation($field, 'en', $value) : $blog->forgetTranslation($field, 'en');
             }
         }
-        if (array_key_exists('city', $data)) {
-            $blog->city_id = filled($data['city']) ? Panel::city($data['city'])->id : null;
+        $cityIds = null;
+        if (array_key_exists('cities', $data)) {
+            // boş = genel yazı (her şehirde); ilk şehir ana şehir olur
+            $cityIds = collect($data['cities'] ?? [])->filter(fn ($c) => filled($c))->map(fn ($c) => Panel::city($c)->id)->unique()->values()->all();
+            $blog->city_id = $cityIds[0] ?? null;
         }
         if (array_key_exists('active', $data)) {
             $blog->active = $data['active'];
@@ -79,6 +82,10 @@ class SaveBlogPost extends PanelTool
             $coverFailed = $cover['failed'] !== [];
         }
         $blog->save();
+
+        if ($cityIds !== null) {
+            $blog->cities()->sync($cityIds);
+        }
 
         if (array_key_exists('related_activities', $data)) {
             $ids = collect($data['related_activities'] ?? [])->map(fn ($a) => Panel::activity($a)->id)->unique()->values();

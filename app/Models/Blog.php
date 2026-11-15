@@ -44,6 +44,12 @@ class Blog extends Model
         return $this->belongsTo(City::class);
     }
 
+    /** Yayınlandığı şehirler (blog_city). Hiç şehri yoksa yazı genel: her şehirde görünür. */
+    public function cities(): BelongsToMany
+    {
+        return $this->belongsToMany(City::class, 'blog_city');
+    }
+
     public function activities(): BelongsToMany
     {
         return $this->belongsToMany(Activity::class)->withPivot('sort_order')->orderByPivot('sort_order');

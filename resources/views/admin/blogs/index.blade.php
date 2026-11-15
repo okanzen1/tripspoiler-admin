@@ -28,7 +28,7 @@
         <x-admin.filter-bar :search="$search" placeholder="Başlık ya da URL ara…"
             :tabs="['name' => 'status', 'value' => $status, 'options' => ['' => ['Tümü', $totalCount], 'active' => ['Yayında', $activeCount], 'passive' => ['Taslak', $totalCount - $activeCount]]]"
             :filters="[
-                ['name' => 'city', 'label' => 'Şehir', 'value' => $cityId, 'options' => ['none' => __('Şehre bağlı değil')] + $filterCities->mapWithKeys(fn ($c) => [$c->id => $c->country->flag . ' ' . $c->name])->all(), 'icon' => 'pin'],
+                ['name' => 'city', 'label' => 'Şehir', 'value' => $cityId, 'options' => ['none' => __('Genel (tüm şehirler)')] + $filterCities->mapWithKeys(fn ($c) => [$c->id => $c->country->flag . ' ' . $c->name])->all(), 'icon' => 'pin'],
                 ['name' => 'cover', 'label' => 'Kapak', 'value' => $cover, 'options' => ['yes' => __('Kapağı olanlar'), 'no' => __('Kapağı olmayanlar')], 'icon' => 'image'],
             ]" />
 
@@ -88,7 +88,7 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="whitespace-nowrap px-6 py-3 text-slate-700">{{ $blog->city ? $blog->city->country->flag . ' ' . $blog->city->name : '—' }}</td>
+                                <td class="px-6 py-3 text-slate-700">{{ $blog->cities->isEmpty() ? __('Genel (tüm şehirler)') : $blog->cities->map(fn ($c) => $c->country->flag . ' ' . $c->name)->join(', ') }}</td>
                                 <td class="whitespace-nowrap px-6 py-3 text-slate-600">{{ $blog->published_at?->locale(app()->getLocale())->translatedFormat('j M Y') ?? '—' }}</td>
                                 <td class="px-6 py-3 text-right font-semibold tabular-nums text-slate-900">{{ number_format($views[$blog->id] ?? 0, 0, ',', '.') }}</td>
                                 <td class="px-6 py-3">

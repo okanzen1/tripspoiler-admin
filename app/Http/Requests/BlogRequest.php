@@ -18,7 +18,9 @@ class BlogRequest extends FormRequest
         $this->merge([
             'slug' => Str::slug($this->input('slug') ?: $this->input('title', '')),
             'active' => $this->boolean('active'),
-            'city_id' => $this->input('city_id') ?: null,
+            // Genel = şehir yok (her şehirde görünür); değilse seçilen şehirler
+            'city_scope' => $this->input('city_scope') === 'cities' ? 'cities' : 'general',
+            'city_ids' => $this->input('city_scope') === 'cities' ? array_values(array_unique(array_map('intval', (array) $this->input('city_ids', [])))) : [],
             'published_at' => $this->input('published_at') ?: null,
         ]);
     }
@@ -28,7 +30,9 @@ class BlogRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', Rule::unique('blogs')->ignore($this->route('blog'))],
-            'city_id' => ['nullable', 'exists:cities,id'],
+            'city_scope' => ['required', 'in:general,cities'],
+            'city_ids' => ['array', 'required_if:city_scope,cities'],
+            'city_ids.*' => ['integer', 'exists:cities,id'],
             'excerpt' => ['nullable', 'string', 'max:500'],
             'content' => ['nullable', 'string', 'max:200000'],
             'tags' => ['nullable', 'string', 'max:1000'],
@@ -46,7 +50,10 @@ class BlogRequest extends FormRequest
 
     public function messages(): array
     {
-        return \App\Support\FaqSync::messages();
+        return [
+            'city_ids.required_if' => __('En az bir şehir seç ya da "Genel"i işaretle.'),
+            ...\App\Support\FaqSync::messages(),
+        ];
     }
 
     /**
@@ -65,7 +72,7 @@ class BlogRequest extends FormRequest
         return [
             'title' => __('başlık'),
             'slug' => __('URL adı'),
-            'city_id' => __('şehir'),
+            'city_ids' => __('şehir'),
             'excerpt' => __('özet'),
             'content' => __('içerik'),
             'tags' => __('etiketler'),

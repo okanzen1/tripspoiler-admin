@@ -40,9 +40,10 @@ class City extends Model
         return $this->hasMany(Activity::class);
     }
 
-    public function blogs(): HasMany
+    /** Bu şehirde yayınlanan yazılar (blog_city; genel yazılar hariç) */
+    public function blogs(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->hasMany(Blog::class);
+        return $this->belongsToMany(Blog::class, 'blog_city');
     }
 
     public function guide(): \Illuminate\Database\Eloquent\Relations\HasOne

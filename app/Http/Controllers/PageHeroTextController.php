@@ -174,7 +174,7 @@ class PageHeroTextController extends Controller
         }
 
         foreach ($data['arches'] ?? [] as $cityId => $ids) {
-            $ids = array_map(fn ($id) => \App\Models\Blog::where('city_id', (int) $cityId)->whereKey((int) $id)->exists() ? (string) (int) $id : '', array_pad(array_values($ids), 3, ''));
+            $ids = array_map(fn ($id) => \App\Models\Blog::whereHas('cities', fn ($q) => $q->whereKey((int) $cityId))->whereKey((int) $id)->exists() ? (string) (int) $id : '', array_pad(array_values($ids), 3, ''));
             Setting::put('blog_hero_' . (int) $cityId, array_filter($ids, 'strlen') ? implode(',', $ids) : null);
         }
 

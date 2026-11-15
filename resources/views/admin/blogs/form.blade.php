@@ -4,7 +4,7 @@
     $editing = $blog->exists;
     $steps = ['Temel bilgiler', 'İçerik', 'Kapak görseli', 'Etiketler ve aktiviteler', 'SSS', 'SEO', 'Yayın'];
     $stepFields = [
-        ['title', 'slug', 'city_id', 'excerpt'],
+        ['title', 'slug', 'city_scope', 'city_ids', 'city_ids.*', 'excerpt'],
         ['content'],
         ['cover', 'remove_cover'],
         ['tags', 'activity_ids', 'activity_ids.*'],
@@ -52,16 +52,43 @@
             <x-admin.input name="title" :label="__('Başlık')" :value="$blog->title" required maxlength="255" placeholder="{{ __('Hagia Sophia: History, Visiting Tips and How to Skip the Lines') }}" autocomplete="off" />
             <x-admin.input name="slug" :label="__('URL adı')" :value="$blog->slug" data-slug-from="title" prefix="/blog/" autocomplete="off"
                 :hint="$editing ? 'Değiştirirsen eski link çalışmaz; yayındaki yazıda dikkatli ol.' : 'Boş bırakırsan başlıktan otomatik üretilir.'" />
-            <div>
-                <label for="city_id" class="block text-sm font-medium text-slate-700">{{ __('Şehir') }} <span class="font-normal text-slate-400">{{ __('(isteğe bağlı)') }}</span></label>
-                <select id="city_id" name="city_id" @class([$field, 'mt-1.5 border-slate-200'])>
-                    <option value="">{{ __('Şehre bağlı değil (genel yazı)') }}</option>
+            {{-- Şehirler: genel (her şehirde) ya da seçilen şehirler (birden fazla) — blog_city --}}
+            @php
+                $cityScope = old('city_scope', $blog->exists && $blog->cities->isEmpty() ? 'general' : 'cities');
+                $selectedCities = array_map('intval', (array) old('city_ids', $blog->exists ? $blog->cities->pluck('id')->all() : []));
+            @endphp
+            <fieldset class="group">
+                <legend class="block text-sm font-medium text-slate-700">{{ __('Nerede görünsün?') }}</legend>
+                <div class="mt-1.5 grid gap-3 sm:grid-cols-2">
+                    <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 transition hover:border-slate-300 has-[:checked]:border-brand-900 has-[:checked]:bg-brand-50/60 has-[:checked]:ring-2 has-[:checked]:ring-brand-900/15">
+                        <input type="radio" id="city_scope_general" name="city_scope" value="general" data-label="{{ __('Genel (tüm şehirler)') }}" class="mt-0.5 size-4 accent-brand-900" @checked($cityScope === 'general') />
+                        <span>
+                            <span class="block text-sm font-semibold text-slate-900">{{ __('Genel') }}</span>
+                            <span class="mt-0.5 block text-xs text-slate-500">{{ __('Bütün şehirlerin blog listesinde görünür.') }}</span>
+                        </span>
+                    </label>
+                    <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 transition hover:border-slate-300 has-[:checked]:border-brand-900 has-[:checked]:bg-brand-50/60 has-[:checked]:ring-2 has-[:checked]:ring-brand-900/15">
+                        <input type="radio" id="city_scope_cities" name="city_scope" value="cities" data-label="{{ __('Seçtiğim şehirler') }}" class="mt-0.5 size-4 accent-brand-900" @checked($cityScope === 'cities') />
+                        <span>
+                            <span class="block text-sm font-semibold text-slate-900">{{ __('Seçtiğim şehirler') }}</span>
+                            <span class="mt-0.5 block text-xs text-slate-500">{{ __('Yalnızca işaretlediğin şehirlerde görünür (birden fazla seçebilirsin).') }}</span>
+                        </span>
+                    </label>
+                </div>
+
+                {{-- şehir kutucukları: yalnızca "Seçtiğim şehirler" işaretliyken --}}
+                <div class="mt-3 hidden flex-wrap gap-2 group-has-[#city_scope_cities:checked]:flex">
                     @foreach ($cities as $city)
-                        <option value="{{ $city->id }}" @selected((string) old('city_id', $blog->city_id) === (string) $city->id)>{{ $city->country->flag }} {{ $city->name }}</option>
+                        <label class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-700 transition hover:border-slate-300 has-[:checked]:border-brand-900 has-[:checked]:bg-brand-900 has-[:checked]:text-white">
+                            <input type="checkbox" name="city_ids[]" value="{{ $city->id }}" class="sr-only" @checked(in_array($city->id, $selectedCities, true)) />
+                            <span>{{ $city->country->flag }}</span>
+                            <span class="font-medium">{{ $city->name }}</span>
+                        </label>
                     @endforeach
-                </select>
-                <p class="mt-1.5 text-xs text-slate-500">{{ __('Seçersen yazı o şehrin sayfasında da listelenir.') }}</p>
-            </div>
+                </div>
+                @error('city_ids') <p class="mt-1.5 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
+                @error('city_ids.*') <p class="mt-1.5 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
+            </fieldset>
             <div>
                 <div class="flex items-center justify-between"><label for="excerpt" class="text-sm font-medium text-slate-700">{{ __('Özet') }}</label><span class="text-xs text-slate-400" data-counter-for="excerpt" data-limit="200"></span></div>
                 <textarea id="excerpt" name="excerpt" rows="3" maxlength="500" placeholder="{{ __('Blog listesinde başlığın altında görünen 1-2 cümle.') }}"
@@ -182,7 +209,7 @@
             <section data-step hidden class="space-y-5">
                 <x-admin.step-heading :title="__('Onay')" :description="__('Bilgileri kontrol et, doğruysa yazıyı oluştur.')" />
                 <dl class="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
-                    @foreach (['Başlık' => 'title', 'URL adı' => 'slug', 'Şehir' => 'city_id', 'Etiketler' => 'tags', 'Kapak' => 'cover', 'Durum' => 'active', 'Yayın tarihi' => 'published_at'] as $label => $name)
+                    @foreach (['Başlık' => 'title', 'URL adı' => 'slug', 'Şehir' => 'city_scope', 'Etiketler' => 'tags', 'Kapak' => 'cover', 'Durum' => 'active', 'Yayın tarihi' => 'published_at'] as $label => $name)
                         <div class="grid grid-cols-3 gap-4 px-5 py-3.5 text-sm">
                             <dt class="text-slate-500">{{ __($label) }}</dt>
                             <dd class="col-span-2 break-all font-medium text-slate-900" data-summary-for="{{ $name }}">—</dd>

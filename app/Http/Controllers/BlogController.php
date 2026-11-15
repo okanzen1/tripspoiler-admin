@@ -24,11 +24,11 @@ class BlogController extends Controller
         $cityId = $request->get('city');
         $cover = in_array($request->get('cover'), ['yes', 'no'], true) ? $request->get('cover') : null;
 
-        $blogs = Blog::with('city.country')->withCount('activities')
+        $blogs = Blog::with(['city.country', 'cities.country'])->withCount('activities')
             ->when($search, fn ($q) => $q->where(fn ($q) => $q->where('title->en', 'like', "%{$search}%")->orWhere('slug', 'like', "%{$search}%")))
             ->when($status, fn ($q) => $q->where('active', $status === 'active'))
-            ->when($cityId === 'none', fn ($q) => $q->whereNull('city_id'))
-            ->when(is_numeric($cityId), fn ($q) => $q->where('city_id', (int) $cityId))
+            ->when($cityId === 'none', fn ($q) => $q->doesntHave('cities'))
+            ->when(is_numeric($cityId), fn ($q) => $q->whereHas('cities', fn ($c) => $c->whereKey((int) $cityId)))
             ->when($cover, fn ($q) => $cover === 'yes' ? $q->whereNotNull('cover_path') : $q->whereNull('cover_path'))
             // sitedeki sırayla (şehir şehir; sıralanmamış yeni yazılar başta, sonra sürüklenen sıra, sonra en yeni)
             ->orderBy('city_id')
@@ -77,6 +77,7 @@ class BlogController extends Controller
             $this->fill($blog, $request);
             $blog->save();
             $this->syncActivities($blog, $request);
+            $blog->cities()->sync($request->validated('city_ids') ?? []);
             FaqSync::sync($blog->faqs(), $request->validated('faqs') ?? []);
 
             return $blog;
@@ -88,7 +89,7 @@ class BlogController extends Controller
 
     public function edit(Blog $blog)
     {
-        return view('admin.blogs.form', $this->formData($blog->load(['activities', 'faqs'])));
+        return view('admin.blogs.form', $this->formData($blog->load(['activities', 'faqs', 'cities'])));
     }
 
     public function update(BlogRequest $request, Blog $blog)
@@ -97,6 +98,7 @@ class BlogController extends Controller
             $this->fill($blog, $request);
             $blog->save();
             $this->syncActivities($blog, $request);
+            $blog->cities()->sync($request->validated('city_ids') ?? []);
             FaqSync::sync($blog->faqs(), $request->validated('faqs') ?? []);
         });
 
@@ -122,7 +124,7 @@ class BlogController extends Controller
         return view('admin.blogs.order', [
             'cities' => $cities,
             'city' => $city,
-            'blogs' => $city ? Blog::where('city_id', $city->id)->orderByRaw('sort_order = 0 desc')->orderBy('sort_order')->orderByDesc('published_at')->orderByDesc('id')->get() : collect(),
+            'blogs' => $city ? Blog::whereHas('cities', fn ($q) => $q->whereKey($city->id))->orderByRaw('sort_order = 0 desc')->orderBy('sort_order')->orderByDesc('published_at')->orderByDesc('id')->get() : collect(),
         ]);
     }
 
@@ -184,7 +186,8 @@ class BlogController extends Controller
 
         $blog->fill([
             'slug' => $data['slug'],
-            'city_id' => $data['city_id'],
+            // ana şehir: seçilen ilk şehir (genel yazıda boş)
+            'city_id' => $data['city_ids'][0] ?? null,
             'active' => $data['active'],
             // Yayına alınırken tarih boşsa şimdi yazılır
             'published_at' => $data['published_at'] ?? ($data['active'] ? ($blog->published_at ?? now()) : null),
@@ -226,7 +229,7 @@ class BlogController extends Controller
         return [
             'blog' => $blog,
             'cities' => City::with('country')->whereHas('country', fn ($q) => $q->where('active', true))
-                ->orWhere('id', $blog->city_id)->orderByDesc('active')->orderBy('name')->get(),
+                ->orWhereIn('id', $blog->exists ? $blog->cities()->pluck('cities.id') : [])->orderByDesc('active')->orderBy('name')->get(),
             'activities' => Activity::with(['city.country', 'partner', 'cover'])->orderBy('city_id')->orderBy('sort_order')->get(),
         ];
     }

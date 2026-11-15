@@ -46,7 +46,8 @@ class BlogTest extends TestCase
     {
         $this->actingAs($this->editor)->post(route('blogs.store'), [
             'title' => 'Hagia Sophia Guide',
-            'city_id' => $this->city->id,
+            'city_scope' => 'cities',
+            'city_ids' => [$this->city->id],
             'excerpt' => 'Everything you need to know.',
             'content' => '<h2>History</h2><p>Built in 537.</p><script>x</script>',
             'tags' => 'History, Istanbul, history, ',
@@ -62,6 +63,26 @@ class BlogTest extends TestCase
         $this->assertNotNull($blog->published_at); // yayına alınınca tarih yazılır
         $this->assertTrue($blog->activities->first()->is($this->activity));
         Storage::disk('media')->assertExists($blog->cover_path);
+    }
+
+    public function test_blog_can_be_general_or_in_several_cities(): void
+    {
+        $other = \App\Models\City::create(['country_id' => $this->city->country_id, 'name' => 'Athens', 'slug' => 'athens']);
+        $blog = Blog::create(['title' => ['en' => 'Passes'], 'slug' => 'passes']);
+        $send = fn (array $data) => $this->actingAs($this->editor)->put(route('blogs.update', $blog), ['title' => 'Passes', 'slug' => 'passes', 'active' => '0', ...$data]);
+
+        // iki şehirde: ilk seçilen ana şehir olur
+        $send(['city_scope' => 'cities', 'city_ids' => [$other->id, $this->city->id]])->assertSessionHasNoErrors();
+        $this->assertEqualsCanonicalizing([$other->id, $this->city->id], $blog->cities()->pluck('cities.id')->all());
+        $this->assertSame($other->id, $blog->fresh()->city_id);
+
+        // şehir seçmeden "Seçtiğim şehirler" olmaz
+        $send(['city_scope' => 'cities'])->assertSessionHasErrors('city_ids');
+
+        // genel: şehir bağlantıları kalkar
+        $send(['city_scope' => 'general', 'city_ids' => [$other->id]])->assertSessionHasNoErrors();
+        $this->assertSame(0, $blog->cities()->count());
+        $this->assertNull($blog->fresh()->city_id);
     }
 
     public function test_update_keeps_translations_and_can_remove_cover(): void

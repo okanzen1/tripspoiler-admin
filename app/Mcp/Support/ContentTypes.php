@@ -27,7 +27,7 @@ class ContentTypes
         'activity' => ['model' => Models\Activity::class, 'title' => 'name', 'search' => ['name', 'slug'], 'html' => ['description'], 'route' => 'activities.edit',
             'about' => 'Bookable activity/ticket/tour/city pass linking to a partner. For a new activity from a product link prefer save-activity (it also handles the photo gallery).'],
         'blog' => ['model' => Models\Blog::class, 'title' => 'title', 'search' => ['title', 'slug'], 'html' => ['content'], 'images' => ['cover_path' => 'cover'], 'route' => 'blogs.edit',
-            'about' => 'Blog post / travel guide. content is HTML. Prefer save-blog-post for writing a full post.'],
+            'about' => 'Blog post / travel guide. content is HTML. Prefer save-blog-post for writing a full post; set the cities it appears in only with save-blog-post "cities" (empty = general, every city).'],
         'faq' => ['model' => Models\Faq::class, 'title' => 'question', 'search' => ['question', 'answer'], 'route' => 'faqs.edit',
             'about' => 'FAQ. Attach with activity_id or blog_id or city_id, or page_key (e.g. "home"); all empty = general FAQ.'],
         'review' => ['model' => Models\Review::class, 'title' => 'name', 'search' => ['name', 'comment'], 'route' => 'reviews.edit', 'hidden' => ['email'],
