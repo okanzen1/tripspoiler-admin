@@ -61,14 +61,14 @@
                 <legend class="block text-sm font-medium text-slate-700">{{ __('Nerede görünsün?') }}</legend>
                 <div class="mt-1.5 grid gap-3 sm:grid-cols-2">
                     <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 transition hover:border-slate-300 has-[:checked]:border-brand-900 has-[:checked]:bg-brand-50/60 has-[:checked]:ring-2 has-[:checked]:ring-brand-900/15">
-                        <input type="radio" id="city_scope_general" name="city_scope" value="general" data-label="{{ __('Genel (tüm şehirler)') }}" class="mt-0.5 size-4 accent-brand-900" @checked($cityScope === 'general') />
+                        <input type="radio" id="city-scope-general" name="city_scope" value="general" data-label="{{ __('Genel (tüm şehirler)') }}" class="mt-0.5 size-4 accent-brand-900" @checked($cityScope === 'general') />
                         <span>
                             <span class="block text-sm font-semibold text-slate-900">{{ __('Genel') }}</span>
                             <span class="mt-0.5 block text-xs text-slate-500">{{ __('Bütün şehirlerin blog listesinde görünür.') }}</span>
                         </span>
                     </label>
                     <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 transition hover:border-slate-300 has-[:checked]:border-brand-900 has-[:checked]:bg-brand-50/60 has-[:checked]:ring-2 has-[:checked]:ring-brand-900/15">
-                        <input type="radio" id="city_scope_cities" name="city_scope" value="cities" data-label="{{ __('Seçtiğim şehirler') }}" class="mt-0.5 size-4 accent-brand-900" @checked($cityScope === 'cities') />
+                        <input type="radio" id="city-scope-cities" name="city_scope" value="cities" data-label="{{ __('Seçtiğim şehirler') }}" class="mt-0.5 size-4 accent-brand-900" @checked($cityScope === 'cities') />
                         <span>
                             <span class="block text-sm font-semibold text-slate-900">{{ __('Seçtiğim şehirler') }}</span>
                             <span class="mt-0.5 block text-xs text-slate-500">{{ __('Yalnızca işaretlediğin şehirlerde görünür (birden fazla seçebilirsin).') }}</span>
@@ -77,7 +77,7 @@
                 </div>
 
                 {{-- şehir kutucukları: yalnızca "Seçtiğim şehirler" işaretliyken --}}
-                <div class="mt-3 hidden flex-wrap gap-2 group-has-[#city_scope_cities:checked]:flex">
+                <div class="mt-3 hidden flex-wrap gap-2 group-has-[#city-scope-cities:checked]:flex">
                     @foreach ($cities as $city)
                         <label class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-700 transition hover:border-slate-300 has-[:checked]:border-brand-900 has-[:checked]:bg-brand-900 has-[:checked]:text-white">
                             <input type="checkbox" name="city_ids[]" value="{{ $city->id }}" class="sr-only" @checked(in_array($city->id, $selectedCities, true)) />
