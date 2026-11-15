@@ -73,4 +73,21 @@ class PartnerLinkTest extends TestCase
         $this->assertNull($link->image_path);
         \Illuminate\Support\Facades\Storage::disk('media')->assertMissing($old);
     }
+
+    public function test_link_is_optional_and_falls_back_to_partner_website(): void
+    {
+        $editor = User::factory()->create();
+        $withSite = Partner::create(['name' => 'Megapass', 'slug' => 'megapass', 'website' => 'https://megapass.com', 'active' => true]);
+        $noSite = Partner::create(['name' => 'Other', 'slug' => 'other', 'active' => true]);
+
+        // partnerin sitesi varsa bağlantı boş bırakılabilir → kart partnerin sitesine gider
+        $this->actingAs($editor)->post(route('partner-links.store'), ['partner_id' => $withSite->id, 'url' => '', 'active' => '1'])->assertSessionHasNoErrors();
+        $link = PartnerLink::first();
+        $this->assertNull($link->url);
+        $this->assertSame('https://megapass.com', $link->targetUrl());
+
+        // partnerin sitesi yoksa bağlantı şart
+        $this->actingAs($editor)->post(route('partner-links.store'), ['partner_id' => $noSite->id, 'url' => '', 'active' => '1'])->assertSessionHasErrors('url');
+        $this->assertSame(1, PartnerLink::count());
+    }
 }

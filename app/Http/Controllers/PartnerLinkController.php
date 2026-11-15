@@ -89,15 +89,17 @@ class PartnerLinkController extends Controller
         $data = $request->validate([
             'city_id' => ['nullable', 'exists:cities,id'],
             'partner_id' => ['required', 'exists:partners,id'],
-            'url' => ['required', 'url:https,http', 'max:1000'],
+            // boşsa partnerin kendi sitesi kullanılır; partnerin sitesi de yoksa bağlantı şart
+            'url' => ['nullable', 'url:https,http', 'max:1000', \Illuminate\Validation\Rule::requiredIf(fn () => blank(Partner::find($request->input('partner_id'))?->website))],
             'count_label' => ['nullable', 'string', 'max:20'],
             'type' => ['nullable', 'in:' . implode(',', array_keys(PartnerLink::TYPES))],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'image_focus' => ['nullable', 'integer', 'between:0,100'],
-        ], [], ['city_id' => __('şehir'), 'partner_id' => __('partner'), 'url' => __('bağlantı'), 'count_label' => __('aktivite sayısı'), 'image' => __('resim')]);
+        ], ['url.required' => __('Bu partnerin sitesi kayıtlı değil; bağlantıyı yaz ya da Partnerler\'de partnerin sitesini ekle.')], ['city_id' => __('şehir'), 'partner_id' => __('partner'), 'url' => __('bağlantı'), 'count_label' => __('aktivite sayısı'), 'image' => __('resim')]);
         unset($data['image']);
 
         $data['image_focus'] = (int) ($data['image_focus'] ?? 50);
+        $data['url'] = trim((string) ($data['url'] ?? '')) ?: null;
 
         return [...$data, 'type' => ($data['type'] ?? null) ?: null, 'city_id' => ($data['city_id'] ?? null) ?: null, 'count_label' => trim((string) ($data['count_label'] ?? '')) ?: null, 'active' => $request->boolean('active')];
     }

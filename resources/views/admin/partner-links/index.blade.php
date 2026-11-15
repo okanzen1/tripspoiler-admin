@@ -60,7 +60,11 @@
                                     <span class="rounded-md bg-amber-50 px-1.5 py-0.5 text-xs font-semibold text-amber-700">{{ $link->count_label }} {{ __('aktivite') }}</span>
                                 @endif
                             </div>
-                            <a href="{{ $link->url }}" target="_blank" rel="noopener" class="mt-0.5 block truncate text-sm text-slate-500 hover:text-brand-900 hover:underline">{{ $link->url }}</a>
+                            @if ($target = $link->targetUrl())
+                                <a href="{{ $target }}" target="_blank" rel="noopener" class="mt-0.5 block truncate text-sm text-slate-500 hover:text-brand-900 hover:underline">{{ $target }}@unless ($link->url) <span class="text-xs text-slate-400">· {{ __('partnerin sitesi') }}</span>@endunless</a>
+                            @else
+                                <p class="mt-0.5 text-sm font-medium text-red-600">{{ __('Bağlantı yok: partnerin sitesi kayıtlı değil, sitede görünmez.') }}</p>
+                            @endif
                         </div>
 
                         <div class="flex shrink-0 items-center gap-1.5">

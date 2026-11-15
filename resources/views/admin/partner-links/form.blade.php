@@ -87,8 +87,9 @@ TXT;
             </fieldset>
 
             <label class="block">
-                <span class="text-sm font-medium text-slate-700">{{ __('Bağlantı') }} <span class="font-normal text-slate-400">· {{ __('partnerin o şehirdeki bütün aktiviteleri sayfası (takip kodunla)') }}</span></span>
-                <input type="url" name="url" required maxlength="1000" placeholder="https://www.megapass.com/istanbul?ref=…" value="{{ old('url', $link->url) }}" autocomplete="off" @class([$field, $err('url')])>
+                <span class="text-sm font-medium text-slate-700">{{ __('Bağlantı') }} <span class="font-normal text-slate-400">· {{ __('isteğe bağlı') }}</span></span>
+                <input type="url" name="url" maxlength="1000" placeholder="https://www.megapass.com/istanbul?ref=…" value="{{ old('url', $link->url) }}" autocomplete="off" @class([$field, $err('url')])>
+                <span class="mt-1 block text-xs text-slate-500">{{ __('Partnerin o şehirdeki aktiviteler sayfası (takip kodunla). Boş bırakırsan partnerin kendi sitesine gider (Partnerler\'de kayıtlı adres).') }}</span>
                 @error('url') <span class="mt-1.5 block text-xs font-medium text-red-600">{{ $message }}</span> @enderror
             </label>
 

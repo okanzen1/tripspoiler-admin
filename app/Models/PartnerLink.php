@@ -26,6 +26,12 @@ class PartnerLink extends Model
         return $this->belongsTo(City::class);
     }
 
+    /** Gidilecek adres: yazılan bağlantı, boşsa partnerin kendi sitesi */
+    public function targetUrl(): ?string
+    {
+        return $this->url ?: $this->partner?->website;
+    }
+
     public function imageUrl(?string $size = null): ?string
     {
         return \App\Services\ImageUploader::url($this->image_path, $size);
