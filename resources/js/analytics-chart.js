@@ -12,7 +12,9 @@ import {
 
 Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip);
 
-const DATA_COLOR = '#2f56b0';
+// her metriğin rengi (KPI kartlarıyla aynı): ziyaretçi mavi, görüntüleme mor, tıklama turuncu, oran yeşil
+const COLORS = { visitors: '#0ea5e9', views: '#8b5cf6', clicks: '#f59e0b', ctr: '#10b981' };
+const rgba = (hex, a) => `rgba(${parseInt(hex.slice(1, 3), 16)}, ${parseInt(hex.slice(3, 5), 16)}, ${parseInt(hex.slice(5, 7), 16)}, ${a})`;
 const TEXT_MUTED = '#94a3b8';
 const GRID = '#eef1f5';
 
@@ -58,8 +60,8 @@ function init() {
         const { chartArea } = ctx.chart;
         if (!chartArea) return 'transparent';
         const g = ctx.chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-        g.addColorStop(0, 'rgba(47, 86, 176, 0.18)');
-        g.addColorStop(1, 'rgba(47, 86, 176, 0)');
+        g.addColorStop(0, rgba(COLORS[metric], 0.22));
+        g.addColorStop(1, rgba(COLORS[metric], 0));
         return g;
     };
 
@@ -69,7 +71,7 @@ function init() {
             labels: daily.labels,
             datasets: [{
                 data: daily[metric],
-                borderColor: DATA_COLOR,
+                borderColor: COLORS[metric],
                 backgroundColor: gradient,
                 borderWidth: 2,
                 fill: true,
@@ -78,7 +80,7 @@ function init() {
                 pointHoverRadius: 5,
                 pointHoverBorderWidth: 2,
                 pointHoverBorderColor: '#ffffff',
-                pointHoverBackgroundColor: DATA_COLOR,
+                pointHoverBackgroundColor: COLORS[metric],
             }],
         },
         options: {
@@ -124,6 +126,8 @@ function init() {
     const select = (key) => {
         metric = key;
         chart.data.datasets[0].data = daily[key];
+        chart.data.datasets[0].borderColor = COLORS[key];
+        chart.data.datasets[0].pointHoverBackgroundColor = COLORS[key];
         chart.update();
         title.textContent = labels[key];
         tabs.forEach((tab) => tab.setAttribute('aria-selected', String(tab.dataset.metric === key)));

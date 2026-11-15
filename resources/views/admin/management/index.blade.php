@@ -91,6 +91,15 @@
                 'icon' => '<path d="M4 7h11l-3-3M20 17H9l3 3" />',
             ],
             [
+                'key' => 'analytics-settings',
+                'title' => 'Analitik ayarları',
+                'description' => 'Sayılmayan ve istenmeyen IP\'ler; bu IP\'lerin eski kayıtlarını analitikten sil.',
+                'url' => route('analytics-settings.index'),
+                'stat' => __(':count IP sayılmıyor', ['count' => count(\App\Support\AnalyticsIps::all())]),
+                'color' => \App\Support\SectionColor::forRoute('analytics-settings'),
+                'icon' => '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /><circle cx="18" cy="6" r="3" /><path d="m16 4 4 4" />',
+            ],
+            [
                 'key' => 'activity-logs',
                 'title' => 'İşlem kaydı',
                 'description' => 'Panelde kim, ne zaman, neyi değiştirdi; girişler ve başarısız denemeler.',

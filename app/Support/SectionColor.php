@@ -10,6 +10,7 @@ class SectionColor
 {
     /** Rota adı öneki → renk */
     private const ROUTES = [
+        'analytics-settings' => 'sky',
         'analytics' => 'sky',
         'activities' => 'emerald',
         'blogs' => 'violet',

@@ -4,64 +4,58 @@
 
 @php
     $fmt = fn ($n) => number_format($n, 0, ',', '.');
+    // her metriğin rengi (grafik de aynı rengi kullanır: resources/js/analytics-chart.js)
     $metrics = [
-        'visitors' => ['label' => 'Ziyaretçi', 'hint' => 'Tekil ziyaretçi', 'format' => $fmt],
-        'views' => ['label' => 'Sayfa görüntüleme', 'hint' => 'Toplam görüntüleme', 'format' => $fmt],
-        'clicks' => ['label' => 'Affiliate tıklama', 'hint' => 'Partner linklerine tıklama', 'format' => $fmt],
-        'ctr' => ['label' => 'Tıklama oranı', 'hint' => 'Tıklayan ziyaretçi oranı', 'format' => fn ($n) => '%' . number_format($n, 1, ',', '.')],
+        'visitors' => ['label' => 'Ziyaretçi', 'hint' => 'Tekil ziyaretçi', 'format' => $fmt,
+            'tone' => 'from-sky-50 aria-selected:border-sky-500 aria-selected:ring-sky-500', 'tile' => 'bg-sky-500', 'icon' => '<circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.8-3.4 3.4-5.5 6.5-5.5s5.7 2.1 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.9.8 3.1 2.6 3.5 5.2" />'],
+        'views' => ['label' => 'Sayfa görüntüleme', 'hint' => 'Toplam görüntüleme', 'format' => $fmt,
+            'tone' => 'from-violet-50 aria-selected:border-violet-500 aria-selected:ring-violet-500', 'tile' => 'bg-violet-500', 'icon' => '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />'],
+        'clicks' => ['label' => 'Affiliate tıklama', 'hint' => 'Partner linklerine tıklama', 'format' => $fmt,
+            'tone' => 'from-amber-50 aria-selected:border-amber-500 aria-selected:ring-amber-500', 'tile' => 'bg-gradient-to-br from-amber-400 to-orange-500', 'icon' => '<path d="m9 9 5 12 1.8-5.2L21 14Z" /><path d="M7.2 2.2 8 5.1M5.1 8l-2.9-.8M14 4.1 12 6M6 12l-1.9 2" />'],
+        'ctr' => ['label' => 'Tıklama oranı', 'hint' => 'Tıklayan ziyaretçi oranı', 'format' => fn ($n) => '%' . number_format($n, 1, ',', '.'),
+            'tone' => 'from-emerald-50 aria-selected:border-emerald-500 aria-selected:ring-emerald-500', 'tile' => 'bg-emerald-500', 'icon' => '<path d="M19 5 5 19" /><circle cx="6.5" cy="6.5" r="2.5" /><circle cx="17.5" cy="17.5" r="2.5" />'],
     ];
     $typeNames = ['home' => 'Anasayfa', 'city' => 'Şehir', 'activity' => 'Aktivite', 'blog' => 'Blog', 'other' => 'Diğer'];
 @endphp
 
 @section('header')
     <x-admin.page-header :title="__('Analitik')"
-        description="{{ $analytics->start->locale(app()->getLocale())->translatedFormat('d F') }} – {{ $analytics->end->locale(app()->getLocale())->translatedFormat('d F Y') }} · {{ __('önceki :count günle karşılaştırmalı', ['count' => $analytics->days]) }}">
+        description="{{ $analytics->start->locale(app()->getLocale())->translatedFormat('d F') }} – {{ $analytics->end->locale(app()->getLocale())->translatedFormat('d F Y') }} · {{ $analytics->custom ? __(':count gün · önceki :count günle karşılaştırmalı', ['count' => $analytics->days]) : __('önceki :count günle karşılaştırmalı', ['count' => $analytics->days]) }}">
         <x-slot:icon><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></x-slot:icon>
 
-        <nav class="flex rounded-xl bg-slate-100 p-1 text-sm font-medium" aria-label="{{ __('Dönem') }}">
-            @foreach (\App\Services\Analytics::RANGES as $days => $label)
-                <a href="{{ route('analytics.index', ['range' => $days]) }}" @if ($analytics->days === $days) aria-current="page" @endif
-                    @class([
-                        'rounded-lg px-3.5 py-1.5 transition',
-                        'bg-white text-brand-900 shadow-sm' => $analytics->days === $days,
-                        'text-slate-500 hover:text-slate-800' => $analytics->days !== $days,
-                    ])>{{ __($label) }}</a>
-            @endforeach
-        </nav>
+        <div class="flex flex-wrap items-center gap-2">
+            <nav class="flex rounded-xl bg-slate-100 p-1 text-sm font-medium" aria-label="{{ __('Dönem') }}">
+                @foreach (\App\Services\Analytics::RANGES as $days => $label)
+                    @php $on = !$analytics->custom && $analytics->days === $days; @endphp
+                    <a href="{{ route('analytics.index', ['range' => $days]) }}" @if ($on) aria-current="page" @endif
+                        @class([
+                            'rounded-lg px-3.5 py-1.5 transition',
+                            'bg-white text-sky-700 shadow-sm' => $on,
+                            'text-slate-500 hover:text-slate-800' => !$on,
+                        ])>{{ __($label) }}</a>
+                @endforeach
+            </nav>
+            {{-- takvim: başlangıç – bitiş --}}
+            <form method="GET" action="{{ route('analytics.index') }}" data-no-ajax
+                @class(['flex items-center gap-1.5 rounded-xl p-1 ring-1 transition', 'bg-sky-50 ring-sky-300' => $analytics->custom, 'bg-white ring-slate-200' => !$analytics->custom])>
+                <svg class="ml-2 size-4 shrink-0 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
+                <input type="date" name="from" value="{{ $analytics->start->toDateString() }}" max="{{ now()->toDateString() }}" aria-label="{{ __('Başlangıç') }}"
+                    class="h-8 rounded-lg border-0 bg-transparent px-1.5 text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-sky-300">
+                <span class="text-slate-300">–</span>
+                <input type="date" name="to" value="{{ $analytics->end->toDateString() }}" max="{{ now()->toDateString() }}" aria-label="{{ __('Bitiş') }}"
+                    class="h-8 rounded-lg border-0 bg-transparent px-1.5 text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-sky-300">
+                <button type="submit" class="h-8 rounded-lg bg-sky-600 px-3 text-xs font-semibold text-white transition hover:bg-sky-700">{{ __('Göster') }}</button>
+            </form>
+            <a href="{{ route('analytics-settings.index') }}" title="{{ __('Analitik ayarları') }}"
+                class="inline-flex h-10 items-center gap-1.5 rounded-xl bg-white px-3 text-xs font-semibold text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-900">
+                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" /></svg>
+                <span class="hidden sm:inline">{{ __('Ayarlar') }}</span>
+            </a>
+        </div>
     </x-admin.page-header>
 @endsection
 
 @section('content')
-    {{-- Sayılmayan IP'ler: site sahibinin kendi ziyaretleri analitiği şişirmesin --}}
-    @php
-        $ignored = array_values(array_filter(array_map('trim', explode(',', (string) \App\Models\Setting::get('analytics_ignore_ips')))));
-        $myIp = request()->ip();
-    @endphp
-    <div class="mb-6 flex flex-wrap items-center gap-3 rounded-2xl bg-white p-4 text-sm ring-1 ring-slate-200">
-        <span class="grid size-9 place-items-center rounded-xl bg-slate-100 text-slate-500">
-            <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 22 12s-1.2 2.4-3.6 4.4M6.4 6.4C3.6 8.3 2 12 2 12s3.5 7 10 7c1.7 0 3.2-.5 4.5-1.2"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
-        </span>
-        <span class="font-semibold text-slate-900">{{ __('Sayılmayan IP\'ler') }}</span>
-        <span class="text-xs text-slate-500">{{ __('Panele girdiğin her cihaz ve IP otomatik eklenir.') }}</span>
-        @forelse ($ignored as $ip)
-            <form method="POST" action="{{ route('analytics.ignore-ip') }}" data-no-ajax class="inline-flex items-center gap-1 rounded-full bg-slate-100 py-1 pl-3 pr-1 font-mono text-xs text-slate-700">
-                @csrf <input type="hidden" name="ip" value="{{ $ip }}"><input type="hidden" name="remove" value="1">
-                {{ $ip }}@if ($ip === $myIp) <span class="font-sans font-semibold text-emerald-700">· {{ __('sen') }}</span>@endif
-                <button type="submit" title="{{ __('Kaldır') }}" class="grid size-5 place-items-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600">×</button>
-            </form>
-        @empty
-            <span class="text-slate-500">{{ __('Yok — senin ziyaretlerin de sayılıyor.') }}</span>
-        @endforelse
-        @unless (in_array($myIp, $ignored, true))
-            <form method="POST" action="{{ route('analytics.ignore-ip') }}" data-no-ajax class="ml-auto">
-                @csrf <input type="hidden" name="ip" value="{{ $myIp }}">
-                <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-brand-900 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-brand-800">
-                    {{ __('Beni sayma') }} <span class="font-mono opacity-70">({{ $myIp }})</span>
-                </button>
-            </form>
-        @endunless
-    </div>
-
     @if ($analytics->hasDemoData())
         <div class="mb-6 flex items-start gap-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200">
             <svg class="mt-0.5 size-5 shrink-0 text-amber-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.5 2.6a1.7 1.7 0 0 1 3 0l6.3 11.5a1.7 1.7 0 0 1-1.5 2.5H3.7a1.7 1.7 0 0 1-1.5-2.5L8.5 2.6ZM10 7a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 7Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" /></svg>
@@ -104,6 +98,13 @@
                             </label>
                         @endforeach
                     </div>
+
+                    {{-- takvim: belirli bir gün (seçilince yukarıdaki zaman düğmeleri yerine o gün) --}}
+                    <label @class(['inline-flex h-9 items-center gap-1.5 rounded-xl border bg-white pl-2.5 pr-1 transition', 'border-sky-400 bg-sky-50' => $liveFilters['date'], 'border-slate-200' => !$liveFilters['date']]) data-date-wrap title="{{ __('Gün seç') }}">
+                        <svg class="size-3.5 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
+                        <input type="date" name="date" value="{{ $liveFilters['date'] }}" max="{{ now()->toDateString() }}" aria-label="{{ __('Gün seç') }}"
+                            class="h-7 border-0 bg-transparent p-0 text-xs font-semibold text-slate-600 outline-none focus:ring-0">
+                    </label>
 
                     {{-- cihaz: tek tıkla, ikonlu --}}
                     <div class="inline-flex h-9 items-center rounded-xl bg-slate-100 p-1" role="radiogroup" aria-label="{{ __('Cihaz') }}">
@@ -157,10 +158,12 @@
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" role="tablist" aria-label="{{ __('Metrik') }}">
             @foreach ($metrics as $key => $metric)
                 <button type="button" role="tab" data-metric="{{ $key }}" aria-selected="{{ $key === 'clicks' ? 'true' : 'false' }}"
-                    class="group rounded-2xl border border-slate-300/60 bg-surface p-5 text-left shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition hover:border-slate-300 aria-selected:border-brand-900 aria-selected:ring-1 aria-selected:ring-brand-900">
+                    class="group rounded-2xl border border-slate-300/60 bg-gradient-to-br to-white p-5 text-left shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md aria-selected:ring-1 {{ $metric['tone'] }}">
                     <div class="flex items-center justify-between gap-2">
-                        <p class="text-sm font-medium text-slate-500">{{ __($metric['label']) }}</p>
-                        <span class="size-2 rounded-full bg-transparent group-aria-selected:bg-data" aria-hidden="true"></span>
+                        <p class="text-sm font-medium text-slate-600">{{ __($metric['label']) }}</p>
+                        <span class="grid size-9 place-items-center rounded-xl text-white shadow-sm {{ $metric['tile'] }}">
+                            <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $metric['icon'] !!}</svg>
+                        </span>
                     </div>
                     <p class="mt-2 text-3xl font-semibold tracking-tight tabular-nums text-slate-900">{{ $metric['format']($kpis[$key]['value']) }}</p>
                     <div class="mt-3 flex items-center gap-2">
@@ -231,10 +234,10 @@
 
         {{-- Dağılımlar --}}
         <div class="mt-5 grid gap-5 md:grid-cols-2">
-            <x-admin.share-bars :title="__('Partnerler')" :items="$partners" unit="tıklama" />
-            <x-admin.share-bars :title="__('Trafik kaynakları')" :items="$sources" unit="oturum" />
-            <x-admin.share-bars :title="__('Cihazlar')" :items="$devices" />
-            <x-admin.share-bars :title="__('Ülkeler')" :items="$countries" />
+            <x-admin.share-bars :title="__('Partnerler')" :items="$partners" unit="tıklama" color="amber" icon='<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" /><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" />' />
+            <x-admin.share-bars :title="__('Trafik kaynakları')" :items="$sources" unit="oturum" color="violet" icon='<path d="M4 12h10M10 6l6 6-6 6M20 4v16" />' />
+            <x-admin.share-bars :title="__('Cihazlar')" :items="$devices" color="emerald" icon='<rect x="2.5" y="4.5" width="19" height="12" rx="2" /><path d="M8 20h8M12 16.5V20" />' />
+            <x-admin.share-bars :title="__('Ülkeler')" :items="$countries" color="sky" icon='<circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />' />
         </div>
     @endif
 @endsection
@@ -276,7 +279,7 @@
             const apply = () => {
                 const p = params();
                 const url = new URL(location.href);
-                ['q', 'when', 'country', 'device'].forEach((key) => p.has(key) ? url.searchParams.set(key, p.get(key)) : url.searchParams.delete(key));
+                ['q', 'when', 'country', 'device', 'date'].forEach((key) => p.has(key) ? url.searchParams.set(key, p.get(key)) : url.searchParams.delete(key));
                 history.replaceState(null, '', url);
                 reset.classList.toggle('hidden', ![...p.keys()].length);
                 // seçili ülke: bayrak + vurgulu çerçeve
@@ -286,15 +289,21 @@
                 country.classList.toggle('text-brand-900', !!country.value);
                 country.classList.toggle('border-slate-200', !country.value);
                 country.classList.toggle('text-slate-600', !country.value);
+                // gün seçildiyse takvim vurgulu, zaman düğmeleri soluk (o gün geçerli)
+                const day = form.querySelector('[name="date"]').value;
+                const wrap = form.querySelector('[data-date-wrap]');
+                wrap.classList.toggle('border-sky-400', !!day); wrap.classList.toggle('bg-sky-50', !!day); wrap.classList.toggle('border-slate-200', !day);
+                form.querySelector('[role="radiogroup"]').classList.toggle('opacity-40', !!day);
                 refresh({ dim: true });
             };
             let typing;
-            form.addEventListener('input', (e) => { clearTimeout(typing); typing = setTimeout(apply, e.target.type === 'search' ? 300 : 0); });
+            form.addEventListener('input', (e) => { if (e.target.name === 'when') form.querySelector('[name="date"]').value = ''; clearTimeout(typing); typing = setTimeout(apply, e.target.type === 'search' ? 300 : 0); });
             reset.addEventListener('click', () => {
                 form.querySelector('[name="q"]').value = '';
                 form.querySelector('[name="when"][value="0"]').checked = true;
                 form.querySelector('[name="device"][value=""]').checked = true;
                 country.value = '';
+                form.querySelector('[name="date"]').value = '';
                 apply();
             });
             setInterval(refresh, 10000);

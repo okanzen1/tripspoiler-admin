@@ -27,10 +27,24 @@ class Analytics
     private readonly CarbonImmutable $previousStart;
     private readonly CarbonImmutable $previousEnd;
 
-    public function __construct(public readonly int $days)
+    /** Gün sayısı (son X gün) ya da takvimden seçilen tarih aralığı */
+    public readonly int $days;
+
+    public readonly bool $custom;
+
+    public function __construct(int $days, ?CarbonImmutable $from = null, ?CarbonImmutable $to = null)
     {
-        $this->end = CarbonImmutable::now()->endOfDay();
-        $this->start = $this->end->subDays($days - 1)->startOfDay();
+        $this->custom = $from !== null && $to !== null;
+        if ($this->custom) {
+            [$from, $to] = $from->greaterThan($to) ? [$to, $from] : [$from, $to];
+            $this->end = $to->endOfDay();
+            $this->start = $from->startOfDay();
+            $days = (int) $this->start->diffInDays($this->end->startOfDay()) + 1;
+        } else {
+            $this->end = CarbonImmutable::now()->endOfDay();
+            $this->start = $this->end->subDays($days - 1)->startOfDay();
+        }
+        $this->days = $days;
         $this->previousEnd = $this->start->subSecond();
         $this->previousStart = $this->start->subDays($days);
     }
@@ -208,8 +222,11 @@ class Analytics
     public static function visitors(array $filters = [], int $limit = 50): Collection
     {
         $range = (int) ($filters['range'] ?? 0);
+        // takvimden gün seçildiyse yalnızca o gün; yoksa bugün / son X gün
+        $date = $filters['date'] ?? null;
         $query = Visit::query()->where('visitor_id', 'not like', 'demo_%')
-            ->where('created_at', '>=', ($range > 0 ? now(self::TIMEZONE)->subDays($range) : now(self::TIMEZONE))->startOfDay()->format('Y-m-d H:i:s'))
+            ->when($date, fn ($q) => $q->whereBetween('created_at', ["{$date} 00:00:00", "{$date} 23:59:59"]),
+                fn ($q) => $q->where('created_at', '>=', ($range > 0 ? now(self::TIMEZONE)->subDays($range) : now(self::TIMEZONE))->startOfDay()->format('Y-m-d H:i:s')))
             ->when($filters['country'] ?? null, fn ($q, $country) => $q->where('country', $country))
             ->when($filters['device'] ?? null, fn ($q, $device) => $q->where('device', $device))
             ->when(trim((string) ($filters['q'] ?? '')), fn ($q, $term) => $q->where(fn ($w) => $w

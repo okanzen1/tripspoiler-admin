@@ -108,4 +108,44 @@ class AnalyticsTest extends TestCase
         $this->artisan('analytics:demo', ['--clear' => true])->assertSuccessful();
         $this->assertSame(['real'], Visit::pluck('visitor_id')->all());
     }
+
+    public function test_settings_page_blocks_ips_and_purges_their_records(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $hash = \App\Support\Privacy::hash('81.214.164.227');
+        $this->visit('a', 's1', '/x', '2026-10-30 10:00:00', ['ip' => '81.214.164.227', 'ip_hash' => $hash]);
+        $this->visit('b', 's2', '/y', '2026-10-30 10:00:00', ['ip' => '1.1.1.1', 'ip_hash' => \App\Support\Privacy::hash('1.1.1.1')]);
+
+        $this->actingAs($admin)->get(route('analytics-settings.index'))->assertOk()->assertSee('İstenmeyen IP');
+
+        // geçersiz IP reddedilir, geçerliler kaydedilir
+        $this->actingAs($admin)->put(route('analytics-settings.blocked'), ['ips' => "81.214.164.227\nbozuk"])->assertSessionHasErrors('ips');
+        $this->actingAs($admin)->put(route('analytics-settings.blocked'), ['ips' => "81.214.164.227, 81.214.164.227\n"])->assertSessionHasNoErrors();
+        $this->assertSame(['81.214.164.227'], \App\Support\AnalyticsIps::blocked());
+        $this->assertSame(1, \App\Support\AnalyticsIps::counts(['81.214.164.227'])['81.214.164.227']);
+
+        // eski kayıtlar silinir, diğer ziyaretçiye dokunulmaz
+        $this->actingAs($admin)->delete(route('analytics-settings.purge'))->assertSessionHasNoErrors();
+        $this->assertSame(0, Visit::where('ip_hash', $hash)->count());
+        $this->assertSame(1, Visit::count());
+
+        // editör ayar sayfasını açamaz
+        $this->actingAs(User::factory()->create())->get(route('analytics-settings.index'))->assertRedirect(); // yetkisiz: geri yönlendirilir
+    }
+
+    public function test_custom_date_range_and_visitor_day_filter(): void
+    {
+        $this->visit('a', 's1', '/x', '2026-10-20 10:00:00');
+        $this->visit('b', 's2', '/y', '2026-10-25 10:00:00');
+
+        $range = new Analytics(30, \Carbon\CarbonImmutable::parse('2026-10-25'), \Carbon\CarbonImmutable::parse('2026-10-20'));
+        $this->assertTrue($range->custom);
+        $this->assertSame(6, $range->days); // ters verilse de 20–25 arası
+        $this->assertSame(2, $range->kpis()['visitors']['value']);
+
+        $this->assertSame(['b'], Analytics::visitors(['date' => '2026-10-25'])->map(fn ($v) => $v->last->visitor_id)->all());
+
+        $admin = User::factory()->admin()->create();
+        $this->actingAs($admin)->get(route('analytics.index', ['from' => '2026-10-20', 'to' => '2026-10-25']))->assertOk()->assertSee('6 gün');
+    }
 }

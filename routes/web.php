@@ -191,6 +191,10 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
 // Sadece admin
 Route::middleware(['auth', 'role:admin'])->prefix('yonetim')->group(function () {
     Route::get('/', [ManagementController::class, 'index'])->name('management.index');
+    // Analitik ayarları: sayılmayan / istenmeyen IP'ler, eski kayıtları silme
+    Route::get('/analitik-ayarlari', [\App\Http\Controllers\AnalyticsSettingsController::class, 'index'])->name('analytics-settings.index');
+    Route::put('/analitik-ayarlari/istenmeyen-ip', [\App\Http\Controllers\AnalyticsSettingsController::class, 'saveBlocked'])->name('analytics-settings.blocked');
+    Route::delete('/analitik-ayarlari/kayitlar', [\App\Http\Controllers\AnalyticsSettingsController::class, 'purge'])->name('analytics-settings.purge');
     Route::get('/roller', [ManagementController::class, 'roles'])->name('roles.index');
     Route::get('/islem-kaydi', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index');
     // Silinen resimler (çöp kutusu, 30 gün)

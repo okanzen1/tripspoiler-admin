@@ -14,10 +14,16 @@ class AnalyticsController extends Controller
     public function index(Request $request)
     {
         $days = (int) $request->get('range', 30);
-        $analytics = new Analytics(array_key_exists($days, Analytics::RANGES) ? $days : 30);
+        // takvimden seçilen aralık (from–to, en fazla 1 yıl); yoksa son 7 / 30 / 90 gün
+        $date = fn ($v) => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $v) ? \Carbon\CarbonImmutable::createFromFormat('Y-m-d', $v)->startOfDay() : null;
+        [$from, $to] = [$date($request->get('from')), $date($request->get('to'))];
+        if ($from && $to && abs($from->diffInDays($to)) > 366) {
+            $from = $to->subDays(366);
+        }
+        $analytics = new Analytics(array_key_exists($days, Analytics::RANGES) ? $days : 30, $from && $to ? $from : null, $from && $to ? $to : null);
 
-        // Etiketler (tarih, ülke, cihaz adları) panel diline göre değiştiği için dil de anahtarda
-        $key = 'analytics:' . $analytics->days . ':' . app()->getLocale() . ':' . $analytics->end->toDateString();
+        // Etiketler (tarih, ülke, cihaz adları) panel diline göre değiştiği için dil de anahtarda; sürüm: kayıt silinince artar
+        $key = 'analytics:' . Cache::get('analytics:version', 0) . ':' . $analytics->start->toDateString() . ':' . app()->getLocale() . ':' . $analytics->end->toDateString();
         $data = Cache::remember($key, self::CACHE_SECONDS, fn () => [
             'kpis' => $analytics->kpis(),
             'daily' => $analytics->daily(),
@@ -56,6 +62,7 @@ class AnalyticsController extends Controller
             'range' => array_key_exists((int) $request->query('when'), Analytics::LIVE_RANGES) ? (int) $request->query('when') : 0,
             'country' => preg_match('/^[A-Z]{2}$/', (string) $request->query('country')) ? $request->query('country') : null,
             'device' => in_array($request->query('device'), ['desktop', 'mobile', 'tablet'], true) ? $request->query('device') : null,
+            'date' => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $request->query('date')) ? $request->query('date') : null,
         ];
     }
 
