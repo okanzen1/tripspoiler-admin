@@ -78,8 +78,8 @@
                 <span class="mt-1 block text-xs text-slate-500">{{ __('Yazarsan kartta “200+ aktivite daha” diye görünür; boş bırakırsan sayı yazılmaz.') }}</span>
             </label>
 
-            <x-admin.image-upload name="image" :label="__('Kart resmi (isteğe bağlı)')" :current="$link->imageUrl('md')" placeholder="{{ __('Resim yok') }}"
-                :hint="__('Yüklersen kartın arka planında görünür; yüklemezsen renkli zemin kullanılır. JPG, PNG ya da WebP · en fazla 5 MB')" />
+            <x-admin.image-upload name="image" :label="__('Kart resmi (isteğe bağlı)')" :current="$link->imageUrl('md')" :focus="$link->image_focus ?? 50" placeholder="{{ __('Resim yok') }}"
+                :hint="__('Dikey resim: 1200 × 1500 px (4:5). Yazılar resmin alt yarısına gelir, ana konu üst-orta kısımda olsun. Kaydırıcı: kart darken resmin hangi tarafı görünsün. JPG, PNG ya da WebP · en fazla 5 MB')" />
             @error('image') <span class="block text-xs font-medium text-red-600">{{ $message }}</span> @enderror
 
             <label class="flex items-center gap-3">

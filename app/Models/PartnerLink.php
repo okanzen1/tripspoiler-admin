@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class PartnerLink extends Model
 {
-    protected $fillable = ['city_id', 'partner_id', 'type', 'url', 'count_label', 'image_path', 'active', 'sort_order'];
+    protected $fillable = ['city_id', 'partner_id', 'type', 'url', 'count_label', 'image_path', 'image_focus', 'active', 'sort_order'];
 
     /** Hangi sekmede çıkar (boş = hepsinde); sitedeki aktivite türleriyle aynı */
     public const TYPES = ['pass' => 'Şehir kartları', 'product' => 'Deneyimler', 'package' => 'Paketler'];

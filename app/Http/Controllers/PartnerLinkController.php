@@ -93,8 +93,11 @@ class PartnerLinkController extends Controller
             'count_label' => ['nullable', 'string', 'max:20'],
             'type' => ['nullable', 'in:' . implode(',', array_keys(PartnerLink::TYPES))],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'image_focus' => ['nullable', 'integer', 'between:0,100'],
         ], [], ['city_id' => __('şehir'), 'partner_id' => __('partner'), 'url' => __('bağlantı'), 'count_label' => __('aktivite sayısı'), 'image' => __('resim')]);
         unset($data['image']);
+
+        $data['image_focus'] = (int) ($data['image_focus'] ?? 50);
 
         return [...$data, 'type' => ($data['type'] ?? null) ?: null, 'city_id' => ($data['city_id'] ?? null) ?: null, 'count_label' => trim((string) ($data['count_label'] ?? '')) ?: null, 'active' => $request->boolean('active')];
     }
