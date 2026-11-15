@@ -54,7 +54,7 @@ TXT;
                 <select name="partner_id" required data-preview="partner" @class([$field, $err('partner_id')])>
                     <option value="">{{ __('Seç…') }}</option>
                     @foreach ($partners as $partner)
-                        <option value="{{ $partner->id }}" @selected((string) old('partner_id', $link->partner_id) === (string) $partner->id)>{{ $partner->name }}{{ $partner->active ? '' : ' (' . __('pasif') . ')' }}</option>
+                        <option value="{{ $partner->id }}" data-logo="{{ $partner->logoUrl() }}" @selected((string) old('partner_id', $link->partner_id) === (string) $partner->id)>{{ $partner->name }}{{ $partner->active ? '' : ' (' . __('pasif') . ')' }}</option>
                     @endforeach
                 </select>
                 @error('partner_id') <span class="mt-1.5 block text-xs font-medium text-red-600">{{ $message }}</span> @enderror
@@ -99,7 +99,7 @@ TXT;
                 <span class="mt-1 block text-xs text-slate-500">{{ __('Yazarsan kartta “200+ aktivite daha” diye görünür; boş bırakırsan sayı yazılmaz.') }}</span>
             </label>
 
-            <x-admin.image-upload name="image" :label="__('Kart resmi (isteğe bağlı)')" :current="$link->imageUrl('md')" :focus="$link->image_focus ?? 50" placeholder="{{ __('Resim yok') }}"
+            <x-admin.image-upload name="image" :label="__('Kart resmi (isteğe bağlı)')" :current="$link->imageUrl('sm')" :focus="$link->image_focus ?? 50" placeholder="{{ __('Resim yok') }}"
                 :hint="__('Dikey resim: 1200 × 1500 px (4:5). Yazılar resmin alt yarısına gelir, ana konu üst-orta kısımda olsun. Kaydırıcı: kart darken resmin hangi tarafı görünsün. JPG, PNG ya da WebP · en fazla 5 MB')" />
             @error('image') <span class="block text-xs font-medium text-red-600">{{ $message }}</span> @enderror
             {{-- grafikere / yapay zekâya verilecek tarif (kopyalanabilir) --}}
@@ -132,20 +132,33 @@ TXT;
             </label>
         </x-admin.card>
 
-        {{-- sitede nasıl görünür (Türkçe örnek) --}}
+        {{-- sitede nasıl görünür: sitedeki kartın aynısı (Türkçe yazılarla); resim, logo ve sayı formla birlikte değişir --}}
         <div class="xl:col-span-2">
             <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">{{ __('Sitede böyle görünür') }}</p>
-            <div class="relative isolate flex aspect-[4/5] max-w-xs flex-col justify-between overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-[#1f2a4d] to-[#C62E2E] p-6 text-white shadow-xl">
-                <div class="pointer-events-none absolute -right-10 -top-10 -z-10 size-40 rounded-full bg-white/10 blur-2xl"></div>
-                <span class="grid size-12 place-items-center rounded-2xl bg-white text-slate-900 shadow">
-                    <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+            <div class="relative isolate flex min-h-[24rem] max-w-[18rem] flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-[#1f2a4d] to-[#C62E2E] p-6 text-white shadow-[0_18px_40px_-22px_rgba(198,46,46,0.8)] ring-1 ring-white/10">
+                <img data-preview-image src="{{ $link->imageUrl('sm') }}" alt="" @class(['absolute inset-0 -z-20 h-full w-full object-cover', 'hidden' => !$link->image_path]) style="object-position: {{ $link->image_focus ?? 50 }}% center">
+                <span data-preview-shade @class(['pointer-events-none absolute inset-0 -z-10 bg-gradient-to-t from-slate-950/95 via-slate-950/60 to-slate-950/20', 'hidden' => !$link->image_path])></span>
+                <span class="flex items-start justify-between gap-2">
+                    <span class="inline-flex h-11 max-w-[75%] items-center rounded-xl bg-white px-3 shadow">
+                        <img data-preview-logo src="" alt="" class="hidden h-6 w-auto max-w-full object-contain">
+                        <span data-preview-text="partner" class="truncate text-sm font-extrabold text-slate-900">Partner</span>
+                    </span>
+                    <span class="grid size-9 shrink-0 place-items-center rounded-full bg-white/15">
+                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg>
+                    </span>
                 </span>
-                <div>
-                    <p class="text-xl font-extrabold leading-tight">Aradığını bulamadın mı?</p>
-                    <p class="mt-2 text-sm text-white/75"><span data-preview-text="partner">Partner</span>'da <span data-preview-text="city">şehir</span> için <span data-preview-text="count"></span> daha fazla aktivite</p>
-                </div>
-                <span class="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-slate-900"><span data-preview-text="partner">Partner</span>'da gör ↗</span>
+                <span class="mt-auto block pt-5">
+                    <span class="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-300">Daha fazlası</span>
+                    <span class="mt-1.5 block text-2xl font-extrabold leading-tight">Aradığını bulamadın mı?</span>
+                    <span class="mt-1.5 block text-sm leading-snug text-white/75" data-preview-text="line">Şehir için daha fazla aktivite</span>
+                </span>
+                <span class="mt-5 inline-flex items-center justify-center gap-1.5 rounded-xl bg-white px-3 py-3 text-sm font-bold text-slate-900">
+                    <span class="truncate"><span data-preview-text="partner">Partner</span> sitesinde gör</span>
+                    <svg class="size-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg>
+                </span>
+                <span class="mt-2 block text-center text-[11px] text-white/50">Partnerin sitesinde açılır</span>
             </div>
+            <p class="mt-2 max-w-[18rem] text-xs text-slate-400">{{ __('“Bütün şehirler” seçiliyse sitede o anki şehrin adı yazar.') }}</p>
         </div>
     </form>
 @endsection
@@ -158,12 +171,35 @@ TXT;
             const sync = () => {
                 const partner = form.querySelector('[data-preview="partner"]');
                 const city = form.querySelector('[data-preview="city"]');
-                const count = form.querySelector('[data-preview="count"]');
+                const count = form.querySelector('[data-preview="count"]').value.trim();
                 const set = (key, text) => document.querySelectorAll(`[data-preview-text="${key}"]`).forEach((el) => el.textContent = text);
-                set('partner', partner.value ? partner.selectedOptions[0].textContent.replace(/\s*\(.*\)$/, '') : 'Partner');
-                set('city', city.value ? city.selectedOptions[0].textContent.trim().replace(/^\S+\s/, '') : 'her şehir');
-                set('count', count.value.trim());
+                const option = partner.selectedOptions[0];
+                set('partner', partner.value ? option.textContent.replace(/\s*\(.*\)$/, '').trim() : 'Partner');
+                // logo varsa ad yerine logo (sitedeki gibi)
+                const logo = document.querySelector('[data-preview-logo]');
+                const logoUrl = partner.value ? option.dataset.logo : '';
+                logo.src = logoUrl || '';
+                logo.classList.toggle('hidden', !logoUrl);
+                logo.nextElementSibling.classList.toggle('hidden', !!logoUrl);
+                const cityName = city.value ? city.selectedOptions[0].textContent.trim().replace(/^\S+\s/, '') : 'İstanbul';
+                set('line', count ? `${cityName} için ${count} aktivite daha` : `${cityName} için daha fazla aktivite`);
+                // odak kaydırıcısı
+                const focus = form.querySelector('[name="image_focus"]');
+                if (focus) document.querySelector('[data-preview-image]').style.objectPosition = `${focus.value}% center`;
             };
+            // yeni resim seçilince önizlemede hemen göster; "Kaldır" ile gizle
+            form.querySelector('input[type="file"][name="image"]')?.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                const img = document.querySelector('[data-preview-image]');
+                if (!file) return;
+                img.src = URL.createObjectURL(file);
+                img.classList.remove('hidden');
+                document.querySelector('[data-preview-shade]').classList.remove('hidden');
+            });
+            form.querySelector('[data-image-upload] [data-remove]')?.addEventListener('click', () => {
+                document.querySelector('[data-preview-image]').classList.add('hidden');
+                document.querySelector('[data-preview-shade]').classList.add('hidden');
+            });
             form.addEventListener('input', sync);
             sync();
             document.querySelectorAll('[data-copy-brief]').forEach((btn) => btn.addEventListener('click', async () => {
