@@ -25,28 +25,6 @@
         <x-slot:icon><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></x-slot:icon>
 
         <div class="flex flex-wrap items-center gap-2">
-            <nav class="flex rounded-xl bg-slate-100 p-1 text-sm font-medium" aria-label="{{ __('Dönem') }}">
-                @foreach (\App\Services\Analytics::RANGES as $days => $label)
-                    @php $on = !$analytics->custom && $analytics->days === $days; @endphp
-                    <a href="{{ route('analytics.index', ['range' => $days]) }}" @if ($on) aria-current="page" @endif
-                        @class([
-                            'rounded-lg px-3.5 py-1.5 transition',
-                            'bg-white text-sky-700 shadow-sm' => $on,
-                            'text-slate-500 hover:text-slate-800' => !$on,
-                        ])>{{ __($label) }}</a>
-                @endforeach
-            </nav>
-            {{-- takvim: başlangıç – bitiş --}}
-            <form method="GET" action="{{ route('analytics.index') }}" data-no-ajax
-                @class(['flex items-center gap-1.5 rounded-xl p-1 ring-1 transition', 'bg-sky-50 ring-sky-300' => $analytics->custom, 'bg-white ring-slate-200' => !$analytics->custom])>
-                <svg class="ml-2 size-4 shrink-0 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
-                <input type="date" name="from" value="{{ $analytics->start->toDateString() }}" max="{{ now()->toDateString() }}" aria-label="{{ __('Başlangıç') }}"
-                    class="h-8 rounded-lg border-0 bg-transparent px-1.5 text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-sky-300">
-                <span class="text-slate-300">–</span>
-                <input type="date" name="to" value="{{ $analytics->end->toDateString() }}" max="{{ now()->toDateString() }}" aria-label="{{ __('Bitiş') }}"
-                    class="h-8 rounded-lg border-0 bg-transparent px-1.5 text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-sky-300">
-                <button type="submit" class="h-8 rounded-lg bg-sky-600 px-3 text-xs font-semibold text-white transition hover:bg-sky-700">{{ __('Göster') }}</button>
-            </form>
             <a href="{{ route('analytics-settings.index') }}" title="{{ __('Analitik ayarları') }}"
                 class="inline-flex h-10 items-center gap-1.5 rounded-xl bg-white px-3 text-xs font-semibold text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-900">
                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" /></svg>
@@ -57,6 +35,80 @@
 @endsection
 
 @section('content')
+    {{-- TEK FİLTRE ÇUBUĞU: dönem, takvim, cihaz, ülke, arama — sayfadaki her şey (kartlar, grafik, tablolar, ziyaretçiler) buna göre --}}
+    @php
+        $periodLabel = $filters['custom']
+            ? $analytics->start->locale(app()->getLocale())->translatedFormat('j M') . ' – ' . $analytics->end->locale(app()->getLocale())->translatedFormat('j M Y')
+            : __(\App\Services\Analytics::RANGES[$filters['range']]);
+        $active = $filters['q'] || $filters['device'] || $filters['country'] || $filters['custom'] || $filters['range'] !== 30;
+    @endphp
+    <form method="GET" action="{{ route('analytics.index') }}" data-analytics-filters data-no-ajax @if ($filters['custom']) data-custom @endif
+        class="sticky top-0 z-20 -mx-1 mb-6 rounded-2xl bg-gradient-to-r from-sky-600 via-indigo-600 to-violet-600 p-3 shadow-[0_18px_40px_-22px_rgba(79,70,229,0.9)] sm:p-4">
+        <div class="flex flex-wrap items-center gap-2.5">
+            {{-- dönem --}}
+            <div class="inline-flex h-10 items-center rounded-xl bg-white/15 p-1 ring-1 ring-white/20" role="radiogroup" aria-label="{{ __('Dönem') }}">
+                @foreach (\App\Services\Analytics::RANGES as $days => $label)
+                    <label class="cursor-pointer">
+                        <input type="radio" name="range" value="{{ $days }}" class="peer sr-only" data-period @checked($filters['range'] === $days)>
+                        <span class="block rounded-lg px-3 py-1.5 text-xs font-semibold text-white/80 transition hover:text-white peer-checked:bg-white peer-checked:text-indigo-700 peer-checked:shadow-sm">{{ __($label) }}</span>
+                    </label>
+                @endforeach
+            </div>
+
+            {{-- takvim: başlangıç – bitiş --}}
+            <div @class(['inline-flex h-10 items-center gap-1 rounded-xl px-2 ring-1 transition', 'bg-white text-indigo-700 ring-white' => $filters['custom'], 'bg-white/15 text-white ring-white/20' => !$filters['custom']])>
+                <svg class="size-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
+                <input type="date" name="from" value="{{ $filters['from'] }}" max="{{ now()->toDateString() }}" aria-label="{{ __('Başlangıç') }}" data-date
+                    class="h-8 w-[8.5rem] rounded-lg border-0 bg-transparent px-1 text-xs font-semibold text-current outline-none [color-scheme:light] focus:ring-2 focus:ring-white/60">
+                <span class="opacity-50">–</span>
+                <input type="date" name="to" value="{{ $filters['to'] }}" max="{{ now()->toDateString() }}" aria-label="{{ __('Bitiş') }}" data-date
+                    class="h-8 w-[8.5rem] rounded-lg border-0 bg-transparent px-1 text-xs font-semibold text-current outline-none focus:ring-2 focus:ring-white/60">
+            </div>
+
+            {{-- cihaz --}}
+            <div class="inline-flex h-10 items-center rounded-xl bg-white/15 p-1 ring-1 ring-white/20" role="radiogroup" aria-label="{{ __('Cihaz') }}">
+                @foreach (['' => ['Hepsi', null], 'desktop' => ['Bilgisayar', '<rect x="2.5" y="4.5" width="19" height="12" rx="2" /><path d="M8 20h8M12 16.5V20" />'], 'mobile' => ['Telefon', '<rect x="7" y="2.5" width="10" height="19" rx="2" /><path d="M11 18.5h2" />'], 'tablet' => ['Tablet', '<rect x="4.5" y="2.5" width="15" height="19" rx="2" /><path d="M11 18.5h2" />']] as $value => [$label, $icon])
+                    <label class="cursor-pointer" title="{{ __($label) }}">
+                        <input type="radio" name="device" value="{{ $value }}" class="peer sr-only" @checked(($filters['device'] ?? '') === $value)>
+                        <span class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white/80 transition hover:text-white peer-checked:bg-white peer-checked:text-violet-700 peer-checked:shadow-sm">
+                            @if ($icon)
+                                <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $icon !!}</svg>
+                                <span class="hidden xl:inline">{{ __($label) }}</span>
+                            @else
+                                {{ __($label) }}
+                            @endif
+                        </span>
+                    </label>
+                @endforeach
+            </div>
+
+            {{-- ülke --}}
+            <label class="relative">
+                <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm leading-none">{{ $filters['country'] ? \App\Services\Analytics::flag($filters['country']) : '🌍' }}</span>
+                <select name="country" @class(['h-10 appearance-none rounded-xl border-0 pl-9 pr-8 text-xs font-semibold outline-none ring-1 transition focus:ring-2', 'bg-white text-indigo-700 ring-white' => $filters['country'], 'bg-white/15 text-white ring-white/20 [&>option]:text-slate-900' => !$filters['country']])>
+                    <option value="">{{ __('Tüm ülkeler') }}</option>
+                    @foreach ($live['countries'] as $code)
+                        <option value="{{ $code }}" @selected($filters['country'] === $code)>{{ \App\Services\Analytics::flag($code) }} {{ \Locale::getDisplayRegion("-{$code}", app()->getLocale()) ?: $code }}</option>
+                    @endforeach
+                </select>
+                <svg class="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+            </label>
+
+            {{-- arama (Enter) --}}
+            <label class="relative min-w-[12rem] flex-1">
+                <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+                <input type="search" name="q" value="{{ $filters['q'] }}" placeholder="{{ __('Ziyaretçide ara: IP, sayfa, şehir, kaynak… (Enter)') }}" autocomplete="off"
+                    class="h-10 w-full rounded-xl border-0 bg-white/15 pl-9 pr-3 text-sm text-white outline-none ring-1 ring-white/20 transition placeholder:text-white/60 focus:bg-white focus:text-slate-900 focus:ring-2 focus:ring-white focus:placeholder:text-slate-400">
+            </label>
+
+            @if ($active)
+                <a href="{{ route('analytics.index') }}" class="inline-flex h-10 items-center gap-1 rounded-xl px-3 text-xs font-semibold text-white/85 transition hover:bg-white/15 hover:text-white">
+                    <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                    {{ __('Temizle') }}
+                </a>
+            @endif
+        </div>
+    </form>
     @if ($analytics->hasDemoData())
         <div class="mb-6 flex items-start gap-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200">
             <svg class="mt-0.5 size-5 shrink-0 text-amber-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.5 2.6a1.7 1.7 0 0 1 3 0l6.3 11.5a1.7 1.7 0 0 1-1.5 2.5H3.7a1.7 1.7 0 0 1-1.5-2.5L8.5 2.6ZM10 7a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 7Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" /></svg>
@@ -78,7 +130,7 @@
                         </span>
                         <div>
                         <h2 class="text-sm font-semibold text-slate-900">{{ __('Ziyaretçiler') }}</h2>
-                        <p class="text-xs text-slate-500">{{ __('Aynı IP tek satırda · satıra tıkla, o ziyaretçinin gezdiği her şeyi gör · botlar sayılmaz') }}</p>
+                        <p class="text-xs text-slate-500"><strong class="font-semibold text-indigo-700">{{ $periodLabel }}</strong> · {{ __('Aynı IP tek satırda · satıra tıkla, o ziyaretçinin gezdiği her şeyi gör · botlar sayılmaz') }}</p>
                         </div>
                     </div>
                     <p class="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-100">
@@ -87,64 +139,6 @@
                     </p>
                 </div>
 
-                <form class="mt-4 flex flex-wrap items-center gap-2.5" data-live-filters onsubmit="return false">
-                    {{-- ara --}}
-                    <label class="relative min-w-[13rem] flex-1 lg:max-w-xs">
-                        <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
-                        <input type="search" name="q" value="{{ $liveFilters['q'] }}" placeholder="{{ __('IP, sayfa, şehir, kaynak…') }}" autocomplete="off"
-                            class="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-900 focus:ring-4 focus:ring-brand-900/10">
-                    </label>
-
-                    {{-- zaman: tek tıkla --}}
-                    <div class="inline-flex h-9 items-center rounded-xl bg-slate-100 p-1" role="radiogroup" aria-label="{{ __('Zaman') }}">
-                        @foreach (\App\Services\Analytics::LIVE_RANGES as $value => $label)
-                            <label class="cursor-pointer">
-                                <input type="radio" name="when" value="{{ $value }}" class="peer sr-only" @checked($liveFilters['range'] === $value)>
-                                <span class="block rounded-lg px-3 py-1 text-xs font-semibold text-slate-500 transition hover:text-slate-800 peer-checked:bg-sky-500 peer-checked:text-white peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500">{{ __(str_replace('Son ', '', $label)) }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-
-                    {{-- takvim: belirli bir gün (seçilince yukarıdaki zaman düğmeleri yerine o gün) --}}
-                    <label @class(['inline-flex h-9 items-center gap-1.5 rounded-xl border bg-white pl-2.5 pr-1 transition', 'border-sky-400 bg-sky-50' => $liveFilters['date'], 'border-slate-200' => !$liveFilters['date']]) data-date-wrap title="{{ __('Gün seç') }}">
-                        <svg class="size-3.5 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
-                        <input type="date" name="date" value="{{ $liveFilters['date'] }}" max="{{ now()->toDateString() }}" aria-label="{{ __('Gün seç') }}"
-                            class="h-7 border-0 bg-transparent p-0 text-xs font-semibold text-slate-600 outline-none focus:ring-0">
-                    </label>
-
-                    {{-- cihaz: tek tıkla, ikonlu --}}
-                    <div class="inline-flex h-9 items-center rounded-xl bg-slate-100 p-1" role="radiogroup" aria-label="{{ __('Cihaz') }}">
-                        @foreach (['' => ['Hepsi', null], 'desktop' => ['Bilgisayar', '<rect x="2.5" y="4.5" width="19" height="12" rx="2" /><path d="M8 20h8M12 16.5V20" />'], 'mobile' => ['Telefon', '<rect x="7" y="2.5" width="10" height="19" rx="2" /><path d="M11 18.5h2" />'], 'tablet' => ['Tablet', '<rect x="4.5" y="2.5" width="15" height="19" rx="2" /><path d="M11 18.5h2" />']] as $value => [$label, $icon])
-                            <label class="cursor-pointer" title="{{ __($label) }}">
-                                <input type="radio" name="device" value="{{ $value }}" class="peer sr-only" @checked(($liveFilters['device'] ?? '') === $value)>
-                                <span class="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-500 transition hover:text-slate-800 peer-checked:bg-violet-500 peer-checked:text-white peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500">
-                                    @if ($icon)
-                                        <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $icon !!}</svg>
-                                        <span class="hidden xl:inline">{{ __($label) }}</span>
-                                    @else
-                                        {{ __($label) }}
-                                    @endif
-                                </span>
-                            </label>
-                        @endforeach
-                    </div>
-
-                    {{-- ülke --}}
-                    <label class="relative">
-                        <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm leading-none" data-country-flag>{{ $liveFilters['country'] ? \App\Services\Analytics::flag($liveFilters['country']) : '🌍' }}</span>
-                        <select name="country" class="h-9 appearance-none rounded-xl border bg-white bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394a3b8%22 stroke-width=%222.5%22><path d=%22m6 9 6 6 6-6%22/></svg>')] bg-[length:14px] bg-[right_10px_center] bg-no-repeat pl-9 pr-8 text-xs font-semibold outline-none transition focus:ring-4 focus:ring-brand-900/10 {{ $liveFilters['country'] ? 'border-brand-900 text-brand-900' : 'border-slate-200 text-slate-600' }}" data-country-select>
-                            <option value="">{{ __('Tüm ülkeler') }}</option>
-                            @foreach ($live['countries'] as $code)
-                                <option value="{{ $code }}" data-flag="{{ \App\Services\Analytics::flag($code) }}" @selected($liveFilters['country'] === $code)>{{ \Locale::getDisplayRegion("-{$code}", app()->getLocale()) ?: $code }}</option>
-                            @endforeach
-                        </select>
-                    </label>
-
-                    <button type="button" data-live-reset @class(['inline-flex h-9 items-center gap-1 rounded-xl px-3 text-xs font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800', 'hidden' => !array_filter($liveFilters)])>
-                        <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
-                        {{ __('Filtreleri temizle') }}
-                    </button>
-                </form>
             </div>
 
             <div data-live-part="visitors" class="transition-opacity duration-150">@include('admin.analytics._live-visitors')</div>
@@ -260,29 +254,38 @@
 
 @push('scripts')
     <script>
-        // Canlı bölüm: sekme görünürken 10 sn'de bir, filtre değişince hemen yenile (sayfa yenilenmez).
-        // Sunucu iki parçayı birlikte döner (özet + ziyaretçi tablosu); filtreler yenilenen alanın dışında kalır.
-        // Filtreler adrese yazılır: sayfa yenilense ya da link paylaşılsa da kalır.
+        // Filtre çubuğu: seçim değişince sayfa o filtreyle yenilenir (arama Enter ile).
+        // Dönem düğmesine basınca takvim temizlenir; takvimden tarih seçilince dönem düğmesi kalkar.
+        (() => {
+            const form = document.querySelector('[data-analytics-filters]');
+            if (!form) return;
+            // takvim yalnızca seçildiyse (ya da zaten takvim aralığı açıksa) gönderilir; yoksa dönem düğmesi geçerli
+            let useDates = form.hasAttribute('data-custom');
+            const send = () => {
+                form.querySelectorAll('[data-date]').forEach((d) => d.disabled = !useDates);
+                form.querySelectorAll('[data-period]').forEach((r) => r.disabled = useDates);
+                form.querySelectorAll('input, select').forEach((el) => { if (el.name && el.value === '') el.disabled = true; });
+            };
+            form.addEventListener('change', (e) => {
+                if (e.target.name === 'q') return;
+                if (e.target.matches('[data-period]')) useDates = false;
+                if (e.target.matches('[data-date]')) useDates = true;
+                send();
+                form.submit();
+            });
+            form.addEventListener('submit', send);
+        })();
+
+        // Canlı bölüm: sekme görünürken 10 sn'de bir, sayfanın filtreleriyle yenilenir (sayfa yenilenmez).
         (() => {
             const root = document.querySelector('[data-live-analytics]');
-            const form = root?.querySelector('[data-live-filters]');
-            if (!root || !form) return;
-            const reset = form.querySelector('[data-live-reset]');
+            if (!root) return;
             const table = root.querySelector('[data-live-part="visitors"]');
-            const country = form.querySelector('[data-country-select]');
-            const params = () => {
-                const p = new URLSearchParams();
-                new FormData(form).forEach((value, key) => { if (String(value).trim() !== '' && !(key === 'when' && value === '0')) p.set(key, value); });
-                return p;
-            };
-            let ticket = 0;
-            const refresh = async ({ dim = false } = {}) => {
+            const refresh = async () => {
                 if (document.hidden) return;
-                const mine = ++ticket;
-                if (dim) table.classList.add('opacity-50');
                 try {
-                    const res = await fetch(root.dataset.url + '?' + params(), { headers: { Accept: 'text/html' }, credentials: 'same-origin' });
-                    if (!res.ok || res.redirected || mine !== ticket) return;
+                    const res = await fetch(root.dataset.url + location.search, { headers: { Accept: 'text/html' }, credentials: 'same-origin' });
+                    if (!res.ok || res.redirected) return;
                     const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
                     doc.querySelectorAll('[data-live-part]').forEach((part) => {
                         const target = root.querySelector(`[data-live-part="${part.dataset.livePart}"]`);
@@ -290,38 +293,7 @@
                     });
                     root.querySelector('[data-live-shown]').textContent = table.querySelector('[data-live-count]')?.textContent ?? '0';
                 } catch { /* bir sonraki turda tekrar */ }
-                finally { if (mine === ticket) table.classList.remove('opacity-50'); }
             };
-            const apply = () => {
-                const p = params();
-                const url = new URL(location.href);
-                ['q', 'when', 'country', 'device', 'date'].forEach((key) => p.has(key) ? url.searchParams.set(key, p.get(key)) : url.searchParams.delete(key));
-                history.replaceState(null, '', url);
-                reset.classList.toggle('hidden', ![...p.keys()].length);
-                // seçili ülke: bayrak + vurgulu çerçeve
-                const option = country.selectedOptions[0];
-                form.querySelector('[data-country-flag]').textContent = option?.dataset.flag || '🌍';
-                country.classList.toggle('border-brand-900', !!country.value);
-                country.classList.toggle('text-brand-900', !!country.value);
-                country.classList.toggle('border-slate-200', !country.value);
-                country.classList.toggle('text-slate-600', !country.value);
-                // gün seçildiyse takvim vurgulu, zaman düğmeleri soluk (o gün geçerli)
-                const day = form.querySelector('[name="date"]').value;
-                const wrap = form.querySelector('[data-date-wrap]');
-                wrap.classList.toggle('border-sky-400', !!day); wrap.classList.toggle('bg-sky-50', !!day); wrap.classList.toggle('border-slate-200', !day);
-                form.querySelector('[role="radiogroup"]').classList.toggle('opacity-40', !!day);
-                refresh({ dim: true });
-            };
-            let typing;
-            form.addEventListener('input', (e) => { if (e.target.name === 'when') form.querySelector('[name="date"]').value = ''; clearTimeout(typing); typing = setTimeout(apply, e.target.type === 'search' ? 300 : 0); });
-            reset.addEventListener('click', () => {
-                form.querySelector('[name="q"]').value = '';
-                form.querySelector('[name="when"][value="0"]').checked = true;
-                form.querySelector('[name="device"][value=""]').checked = true;
-                country.value = '';
-                form.querySelector('[name="date"]').value = '';
-                apply();
-            });
             setInterval(refresh, 10000);
             document.addEventListener('visibilitychange', () => !document.hidden && refresh());
         })();

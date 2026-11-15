@@ -26,12 +26,12 @@ class AnalyticsTest extends TestCase
         Visit::create(['visitor_id' => $visitor, 'session_id' => $session, 'path' => $path, 'created_at' => $at] + $extra);
     }
 
-    private function click(string $visitor, string $path, string $at, string $partner = 'getyourguide'): void
+    private function click(string $visitor, string $path, string $at, string $partner = 'getyourguide', array $extra = []): void
     {
         AffiliateClick::create([
             'visitor_id' => $visitor, 'session_id' => 's', 'partner' => $partner,
             'path' => $path, 'target_url' => 'https://example.com', 'created_at' => $at,
-        ]);
+        ] + $extra);
     }
 
     public function test_editor_and_admin_can_view_analytics(): void
@@ -143,9 +143,28 @@ class AnalyticsTest extends TestCase
         $this->assertSame(6, $range->days); // ters verilse de 20–25 arası
         $this->assertSame(2, $range->kpis()['visitors']['value']);
 
-        $this->assertSame(['b'], Analytics::visitors(['date' => '2026-10-25'])->map(fn ($v) => $v->last->visitor_id)->all());
+        $this->assertSame(['b'], Analytics::visitors(['from' => '2026-10-25', 'to' => '2026-10-25'])->map(fn ($v) => $v->last->visitor_id)->all());
+        $this->assertCount(2, Analytics::visitors(['from' => '2026-10-20', 'to' => '2026-10-25']));
 
         $admin = User::factory()->admin()->create();
         $this->actingAs($admin)->get(route('analytics.index', ['from' => '2026-10-20', 'to' => '2026-10-25']))->assertOk()->assertSee('6 gün');
+        $this->actingAs($admin)->get(route('analytics.live', ['from' => '2026-10-25', 'to' => '2026-10-25']))->assertOk();
+    }
+
+    public function test_one_filter_bar_applies_device_and_country_to_every_number(): void
+    {
+        $this->visit('a', 's1', '/x', '2026-10-31 10:00:00', ['device' => 'mobile', 'country' => 'TR']);
+        $this->visit('b', 's2', '/y', '2026-10-31 11:00:00', ['device' => 'desktop', 'country' => 'US']);
+        $this->click('a', '/x', '2026-10-31 10:01:00', extra: ['device' => 'mobile', 'country' => 'TR']);
+
+        // bugün (range=1), yalnızca telefon
+        $mobile = new Analytics(1, filters: ['device' => 'mobile']);
+        $this->assertSame(1, $mobile->kpis()['visitors']['value']);
+        $this->assertSame(1, $mobile->kpis()['clicks']['value']);
+        $this->assertSame(0, (new Analytics(1, filters: ['country' => 'US']))->kpis()['clicks']['value']);
+        $this->assertSame(2, (new Analytics(1))->kpis()['visitors']['value']);
+
+        $admin = User::factory()->admin()->create();
+        $this->actingAs($admin)->get(route('analytics.index', ['range' => 1, 'device' => 'mobile', 'country' => 'TR']))->assertOk()->assertSee('Temizle');
     }
 }

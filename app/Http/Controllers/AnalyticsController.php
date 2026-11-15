@@ -13,17 +13,11 @@ class AnalyticsController extends Controller
 
     public function index(Request $request)
     {
-        $days = (int) $request->get('range', 30);
-        // takvimden seçilen aralık (from–to, en fazla 1 yıl); yoksa son 7 / 30 / 90 gün
-        $date = fn ($v) => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $v) ? \Carbon\CarbonImmutable::createFromFormat('Y-m-d', $v)->startOfDay() : null;
-        [$from, $to] = [$date($request->get('from')), $date($request->get('to'))];
-        if ($from && $to && abs($from->diffInDays($to)) > 366) {
-            $from = $to->subDays(366);
-        }
-        $analytics = new Analytics(array_key_exists($days, Analytics::RANGES) ? $days : 30, $from && $to ? $from : null, $from && $to ? $to : null);
+        [$analytics, $filters] = $this->resolve($request);
 
         // Etiketler (tarih, ülke, cihaz adları) panel diline göre değiştiği için dil de anahtarda; sürüm: kayıt silinince artar
-        $key = 'analytics:' . Cache::get('analytics:version', 0) . ':' . $analytics->start->toDateString() . ':' . app()->getLocale() . ':' . $analytics->end->toDateString();
+        $key = 'analytics:' . Cache::get('analytics:version', 0) . ':' . $analytics->start->toDateString() . ':' . $analytics->end->toDateString()
+            . ':' . ($filters['device'] ?? '-') . ':' . ($filters['country'] ?? '-') . ':' . app()->getLocale();
         $data = Cache::remember($key, self::CACHE_SECONDS, fn () => [
             'kpis' => $analytics->kpis(),
             'daily' => $analytics->daily(),
@@ -34,15 +28,13 @@ class AnalyticsController extends Controller
             'countries' => $analytics->countries(),
         ]);
 
-        $filters = $this->liveFilters($request);
-
-        return view('admin.analytics.index', ['analytics' => $analytics, 'live' => Analytics::live($filters), 'liveFilters' => $filters, ...$data]);
+        return view('admin.analytics.index', ['analytics' => $analytics, 'live' => Analytics::live($filters), 'filters' => $filters, ...$data]);
     }
 
-    /** Canlı bölüm: sayfa 10 saniyede bir (ve filtre değişince) bunu çekip yerine koyar (önbelleksiz) */
+    /** Canlı bölüm: sayfa 10 saniyede bir bunu (sayfayla aynı filtrelerle) çekip yerine koyar (önbelleksiz) */
     public function live(Request $request)
     {
-        return view('admin.analytics._live', ['live' => Analytics::live($this->liveFilters($request))]);
+        return view('admin.analytics._live', ['live' => Analytics::live($this->resolve($request)[1])]);
     }
 
     /** Tek ziyaretçi (IP): bütün oturumları, sayfaları ve partner tıklamaları */
@@ -54,16 +46,36 @@ class AnalyticsController extends Controller
         return view('admin.analytics.visitor', ['who' => $who, ...$data]);
     }
 
-    /** Canlı liste filtreleri: ara, aralık, ülke, cihaz */
-    private function liveFilters(Request $request): array
+    /**
+     * Sayfanın üstündeki tek filtre çubuğu: dönem (bugün / son 7-30-90 gün ya da takvimden from–to), cihaz, ülke, arama.
+     * Kartlar, grafik, tablolar ve ziyaretçi listesi aynı filtreyi kullanır.
+     *
+     * @return array{0: Analytics, 1: array{q: ?string, device: ?string, country: ?string, range: ?int, from: string, to: string, custom: bool}}
+     */
+    private function resolve(Request $request): array
     {
-        return [
+        $date = fn ($v) => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $v) ? \Carbon\CarbonImmutable::createFromFormat('Y-m-d', $v)->startOfDay() : null;
+        [$from, $to] = [$date($request->query('from')), $date($request->query('to'))];
+        if ($from && $to && abs($from->diffInDays($to)) > 366) {
+            $from = $to->subDays(366);
+        }
+        $custom = $from && $to;
+        $days = (int) $request->query('range', 30);
+        $days = array_key_exists($days, Analytics::RANGES) ? $days : 30;
+        $device = in_array($request->query('device'), ['desktop', 'mobile', 'tablet'], true) ? $request->query('device') : null;
+        $country = preg_match('/^[A-Z]{2}$/', (string) $request->query('country')) ? $request->query('country') : null;
+
+        $analytics = new Analytics($days, $custom ? $from : null, $custom ? $to : null, ['device' => $device, 'country' => $country]);
+
+        return [$analytics, [
             'q' => mb_substr(trim((string) $request->query('q')), 0, 100) ?: null,
-            'range' => array_key_exists((int) $request->query('when'), Analytics::LIVE_RANGES) ? (int) $request->query('when') : 0,
-            'country' => preg_match('/^[A-Z]{2}$/', (string) $request->query('country')) ? $request->query('country') : null,
-            'device' => in_array($request->query('device'), ['desktop', 'mobile', 'tablet'], true) ? $request->query('device') : null,
-            'date' => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $request->query('date')) ? $request->query('date') : null,
-        ];
+            'device' => $device,
+            'country' => $country,
+            'range' => $custom ? null : $days,
+            'from' => $analytics->start->toDateString(),
+            'to' => $analytics->end->toDateString(),
+            'custom' => (bool) $custom,
+        ]];
     }
 
     /**

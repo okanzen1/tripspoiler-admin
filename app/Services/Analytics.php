@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
  */
 class Analytics
 {
-    public const RANGES = [7 => 'Son 7 gün', 30 => 'Son 30 gün', 90 => 'Son 90 gün'];
+    public const RANGES = [1 => 'Bugün', 7 => 'Son 7 gün', 30 => 'Son 30 gün', 90 => 'Son 90 gün'];
 
     private ?array $partnerNames = null;
 
@@ -32,7 +32,10 @@ class Analytics
 
     public readonly bool $custom;
 
-    public function __construct(int $days, ?CarbonImmutable $from = null, ?CarbonImmutable $to = null)
+    /**
+     * @param  array{device?: ?string, country?: ?string}  $filters  bütün hesaplara uygulanır (sayfanın üstündeki filtre çubuğu)
+     */
+    public function __construct(int $days, ?CarbonImmutable $from = null, ?CarbonImmutable $to = null, public readonly array $filters = [])
     {
         $this->custom = $from !== null && $to !== null;
         if ($this->custom) {
@@ -186,12 +189,11 @@ class Analytics
     public const TIMEZONE = 'Europe/Istanbul';
 
     /** Canlı listedeki filtreler: zaman aralığı (gün; 0 = bugün) */
-    public const LIVE_RANGES = [0 => 'Bugün', 7 => 'Son 7 gün', 30 => 'Son 30 gün', 90 => 'Son 90 gün'];
 
     /**
      * Canlı: son 5 dakikada sitede olanlar, şu an açık sayfalar ve IP'ye göre gruplanmış ziyaretçiler.
      *
-     * @param  array{q?: ?string, range?: ?int, country?: ?string, device?: ?string}  $filters
+     * @param  array{q?: ?string, from?: string, to?: string, country?: ?string, device?: ?string}  $filters
      * @return array{active: int, today: int, pages: Collection, visitors: Collection, countries: Collection}
      */
     public static function live(array $filters = [], int $limit = 50): array
@@ -221,12 +223,12 @@ class Analytics
      */
     public static function visitors(array $filters = [], int $limit = 50): Collection
     {
-        $range = (int) ($filters['range'] ?? 0);
-        // takvimden gün seçildiyse yalnızca o gün; yoksa bugün / son X gün
-        $date = $filters['date'] ?? null;
+        // dönem: sayfanın üstündeki filtreyle aynı tarih aralığı (from–to, gün olarak); yoksa bugün
+        $today = now(self::TIMEZONE)->toDateString();
+        $from = $filters['from'] ?? $today;
+        $to = $filters['to'] ?? $today;
         $query = Visit::query()->where('visitor_id', 'not like', 'demo_%')
-            ->when($date, fn ($q) => $q->whereBetween('created_at', ["{$date} 00:00:00", "{$date} 23:59:59"]),
-                fn ($q) => $q->where('created_at', '>=', ($range > 0 ? now(self::TIMEZONE)->subDays($range) : now(self::TIMEZONE))->startOfDay()->format('Y-m-d H:i:s')))
+            ->whereBetween('created_at', ["{$from} 00:00:00", "{$to} 23:59:59"])
             ->when($filters['country'] ?? null, fn ($q, $country) => $q->where('country', $country))
             ->when($filters['device'] ?? null, fn ($q, $device) => $q->where('device', $device))
             ->when(trim((string) ($filters['q'] ?? '')), fn ($q, $term) => $q->where(fn ($w) => $w
@@ -336,11 +338,19 @@ class Analytics
 
     private function visits(CarbonImmutable $from, CarbonImmutable $to): Builder
     {
-        return Visit::query()->whereBetween('created_at', [$from, $to]);
+        return $this->filtered(Visit::query()->whereBetween('created_at', [$from, $to]));
     }
 
     private function clicks(CarbonImmutable $from, CarbonImmutable $to): Builder
     {
-        return AffiliateClick::query()->whereBetween('created_at', [$from, $to]);
+        return $this->filtered(AffiliateClick::query()->whereBetween('created_at', [$from, $to]));
+    }
+
+    /** Cihaz ve ülke filtresi (ziyaret ve tıklama tablolarında aynı sütunlar) */
+    private function filtered(Builder $query): Builder
+    {
+        return $query
+            ->when($this->filters['device'] ?? null, fn ($q, $device) => $q->where('device', $device))
+            ->when($this->filters['country'] ?? null, fn ($q, $country) => $q->where('country', $country));
     }
 }

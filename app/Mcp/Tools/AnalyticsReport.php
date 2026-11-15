@@ -25,7 +25,7 @@ class AnalyticsReport extends PanelTool
     {
         $days = in_array((int) $request->get('days'), [7, 30, 90], true) ? (int) $request->get('days') : 30;
         $analytics = new Analytics($days);
-        $live = Analytics::live(['range' => min($days, 90), 'country' => $request->get('country')], min(50, max(1, (int) ($request->get('visitors') ?: 15))));
+        $live = Analytics::live(['from' => now(Analytics::TIMEZONE)->subDays(min($days, 90) - 1)->toDateString(), 'to' => now(Analytics::TIMEZONE)->toDateString(), 'country' => $request->get('country')], min(50, max(1, (int) ($request->get('visitors') ?: 15))));
 
         return [
             'period' => $analytics->start->toDateString() . ' – ' . $analytics->end->toDateString(),
