@@ -59,7 +59,10 @@ class BlogController extends Controller
             'status' => $status,
             'cityId' => $cityId,
             'cover' => $cover,
-            'filterCities' => City::with('country')->whereHas('blogs')->orderBy('name')->get(),
+            // yazı sayısına göre (çok yazısı olan şehir başta); "Genel" en sonda
+            'filterCities' => City::with('country')->whereHas('blogs')->withCount('blogs')->orderByDesc('blogs_count')->orderBy('name')->get(),
+            'generalCount' => Blog::doesntHave('cities')->count(),
+            'noCoverCount' => Blog::whereNull('cover_path')->count(),
             'activeCount' => Blog::active()->count(),
             'totalCount' => Blog::count(),
         ]);

@@ -19,6 +19,10 @@
 @section('content')
     <x-admin.todo-list :types="['campaign']" />
     @php
+        $liveCampaigns = \App\Models\Campaign::visible()->count();
+    @endphp
+    <x-admin.badge-note tone="sky" :count="$liveCampaigns" :text="__('Menüdeki sayı: şu an sitede yayında olan :n kampanya var. Bu bir hata değil, bilgi.', ['n' => $liveCampaigns])" />
+    @php
         $states = [
             'live' => [__('Yayında'), 'bg-emerald-50 text-emerald-700 ring-emerald-200'],
             'scheduled' => [__('Başlamadı'), 'bg-sky-50 text-sky-700 ring-sky-200'],

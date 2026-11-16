@@ -19,6 +19,11 @@
 @section('content')
     <x-admin.todo-list :under="[route('pages.index'), route('site-settings.hero')]" />
     @php
+        $missingBanners = \App\Support\MissingImages::cityBanners();
+    @endphp
+    <x-admin.badge-note :count="array_sum($missingBanners)" :text="__(':n şehrin sayfa üst resmi (banner) yok, şimdilik genel resim görünüyor.', ['n' => array_sum($missingBanners)])"
+        :href="($k = array_key_first($missingBanners)) ? route('pages.hero-text', \App\Models\Page::where('key', $k)->first()) . '#sehirler' : null" :link="__('Resim ekle')" />
+    @php
         // Sayfa ikonu ve banner önizlemesi
         // her sayfanın kendi rengi (ikon kutusu)
         $colors = [

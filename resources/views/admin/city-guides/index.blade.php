@@ -30,6 +30,11 @@
 
 @section('content')
     <x-admin.todo-list :types="['city-guide', 'city-guide-section', 'city-guide-topic']" />
+    @php
+        $missingSections = \App\Support\MissingImages::guideSections();
+    @endphp
+    <x-admin.badge-note :count="$missingSections->count()" :text="__('Menüdeki kırmızı sayı: yazılmış :n rehber konusunun resmi yok (:cities). Şehre girip “Resim eksik” yazan konulara resim ekle.', ['n' => $missingSections->count(), 'cities' => \App\Models\City::whereIn('id', $missingSections->pluck('city_id')->unique())->pluck('name')->join(', ')])"
+        :href="($c = $missingSections->first()?->city_id) ? route('city-guides.show', $c) : null" :link="__('İlk şehre git')" />
     @if ($cities->isEmpty())
         <x-admin.card class="px-6 py-16 text-center">
             <p class="text-sm font-semibold text-slate-900">{{ __('Henüz yayında şehir yok') }}</p>

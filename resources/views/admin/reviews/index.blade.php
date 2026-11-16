@@ -16,6 +16,11 @@
 @endsection
 
 @section('content')
+    @php
+        $pendingReviews = \App\Models\Review::pending()->count();
+    @endphp
+    <x-admin.badge-note :count="$pendingReviews" :text="__('Menüdeki kırmızı sayı: :n yorum onay bekliyor. Onaylamadan sitede görünmez.', ['n' => $pendingReviews])"
+        :href="route('reviews.index', ['status' => 'pending'])" :link="__('Bekleyenleri göster')" />
     {{-- ÖZET --}}
     @php
         $maxN = max(1, (int) collect($distribution)->max());

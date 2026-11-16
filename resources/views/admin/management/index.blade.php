@@ -14,6 +14,11 @@
 @section('content')
     <x-admin.todo-list :types="['page', 'hero', 'section', 'step', 'feature']" />
     @php
+        $missingBanners = \App\Support\MissingImages::cityBanners();
+    @endphp
+    <x-admin.badge-note :count="array_sum($missingBanners)" :text="__('Menüdeki kırmızı sayı: :n şehrin sayfa üst resmi (banner) yok, şimdilik genel resim görünüyor.', ['n' => array_sum($missingBanners)])"
+        :href="($k = array_key_first($missingBanners)) ? route('pages.hero-text', \App\Models\Page::where('key', $k)->first()) . '#sehirler' : null" :link="__('Resim ekle')" />
+    @php
         $cards = [
             [
                 'key' => 'site-settings',

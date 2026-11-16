@@ -29,13 +29,43 @@
 
 @section('content')
     <x-admin.todo-list :types="['blog']" />
+    @php
+        $missingCovers = \App\Support\MissingImages::blogs();
+    @endphp
+    <x-admin.badge-note :count="$missingCovers" :text="__('Menüdeki kırmızı sayı: :n yazının kapak resmi yok. Kapaksız yazı sitede resimsiz görünür.', ['n' => $missingCovers])"
+        :href="route('blogs.index', ['cover' => 'no'])" :link="__('Kapaksızları göster')" />
     <x-admin.card class="overflow-hidden">
         <x-admin.filter-bar :search="$search" placeholder="Başlık ya da URL ara…"
             :tabs="['name' => 'status', 'value' => $status, 'options' => ['' => ['Tümü', $totalCount], 'active' => ['Yayında', $activeCount], 'passive' => ['Taslak', $totalCount - $activeCount]]]"
             :filters="[
-                ['name' => 'city', 'label' => 'Şehir', 'value' => $cityId, 'options' => ['none' => __('Genel (tüm şehirler)')] + $filterCities->mapWithKeys(fn ($c) => [$c->id => $c->country->flag . ' ' . $c->name])->all(), 'icon' => 'pin'],
+                ['name' => 'city', 'label' => 'Şehir', 'value' => $cityId, 'options' => $filterCities->mapWithKeys(fn ($c) => [$c->id => $c->country->flag . ' ' . $c->name])->all() + ($generalCount ? ['none' => __('Genel (şehirsiz)')] : []), 'icon' => 'pin'],
                 ['name' => 'cover', 'label' => 'Kapak', 'value' => $cover, 'options' => ['yes' => __('Kapağı olanlar'), 'no' => __('Kapağı olmayanlar')], 'icon' => 'image'],
             ]" />
+
+        {{-- hızlı seçim: şehirler etiket gibi (sayılarıyla); seçince liste o şehre göre süzülür --}}
+        @php
+            $chip = fn (bool $on) => 'inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-sm font-medium transition ' . ($on ? 'bg-brand-900 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900');
+            $count = fn (bool $on) => 'rounded-full px-1.5 text-xs tabular-nums ' . ($on ? 'bg-white/20 text-white' : 'bg-white text-slate-500');
+            $cityChips = collect([['', __('Tüm şehirler'), $totalCount]])
+                ->merge($filterCities->map(fn ($c) => [(string) $c->id, $c->country->flag . ' ' . $c->name, $c->blogs_count]))
+                ->when($generalCount, fn ($list) => $list->push(['none', __('Genel'), $generalCount]));
+        @endphp
+        <div class="-mt-2 flex flex-wrap items-center gap-2 px-5 pb-5">
+            @foreach ($cityChips as [$value, $label, $n])
+                @php($on = (string) ($cityId ?? '') === $value)
+                <a href="{{ request()->fullUrlWithQuery(['city' => $value === '' ? null : $value, 'page' => null]) }}" @class([$chip($on)])>
+                    {{ $label }} <span @class([$count($on)])>{{ $n }}</span>
+                </a>
+            @endforeach
+            @if ($noCoverCount)
+                <span class="mx-1 h-5 w-px bg-slate-200"></span>
+                @php($on = $cover === 'no')
+                <a href="{{ request()->fullUrlWithQuery(['cover' => $on ? null : 'no', 'page' => null]) }}"
+                    @class(['inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-sm font-medium transition', 'bg-rose-600 text-white shadow-sm' => $on, 'bg-rose-50 text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100' => !$on])>
+                    {{ __('Kapağı yok') }} <span @class(['rounded-full px-1.5 text-xs tabular-nums', 'bg-white/20 text-white' => $on, 'bg-white text-rose-600' => !$on])>{{ $noCoverCount }}</span>
+                </a>
+            @endif
+        </div>
 
         @if ($blogs->isEmpty())
             <div class="border-t border-slate-100 px-6 py-16 text-center">
