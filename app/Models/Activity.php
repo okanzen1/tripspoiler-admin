@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasLocalizedSlugs;
 use App\Models\Concerns\HasSlugRedirects;
 use App\Enums\ActivityType;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,7 +15,10 @@ use Spatie\Translatable\HasTranslations;
 
 class Activity extends Model
 {
-    use HasSlugRedirects, HasTranslations;
+    use HasLocalizedSlugs, HasSlugRedirects, HasTranslations;
+
+    /** Dillere göre adres bu alanın çevirisinden üretilir (HasLocalizedSlugs) */
+    public const SLUG_SOURCE = 'name';
 
     /** Front'taki adres kalıbı (config/site.php) */
     public const SITE_PATH = 'activity';

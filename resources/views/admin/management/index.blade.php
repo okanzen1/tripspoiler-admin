@@ -40,6 +40,7 @@
                 'description' => 'Sabit sayfaların SEO başlığı ve açıklaması.',
                 'url' => route('pages.index'),
                 'todo' => \App\Support\TranslationTodo::under(route('pages.index')),
+                'missing' => array_sum(\App\Support\MissingImages::cityBanners()),
                 'stat' => $pagesMissingSeo ? __(':count eksik', ['count' => $pagesMissingSeo]) : __('Tamam'),
                 'color' => \App\Support\SectionColor::forRoute('pages'),
                 'icon' => '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" /><path d="M14 3v5h5" />',
@@ -166,6 +167,9 @@
                                 <span class="inline-flex items-center gap-1 rounded-full bg-purple-500 px-2.5 py-1 text-xs font-semibold text-white" title="{{ __(':count kaydın çevirisi eksik', ['count' => $card['todo']]) }}">
                                     <svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M22 22l-5-10-5 10M14 18h6" /></svg>{{ __(':count çeviri eksik', ['count' => $card['todo']]) }}
                                 </span>
+                            @endif
+                            @if ($card['missing'] ?? 0)
+                                <span class="rounded-full bg-rose-500 px-2.5 py-1 text-xs font-semibold text-white">{{ __(':count resim eksik', ['count' => $card['missing']]) }}</span>
                             @endif
                             <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ \App\Support\SectionColor::classes($card['color'], 'soft') }}">{{ $card['stat'] }}</span>
                         </span>

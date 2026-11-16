@@ -18,6 +18,32 @@ class MissingImages
     }
 
     /**
+     * Sayfa hero'sunda kendi resmi olmayan şehirler (Aktiviteler / Şehirler sayfası), sayfa anahtarına göre.
+     *
+     * @return array<string, int>  ör. ['cities' => 1]
+     */
+    public static function cityBanners(): array
+    {
+        static $cache = null;
+        if ($cache !== null) {
+            return $cache;
+        }
+        $cache = [];
+        foreach (array_keys(\App\Http\Controllers\PageHeroController::SPECS) as $key) {
+            $rows = \App\Http\Controllers\PageHeroTextController::rowCities($key, idsOnly: true);
+            if ($rows->isEmpty()) {
+                continue;
+            }
+            $withImage = \App\Models\PageBanner::where('page_key', $key)->whereNotNull('city_id')->whereNotNull('image')->pluck('city_id')->all();
+            if ($n = $rows->diff($withImage)->count()) {
+                $cache[$key] = $n;
+            }
+        }
+
+        return $cache;
+    }
+
+    /**
      * Yazılmış (başlık + metin dolu) ama kapak resmi olmayan alanlar.
      *
      * @return Collection<int, CityGuideSection>

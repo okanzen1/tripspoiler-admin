@@ -88,11 +88,7 @@ class PageHeroTextController extends Controller
         // Resimler (Aktiviteler, Şehirler): genel + şehre özel; liste satırlarında
         $spec = PageHeroController::SPECS[$page->key] ?? null;
         $banners = $spec ? \App\Models\PageBanner::where('page_key', $page->key)->get() : collect();
-        $rowCities = match ($page->key) {
-            'activities' => \App\Models\City::with('country')->withCount('activities')->has('activities')->orderByDesc('activities_count')->orderBy('name')->get(),
-            'cities' => \App\Models\City::with(['country', 'guide', 'guideSections.topic'])->withCount('activities')->where(fn ($q) => $q->where('active', true)->orHas('activities'))->orderByDesc('activities_count')->orderBy('name')->get(),
-            default => collect(),
-        };
+        $rowCities = self::rowCities($page->key);
 
         return view('admin.pages.hero-text', [
             'page' => $page,
@@ -190,5 +186,23 @@ class PageHeroTextController extends Controller
         }
 
         return back()->with('success', __(':page hero ayarları kaydedildi. Boş bıraktığın yazıda varsayılan metin görünür.', ['page' => $page->name]));
+    }
+
+    /** Hero sayfasında şehre özel resim satırları olan şehirler (Aktiviteler, Şehirler) */
+    public static function rowCities(string $pageKey, bool $idsOnly = false): \Illuminate\Support\Collection
+    {
+        if ($idsOnly) {
+            return match ($pageKey) {
+                'activities' => \App\Models\City::has('activities')->pluck('id'),
+                'cities' => \App\Models\City::where(fn ($q) => $q->where('active', true)->orHas('activities'))->pluck('id'),
+                default => collect(),
+            };
+        }
+
+        return match ($pageKey) {
+            'activities' => \App\Models\City::with('country')->withCount('activities')->has('activities')->orderByDesc('activities_count')->orderBy('name')->get(),
+            'cities' => \App\Models\City::with(['country', 'guide', 'guideSections.topic'])->withCount('activities')->where(fn ($q) => $q->where('active', true)->orHas('activities'))->orderByDesc('activities_count')->orderBy('name')->get(),
+            default => collect(),
+        };
     }
 }

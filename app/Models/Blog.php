@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasLocalizedSlugs;
 use App\Models\Concerns\HasSlugRedirects;
 use App\Services\ImageUploader;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,7 +14,10 @@ use Spatie\Translatable\HasTranslations;
 
 class Blog extends Model
 {
-    use HasSlugRedirects, HasTranslations;
+    use HasLocalizedSlugs, HasSlugRedirects, HasTranslations;
+
+    /** Dillere göre adres bu alanın çevirisinden üretilir (HasLocalizedSlugs) */
+    public const SLUG_SOURCE = 'title';
 
     /** Front'taki adres kalıbı (config/site.php) */
     public const SITE_PATH = 'blog';
