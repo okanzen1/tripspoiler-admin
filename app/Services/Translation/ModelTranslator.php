@@ -394,7 +394,31 @@ class ModelTranslator
             ->all();
     }
 
-    private function hash(Model $model): string
+    /**
+     * İngilizce metnin parmak izi. Yalnızca okunan yazıya bakar: düzenleyicinin değiştirdiği boşluk, satır sonu,
+     * HTML etiketi/özelliği ya da &amp;nbsp; gibi biçim farkları çeviriyi "eski" yapmaz; kelime değişince yapar.
+     */
+    public function hash(Model $model): string
+    {
+        $normalize = function ($value, bool $html) use (&$normalize) {
+            if (is_array($value)) {
+                return array_map(fn ($v) => $normalize($v, $html), $value);
+            }
+            $text = (string) $value;
+            if ($html) {
+                $text = strip_tags(preg_replace('~<(br|/p|/h[1-6]|/li|/div|/tr|/blockquote)\b[^>]*>~i', ' ', $text));
+            }
+            $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+            return trim(preg_replace('~[\s\x{00A0}\x{200B}]+~u', ' ', $text));
+        };
+        $source = collect($this->source($model))->map(fn ($value, $field) => $normalize($value, in_array($field, self::HTML_FIELDS, true)))->all();
+
+        return hash('sha256', json_encode($source, JSON_UNESCAPED_UNICODE));
+    }
+
+    /** Eski (biçime duyarlı) parmak izi: yalnızca kayıtlı durumları yeni hesaba taşıyan migration için */
+    public function legacyHash(Model $model): string
     {
         return hash('sha256', json_encode($this->source($model), JSON_UNESCAPED_UNICODE));
     }

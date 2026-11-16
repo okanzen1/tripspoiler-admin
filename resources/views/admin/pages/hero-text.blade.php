@@ -224,13 +224,22 @@
             <x-admin.card class="scroll-mt-20 overflow-hidden" id="sehirler">
                 <div class="flex items-start gap-3 p-6 sm:p-8">
                     {!! $badge(count($steps)) !!}
-                    <x-admin.step-heading :title="$page->key === 'blog' ? __('Öne çıkan yazılar (üstteki 3 kemer)') : __('Şehirler')"
-                        :description="match ($page->key) {
-                            'blog' => __('Blog sayfasının üstündeki üç kemerde (ortadaki büyük "Featured") hangi yazılar dursun. Blog sayfası şehre göre açıldığı için her şehir ayrı seçilir. Boş = Blog listesindeki sıraya göre. Kapağı olmayan yazı seçilemez.'),
-                            'cities' => __('Şehre özel resim (yoksa genel resim) ve fotoğrafın üstündeki iki kart. Kartlar: Otomatik = kapak resmi olan ilk konular.'),
-                            default => __('Ziyaretçi o şehri seçince banner şehrin resmine döner; resmi yoksa genel resim görünür.'),
-                        }" />
+                    @php
+                        $sizeNote = $hasImages ? ' ' . __('Resim boyutu: masaüstü :dw × :dh, telefon :mw × :mh piksel.', ['dw' => $spec['desktop'][0][0], 'dh' => $spec['desktop'][0][1], 'mw' => $spec['mobile'][0][0], 'mh' => $spec['mobile'][0][1]]) : '';
+                        $citiesDescription = match ($page->key) {
+                            'blog' => __('Blog sayfasının üstündeki üç kemerde (ortadaki büyük “Featured”) hangi yazılar dursun. Her şehir ayrı seçilir. Boş bırakırsan blog listesindeki sıra kullanılır. Kapağı olmayan yazı seçilemez.'),
+                            'cities' => __('Her şehre kendi resmini koy; koymazsan genel resim görünür. Fotoğrafın üstündeki iki kartı da buradan seçersin.'),
+                            default => __('Ziyaretçi bir şehir seçince bu alanda o şehrin resmi görünür; şehrin resmi yoksa genel resim görünür.'),
+                        } . $sizeNote;
+                        $missingCityImages = $hasImages ? $rows->filter(fn ($c) => !$cityBanners->get($c->id)?->image)->count() : 0;
+                    @endphp
+                    <x-admin.step-heading :title="$page->key === 'blog' ? __('Öne çıkan yazılar (üstteki 3 kemer)') : __('Şehirler')" :description="$citiesDescription" />
                 </div>
+                @if ($missingCityImages)
+                    <div class="-mt-2 px-6 pb-5 sm:px-8">
+                        <p class="rounded-xl bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 ring-1 ring-rose-200">{{ __(':n şehrin kendi resmi yok, şimdilik genel resim görünüyor.', ['n' => $missingCityImages]) }}</p>
+                    </div>
+                @endif
 
                 <ul class="divide-y divide-slate-100 border-t border-slate-100">
                     @foreach ($rows as $rowCity)
@@ -265,7 +274,7 @@
                                     <p class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                                         <span>{{ $rowCity->country?->name }} · {{ $arch ? __(':n yazı', ['n' => $arch['city']->blogs->count()]) : __(':n aktivite', ['n' => $rowCity->activities_count]) }}</span>
                                         @if ($hasImages)
-                                            <span @class(['rounded-md px-1.5 py-0.5 font-medium', 'bg-emerald-50 text-emerald-700' => $desk, 'bg-slate-100 text-slate-500' => !$desk])>{{ $desk ? __('Özel resim') : __('Genel resim') }}</span>
+                                            <span @class(['rounded-md px-1.5 py-0.5 font-medium', 'bg-emerald-50 text-emerald-700' => $desk, 'bg-rose-50 text-rose-700' => !$desk])>{{ $desk ? __('Özel resim') : __('Resim eksik') }}</span>
                                             @if ($mob) <span class="rounded-md bg-sky-50 px-1.5 py-0.5 font-medium text-sky-700">{{ __('Telefon resmi') }}</span> @endif
                                         @endif
                                         @if ($page->key === 'cities')
