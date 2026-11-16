@@ -15,6 +15,11 @@
             <svg class="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
             {{ __('Sıralama') }}
         </a>
+        <a href="{{ route('blogs.import') }}"
+            class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-brand-900 ring-1 ring-brand-200 transition hover:bg-brand-50">
+            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1" /><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2" /><path d="M9 13h6M9 17h4" /></svg>
+            {{ __('Hazır yazı yapıştır') }}
+        </a>
         <a href="{{ route('blogs.create') }}"
             class="inline-flex items-center gap-2 rounded-xl bg-brand-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800">
             <x-admin.icon name="plus" /> {{ __('Yeni yazı') }}
@@ -77,6 +82,9 @@
                                             <a href="{{ route('blogs.edit', $blog) }}" class="line-clamp-1 font-semibold text-slate-900 hover:text-brand-900 hover:underline">{{ $blog->title }}</a>
                                             <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
                                                 <x-admin.todo-pill type="blog" :id="$blog->id" />
+                                                @unless ($blog->cover_path)
+                                                    <a href="{{ route('blogs.edit', $blog) }}" class="rounded-md bg-rose-50 px-1.5 py-0.5 font-semibold text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100">{{ __('Resim eksik') }}</a>
+                                                @endunless
                                                 <span>{{ $blog->readingMinutes() }} dk okuma</span>
                                                 @if ($blog->activities_count)
                                                     <span class="rounded-md bg-slate-100 px-1.5 py-0.5 font-medium text-slate-600">{{ $blog->activities_count }} aktivite</span>

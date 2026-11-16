@@ -13,6 +13,11 @@
     <x-admin.page-header :title="$city->name" :breadcrumb="['Şehir rehberi' => route('city-guides.index')]"
         :description="__('Önce genel girişi yaz, sonra alanları doldur. Sağdaki anahtarla bu şehirde aç/kapa; değişiklik hemen kaydedilir.')">
         <x-slot:icon><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6z" /><path d="M9 4v14M15 6v14" /></x-slot:icon>
+        <a href="{{ route('city-guides.import', ['city' => $city->id]) }}"
+            class="inline-flex items-center gap-2 rounded-xl bg-brand-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800">
+            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1" /><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2" /><path d="M9 13h6M9 17h4" /></svg>
+            {{ __('Hazır rehber yapıştır') }}
+        </a>
         <a href="{{ rtrim(config('site.url'), '/') . '/en/cities/' . $city->slug }}" target="_blank" rel="noopener"
             class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-white">{{ __('Şehir sayfasını aç') }} ↗</a>
     </x-admin.page-header>
@@ -112,6 +117,8 @@
                                 @endif
                                 @if ($section->image_path)
                                     <span class="rounded-md bg-sky-50 px-1.5 py-0.5 text-[11px] font-semibold text-sky-700 ring-1 ring-sky-200">{{ __('Kapak resmi var') }}</span>
+                                @elseif ($written)
+                                    <span class="rounded-md bg-rose-50 px-1.5 py-0.5 text-[11px] font-semibold text-rose-700 ring-1 ring-rose-200">{{ __('Resim eksik') }}</span>
                                 @endif
                                 @if (!\App\Support\PageSections::guideOn($topic->id))
                                     <span class="rounded-md bg-amber-50 px-1.5 py-0.5 text-[11px] font-semibold text-amber-800 ring-1 ring-amber-200" title="{{ __('Sayfalar › Şehirler › Bölümler') }}">{{ __('Şehirler sayfasında kapalı') }}</span>

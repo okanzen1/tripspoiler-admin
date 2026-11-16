@@ -86,6 +86,90 @@ class CityGuideController extends Controller
         return response()->json(['message' => __('Kaydedildi. Sitede hemen görünür.')]);
     }
 
+    /**
+     * Hazır rehber yapıştır: Claude / ChatGPT'nin verdiği HTML'den bir ya da birkaç şehrin genel girişi ve alanları
+     * (resimler panelden eklenir). Şehir sayfasından gelince (?city=) talimatta o şehir yazılı gelir.
+     */
+    public function importForm(Request $request)
+    {
+        $city = $request->filled('city') ? City::with('country')->find($request->integer('city')) : null;
+
+        return view('admin.city-guides.import', [
+            'city' => $city,
+            'prompt' => \App\Support\ContentImport::cityGuidePrompt($city),
+        ]);
+    }
+
+    public function import(Request $request)
+    {
+        $data = $request->validate([
+            'html' => ['required', 'string', 'max:2000000'],
+            'city_id' => ['nullable', 'integer', 'exists:cities,id'],
+        ], [], ['html' => __('rehber')]);
+
+        $guides = array_filter(\App\Support\ContentImport::cityGuides($data['html']), fn ($g) => $g['sections'] || $g['title']);
+        if (!$guides) {
+            return back()->withInput()->withErrors(['html' => __('Rehberde alan bulunamadı. Talimatı kopyalayıp yeniden ürettir; her şehir <guide data-city="…"> ve her alan <section data-topic="…"> içinde olmalı.')]);
+        }
+
+        $done = [];
+        $doneCities = [];
+        $missingCities = [];
+        $unknown = [];
+        foreach ($guides as $parsed) {
+            // <guide data-city> yoksa şehir sayfasından seçilen şehir
+            $city = $parsed['city'] !== null ? \App\Support\ContentImport::findCity($parsed['city']) : (isset($data['city_id']) ? City::find($data['city_id']) : null);
+            if (!$city) {
+                $missingCities[] = $parsed['city'] ?? __('(şehir yazılmamış)');
+                continue;
+            }
+            $this->importGuide($city, $parsed);
+            $doneCities[] = $city;
+            $done[] = $city->name . ' (' . count($parsed['sections']) . ' ' . __('alan') . ')';
+            array_push($unknown, ...$parsed['unknown']);
+        }
+
+        $message = $done ? __('Eklendi ve sitede açıldı: :list. Şimdi alanlara kapak resmi ekle.', ['list' => implode(', ', $done)]) : __('Hiçbir şehir eklenmedi.');
+        if ($missingCities) {
+            $message .= ' ' . __('Panelde bulunamayan şehirler atlandı (önce Yönetim › Şehirler\'den ekle): :list', ['list' => implode(', ', $missingCities)]);
+        }
+        if ($unknown) {
+            $message .= ' ' . __('Tanınmayan alanlar atlandı: :keys', ['keys' => implode(', ', array_unique($unknown))]);
+        }
+
+        // Tek şehirse o şehrin sayfasına, çoksa listeye
+        if (!$doneCities) {
+            return back()->withInput()->withErrors(['html' => $message]);
+        }
+
+        return redirect(count($doneCities) === 1 ? route('city-guides.show', $doneCities[0]) : route('city-guides.index'))->with('success', $message);
+    }
+
+    private function importGuide(City $city, array $parsed): void
+    {
+        $this->ensureSections($city);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($parsed, $city) {
+            if ($parsed['title'] || $parsed['description']) {
+                $guide = CityGuide::firstOrNew(['city_id' => $city->id]);
+                $parsed['title'] && $guide->setTranslation('title', 'en', $parsed['title']);
+                $parsed['description'] && $guide->setTranslation('description', 'en', $parsed['description']);
+                $guide->save();
+            }
+
+            $sections = $city->guideSections()->with('topic')->get()->keyBy(fn ($s) => $s->topic->key);
+            foreach ($parsed['sections'] as $key => $row) {
+                $section = $sections->get($key);
+                if (!$section) {
+                    continue;
+                }
+                $section->setTranslation('title', 'en', $row['title']);
+                $row['content'] ? $section->setTranslation('content', 'en', $row['content']) : $section->forgetTranslation('content', 'en');
+                $section->active = $section->isWritten();
+                $section->save();
+            }
+        });
+    }
+
     public function editSection(City $city, CityGuideSection $section)
     {
         abort_unless($section->city_id === $city->id, 404);

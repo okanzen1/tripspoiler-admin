@@ -109,6 +109,9 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
     });
     Route::controller(\App\Http\Controllers\CityGuideController::class)->prefix('sehir-rehberi')->name('city-guides.')->group(function () {
         Route::get('/', 'index')->name('index');
+        // Hazır rehber yapıştır (Claude / ChatGPT HTML'i → bir ya da birkaç şehrin girişi + alanları)
+        Route::get('/yapistir', 'importForm')->name('import');
+        Route::post('/yapistir', 'import')->name('import.store');
         Route::get('/{city}', 'show')->name('show');
         Route::put('/{city}/giris', 'updateIntro')->name('intro');
         Route::patch('/{city}/sira', 'order')->name('order');
@@ -116,6 +119,9 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
         Route::put('/{city}/alan/{section}', 'updateSection')->name('sections.update');
     });
 
+    // Hazır yazı yapıştır (Claude / ChatGPT HTML'i → taslak yazı)
+    Route::get('/blog/yapistir', [BlogController::class, 'importForm'])->name('blogs.import');
+    Route::post('/blog/yapistir', [BlogController::class, 'import'])->name('blogs.import.store');
     Route::resource('blog', BlogController::class)
         ->except('show')
         ->names('blogs')

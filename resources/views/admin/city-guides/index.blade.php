@@ -16,6 +16,11 @@
                 {{ __('Alanların sırası') }}
             </a>
         @endif
+        <a href="{{ route('city-guides.import') }}"
+            class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-brand-900 ring-1 ring-brand-200 transition hover:bg-brand-50">
+            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1" /><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2" /><path d="M9 13h6M9 17h4" /></svg>
+            {{ __('Hazır rehber yapıştır') }}
+        </a>
         <a href="{{ route('city-guide-topics.create') }}"
             class="inline-flex items-center gap-2 rounded-xl bg-brand-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800">
             <x-admin.icon name="plus" /> {{ __('Yeni alan') }}
@@ -31,6 +36,9 @@
             <p class="mt-1 text-sm text-slate-500">{{ __('Yönetim › Şehirler\'den bir şehri yayına al.') }}</p>
         </x-admin.card>
     @else
+        @php
+            $missing = \App\Support\MissingImages::guideSections()->countBy('city_id');
+        @endphp
         <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             @foreach ($cities as $city)
                 @php
@@ -46,6 +54,9 @@
                                     <p class="text-sm text-slate-500">{{ $city->country?->name }} · {{ __(':n aktivite', ['n' => $city->activities_count]) }}</p>
                                     @if ($cityTodo = \App\Support\TranslationTodo::under(route('city-guides.show', $city)) + \App\Support\TranslationTodo::count('city-guide-topic'))
                                         <span class="mt-1 inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[11px] font-semibold text-purple-700 ring-1 ring-purple-200">{{ __(':count çeviri eksik', ['count' => $cityTodo]) }}</span>
+                                    @endif
+                                    @if ($missing[$city->id] ?? 0)
+                                        <span class="mt-1 inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700 ring-1 ring-rose-200">{{ __(':count alanda resim eksik', ['count' => $missing[$city->id]]) }}</span>
                                     @endif
                                 </div>
                             </div>

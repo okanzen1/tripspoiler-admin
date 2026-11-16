@@ -73,11 +73,11 @@
                 <path d="M4 7h16v4a2 2 0 0 0 0 4v4H4v-4a2 2 0 0 0 0-4Z" /><path d="M14 7v2M14 12v1M14 16v1" />
             </x-admin.nav-link>
 
-            <x-admin.nav-link route="blogs.index" :todo="\App\Support\TranslationTodo::area('blogs')" :match="['blogs.*']" :label="__('Blog')">
+            <x-admin.nav-link route="blogs.index" :todo="\App\Support\TranslationTodo::area('blogs')" :match="['blogs.*']" :label="__('Blog')" :badge="\App\Support\MissingImages::blogs()" :badge-title="__('kapak resmi eksik yazı')">
                 <path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
             </x-admin.nav-link>
 
-            <x-admin.nav-link route="city-guides.index" :todo="\App\Support\TranslationTodo::area('city-guides')" :match="['city-guides.*', 'city-guide-topics.*']" :label="__('Şehir rehberi')">
+            <x-admin.nav-link route="city-guides.index" :todo="\App\Support\TranslationTodo::area('city-guides')" :match="['city-guides.*', 'city-guide-topics.*']" :label="__('Şehir rehberi')" :badge="\App\Support\MissingImages::guideSections()->count()" :badge-title="__('kapak resmi eksik alan')">
                 <path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6z" /><path d="M9 4v14M15 6v14" />
             </x-admin.nav-link>
 

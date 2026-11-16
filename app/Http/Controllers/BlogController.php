@@ -87,6 +87,71 @@ class BlogController extends Controller
         return redirect()->route('blogs.edit', $blog)->with('success', __('":name" eklendi.', ['name' => $blog->title]) . ' ' . __('Şimdi yukarıdaki Çeviriler kutusundan diğer dillere çevirebilirsin.'));
     }
 
+    /**
+     * Hazır yazı yapıştır: Claude / ChatGPT'nin verdiği HTML'den taslak yazı (resimler panelden eklenir).
+     */
+    public function importForm()
+    {
+        return view('admin.blogs.import', [
+            'cities' => City::with('country')->whereHas('country', fn ($q) => $q->where('active', true))->orderByDesc('active')->orderBy('name')->get(),
+            'prompt' => \App\Support\ContentImport::blogPrompt(),
+        ]);
+    }
+
+    public function import(Request $request)
+    {
+        $data = $request->validate([
+            'html' => ['required', 'string', 'max:300000'],
+            'city_id' => ['nullable', 'integer', 'exists:cities,id'],
+        ], [], ['html' => __('yazı')]);
+
+        $posts = array_filter(\App\Support\ContentImport::blogs($data['html']), fn ($p) => $p['title'] && $p['content']);
+        if (!$posts) {
+            return back()->withInput()->withErrors(['html' => __('Yazıda başlık ya da metin bulunamadı. Talimatı kopyalayıp yeniden ürettir; her yazıda <title> ve <article> olmalı.')]);
+        }
+
+        $added = [];
+        $skipped = [];
+        // Aynı yazı ikinci kez yapıştırılırsa eklenmez (İngilizce başlık, büyük/küçük harf fark etmez)
+        $titles = Blog::all()->map(fn (Blog $b) => mb_strtolower((string) $b->getTranslation('title', 'en', false)))->flip();
+        DB::transaction(function () use ($posts, $data, &$added, &$skipped, $titles) {
+            foreach ($posts as $parsed) {
+                $key = mb_strtolower($parsed['title']);
+                if ($titles->has($key)) {
+                    $skipped[] = $parsed['title'];
+                    continue;
+                }
+                $titles->put($key, true);
+                $slug = \Illuminate\Support\Str::slug($parsed['slug'] ?: $parsed['title']) ?: 'post';
+                for ($base = $slug, $i = 2; Blog::where('slug', $slug)->exists(); $i++) {
+                    $slug = "{$base}-{$i}";
+                }
+
+                $blog = new Blog(['slug' => $slug, 'city_id' => $data['city_id'] ?? null, 'active' => false]);
+                foreach (['title', 'excerpt', 'content', 'meta_title', 'meta_description'] as $field) {
+                    filled($parsed[$field]) && $blog->setTranslation($field, 'en', $parsed[$field]);
+                }
+                $parsed['tags'] && $blog->setTranslation('tags', 'en', $parsed['tags']);
+                $blog->save();
+                $blog->cities()->sync(array_filter([$data['city_id'] ?? null]));
+                FaqSync::sync($blog->faqs(), $parsed['faqs']);
+                $added[] = $blog;
+            }
+        });
+
+        $message = $added
+            ? __(':count yazı taslak olarak eklendi. Kapak resimlerini ekleyip yayına al.', ['count' => count($added)])
+            : __('Yeni yazı eklenmedi.');
+        if ($skipped) {
+            $message .= ' ' . __('Zaten olduğu için atlananlar: :titles', ['titles' => implode(', ', $skipped)]);
+        }
+
+        // Tek yazıysa direkt o yazıya, çoksa taslak listesine
+        return count($added) === 1
+            ? redirect()->route('blogs.edit', $added[0])->with('success', $message)
+            : redirect()->route($added ? 'blogs.index' : 'blogs.import', $added ? ['status' => 'passive', 'cover' => 'no'] : [])->with('success', $message);
+    }
+
     public function edit(Blog $blog)
     {
         return view('admin.blogs.form', $this->formData($blog->load(['activities', 'faqs', 'cities'])));
