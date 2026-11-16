@@ -37,7 +37,20 @@ class Language extends Model
      */
     public static function targets(): Collection
     {
-        return static::active()->where('code', '!=', self::SOURCE)->ordered()->get();
+        // istek boyunca bir kez okunur (çeviri sayaçları her kayıt için soruyordu); dil değişince sıfırlanır
+        $app = app();
+        if (!$app->bound('language.targets')) {
+            $app->instance('language.targets', static::active()->where('code', '!=', self::SOURCE)->ordered()->get());
+        }
+
+        return $app->make('language.targets');
+    }
+
+    protected static function booted(): void
+    {
+        $reset = fn () => app()->forgetInstance('language.targets');
+        static::saved($reset);
+        static::deleted($reset);
     }
 
     /** Dil seçicilerde gösterilen bayrak */
