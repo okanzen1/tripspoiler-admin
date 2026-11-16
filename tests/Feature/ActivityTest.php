@@ -183,6 +183,15 @@ class ActivityTest extends TestCase
         $this->assertSame('<p>Hi <a href="#">x</a></p>', HtmlSanitizer::clean('<p style="color:red">Hi <a href="javascript:alert(1)">x</a></p><iframe src="x"></iframe>'));
         $this->assertNull(HtmlSanitizer::clean('<p><br></p>'));
     }
+
+    public function test_sanitizer_blocks_known_bypasses(): void
+    {
+        $this->assertSame('<p>ax</p>', HtmlSanitizer::clean('<p>a<span/onmouseover=alert(1)>x</span></p>'));
+        $this->assertSame('<p><a href="#">x</a></p>', HtmlSanitizer::clean('<p><a href="java&#x73;cript:alert(1)">x</a></p>'));
+        $this->assertSame('<p><a href="#">y</a></p>', HtmlSanitizer::clean("<p><a href=\"jav\tascript:alert(1)\">y</a></p>"));
+        $this->assertSame('<p>z</p>', HtmlSanitizer::clean('<p><svg onload=alert(1)></svg>z</p>'));
+        $this->assertSame('<p>Türkçe <a href="https://x.com" target="_blank" rel="noopener noreferrer">l</a></p>', HtmlSanitizer::clean('<p>Türkçe <a href="https://x.com" target="_blank">l</a></p>'));
+    }
     public function test_popular_can_be_toggled_from_the_list_and_filtered(): void
     {
         $a = Activity::create(['city_id' => $this->city->id, 'partner_id' => $this->partner->id, 'name' => ['en' => 'Tour A'], 'slug' => 'tour-a', 'type' => 'product']);
