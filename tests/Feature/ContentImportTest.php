@@ -144,6 +144,8 @@ HTML])->assertRedirect(route('city-guides.show', $this->city))->assertSessionHas
         $this->assertSame('<p>Body of First Post.</p>', $first->content);
         $this->assertSame(['Q?'], $first->faqs->pluck('question')->all());
         $this->assertSame('Second Post', Blog::where('slug', 'second-post')->firstOrFail()->title);
+        $this->assertSame(now()->toDateString(), $first->published_at->toDateString());
+        $this->assertSame(now()->subDays(3)->toDateString(), Blog::where('slug', 'second-post')->first()->published_at->toDateString());
         $this->assertSame(3, Blog::count());
 
         // aynısı tekrar: hiçbiri eklenmez

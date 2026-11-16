@@ -127,7 +127,9 @@ class BlogController extends Controller
                     $slug = "{$base}-{$i}";
                 }
 
-                $blog = new Blog(['slug' => $slug, 'city_id' => $data['city_id'] ?? null, 'active' => false]);
+                // Tarih boş kalmasın: ilk yazı bugün, sonrakiler 3'er gün geriye (hepsi aynı gün yazılmış görünmesin)
+                $blog = new Blog(['slug' => $slug, 'city_id' => $data['city_id'] ?? null, 'active' => false,
+                    'published_at' => now()->startOfDay()->subDays(3 * count($added))]);
                 foreach (['title', 'excerpt', 'content', 'meta_title', 'meta_description'] as $field) {
                     filled($parsed[$field]) && $blog->setTranslation($field, 'en', $parsed[$field]);
                 }
