@@ -18,6 +18,10 @@ const load = (file) => new Promise((resolve, reject) => {
     image.src = URL.createObjectURL(file);
 });
 
+// Dosya adı yalnızca a-z 0-9 ve tire olsun ("Atina Görsel (1).jpg" → "atina-gorsel-1")
+const safeName = (name) => name.replace(/\.[^.]+$/, '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/ı/g, 'i').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'image';
+
 const encode = (canvas, type, quality) => new Promise((resolve) => canvas.toBlob(resolve, type, quality));
 
 /**
@@ -37,8 +41,9 @@ export async function compressImage(file, maxBytes = fileLimit * 0.85) {
         return file; // tarayıcı okuyamadı; sunucu karar versin
     }
 
+    // Küçük olsa da her görsel yeniden çizilir: fotoğrafın içindeki gizli bilgiler (EXIF/XMP, "<?xpacket" gibi)
+    // ve Türkçe/boşluklu dosya adı silinir. Hostinger'ın güvenlik duvarı bunları saldırı sanıp 403 veriyordu.
     const longEdge = Math.max(image.naturalWidth, image.naturalHeight);
-    if (file.size <= maxBytes && longEdge <= MAX_EDGE) return file;
 
     let scale = Math.min(1, MAX_EDGE / longEdge);
     const canvas = document.createElement('canvas');
@@ -52,13 +57,13 @@ export async function compressImage(file, maxBytes = fileLimit * 0.85) {
         context.imageSmoothingQuality = 'high';
         context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-        for (const quality of [0.86, 0.78, 0.7, 0.6]) {
+        for (const quality of [0.9, 0.86, 0.78, 0.7, 0.6]) {
             let blob = await encode(canvas, 'image/webp', quality);
             // WebP kodlayamayan eski tarayıcılar PNG döner; o durumda JPEG
             if (blob && blob.type !== 'image/webp') blob = await encode(canvas, 'image/jpeg', quality);
             if (blob && blob.size <= maxBytes) {
                 const extension = blob.type === 'image/webp' ? 'webp' : 'jpg';
-                return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.' + extension, { type: blob.type, lastModified: Date.now() });
+                return new File([blob], safeName(file.name) + '.' + extension, { type: blob.type, lastModified: Date.now() });
             }
         }
         scale *= 0.8;
@@ -81,7 +86,7 @@ export async function compressImages(files) {
 
     for (const file of list) {
         const compressed = await compressImage(file, share);
-        if (compressed !== file) changes.push({ name: file.name, before: file.size, after: compressed.size });
+        if (compressed !== file && compressed.size < file.size * 0.9) changes.push({ name: file.name, before: file.size, after: compressed.size });
         result.push(compressed);
     }
 
@@ -103,11 +108,11 @@ document.addEventListener('change', async (event) => {
 
     try {
         const { files, changes } = await compressImages(input.files);
-        if (changes.length) {
+        if (files.some((file, i) => file !== input.files[i])) {
             const transfer = new DataTransfer();
             files.forEach((file) => transfer.items.add(file));
             input.files = transfer.files;
-            input.dispatchEvent(new CustomEvent('image:compressed', { bubbles: true, detail: changes }));
+            if (changes.length) input.dispatchEvent(new CustomEvent('image:compressed', { bubbles: true, detail: changes }));
         }
     } finally {
         delete input.dataset.compressing;
