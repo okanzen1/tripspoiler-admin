@@ -68,6 +68,23 @@ class ActivityTest extends TestCase
         $this->assertSame(1600, $width);
     }
 
+    public function test_detail_boxes_are_saved_as_clean_lines(): void
+    {
+        $activity = Activity::create(['city_id' => $this->city->id, 'name' => ['en' => 'Box test'], 'slug' => 'box-test', 'type' => 'product']);
+
+        $this->actingAs($this->editor)->put(route('activities.update', $activity), $this->payload([
+            'name' => 'Box test', 'slug' => 'box-test',
+            'included' => "- Entry ticket\n\n• Audio guide\n1. Map <b>x</b>",
+            'meeting_point' => '  Main gate  ',
+            'excluded' => '',
+        ]))->assertSessionHasNoErrors();
+
+        $activity->refresh();
+        $this->assertSame("Entry ticket\nAudio guide\nMap x", $activity->getTranslation('included', 'en'));
+        $this->assertSame('Main gate', $activity->getTranslation('meeting_point', 'en'));
+        $this->assertEmpty($activity->getTranslation('excluded', 'en', false));
+    }
+
     public function test_update_keeps_other_translations_and_manages_images(): void
     {
         $activity = Activity::create([

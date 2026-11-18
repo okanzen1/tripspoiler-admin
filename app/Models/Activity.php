@@ -27,10 +27,24 @@ class Activity extends Model
         'city_id', 'partner_id', 'name', 'slug', 'type', 'affiliate_url', 'partner_product_id',
         'duration', 'audio_guide', 'setting', 'description', 'meta_title', 'meta_description',
         'is_popular', 'active', 'sort_order',
+        'highlights', 'included', 'excluded', 'meeting_point', 'important_info', 'cancellation',
+    ];
+
+    /**
+     * Sayfadaki ayrı bloklar (İngilizce yazılır, çevrilir): alan → [paneldeki ad, açıklama, liste mi (her satır bir madde)].
+     */
+    public const DETAILS = [
+        'highlights' => ['Öne çıkanlar', 'Her satıra bir madde. Örn: Skip the ticket line at the Acropolis', true],
+        'included' => ['Dahil olanlar', 'Her satıra bir madde. Örn: Entry ticket, Audio guide', true],
+        'excluded' => ['Dahil olmayanlar', 'Her satıra bir madde. Örn: Hotel pickup, Food and drinks', true],
+        'meeting_point' => ['Buluşma / giriş noktası', 'Kısa metin: nereye gidilir, adres. Örn: Main entrance on Theorias Street', false],
+        'important_info' => ['Gitmeden önce bilin', 'Her satıra bir madde. Örn: Closed on Tuesdays', true],
+        'cancellation' => ['İptal koşulları', 'Partnerin sayfasında yazanı yaz; emin değilsen boş bırak. Örn: Free cancellation up to 24 hours before', false],
     ];
 
     /** Çok dilli alanlar; panel İngilizce (en) düzenler, diğer diller korunur */
-    public array $translatable = ['name', 'description', 'meta_title', 'meta_description'];
+    public array $translatable = ['name', 'description', 'meta_title', 'meta_description',
+        'highlights', 'included', 'excluded', 'meeting_point', 'important_info', 'cancellation'];
 
     /**
      * Panelin dili Türkçe olsa da aktivite metinleri İngilizce (en) okunur ve yazılır.

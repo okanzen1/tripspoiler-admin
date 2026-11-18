@@ -60,8 +60,8 @@ class AnalyticsController extends Controller
             $from = $to->subDays(366);
         }
         $custom = $from && $to;
-        $days = (int) $request->query('range', 30);
-        $days = array_key_exists($days, Analytics::RANGES) ? $days : 30;
+        $days = (int) $request->query('range', 1); // ilk açılışta bugün
+        $days = array_key_exists($days, Analytics::RANGES) ? $days : 1;
         $device = in_array($request->query('device'), ['desktop', 'mobile', 'tablet'], true) ? $request->query('device') : null;
         $country = preg_match('/^[A-Z]{2}$/', (string) $request->query('country')) ? $request->query('country') : null;
 

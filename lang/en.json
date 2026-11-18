@@ -842,5 +842,19 @@
     "Tabloyu sil": "Delete table",
     "Her satır tablonun bir satırı. Hücreleri | ile ayır. İlk satır başlık olur.": "Each line is a table row. Separate cells with |. The first line is the header.",
     "Kalın: **yazı** · Bağlantı: [yazı](https://…)": "Bold: **text** · Link: [text](https://…)",
-    "Semt | En uygun | Not\nPlaka | İlk kez gelenler | Merkezi": "Area | Best for | Note\nPlaka | First-time visitors | Central"
+    "Semt | En uygun | Not\nPlaka | İlk kez gelenler | Merkezi": "Area | Best for | Note\nPlaka | First-time visitors | Central",
+    "Sayfadaki bilgi kutuları": "Info boxes on the page",
+    "Sitede açıklamanın yanında ayrı kutular olarak görünür. İngilizce yaz, sadece partnerin sayfasında yazan bilgileri kullan; boş bıraktığın kutu görünmez.": "Shown on the site as separate boxes next to the description. Write in English and only use facts from the partner's page; empty boxes are hidden.",
+    "Öne çıkanlar": "Highlights",
+    "Dahil olanlar": "Included",
+    "Dahil olmayanlar": "Not included",
+    "Buluşma / giriş noktası": "Meeting / entry point",
+    "Gitmeden önce bilin": "Good to know",
+    "İptal koşulları": "Cancellation",
+    "Her satıra bir madde. Örn: Skip the ticket line at the Acropolis": "One item per line. e.g. Skip the ticket line at the Acropolis",
+    "Her satıra bir madde. Örn: Entry ticket, Audio guide": "One item per line. e.g. Entry ticket, Audio guide",
+    "Her satıra bir madde. Örn: Hotel pickup, Food and drinks": "One item per line. e.g. Hotel pickup, Food and drinks",
+    "Kısa metin: nereye gidilir, adres. Örn: Main entrance on Theorias Street": "Short text: where to go, address. e.g. Main entrance on Theorias Street",
+    "Her satıra bir madde. Örn: Closed on Tuesdays": "One item per line. e.g. Closed on Tuesdays",
+    "Partnerin sayfasında yazanı yaz; emin değilsen boş bırak. Örn: Free cancellation up to 24 hours before": "Copy what the partner page says; leave empty if unsure. e.g. Free cancellation up to 24 hours before"
 }

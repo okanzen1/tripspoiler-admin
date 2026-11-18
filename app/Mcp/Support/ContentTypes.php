@@ -58,6 +58,8 @@ class ContentTypes
             'about' => 'Guide topics shared by all cities (e.g. transport, food, neighbourhoods).'],
         'partner' => ['model' => Models\Partner::class, 'title' => 'name', 'search' => ['name', 'slug', 'website'], 'images' => ['logo_path' => 'logo'], 'route' => 'partners.edit',
             'about' => 'Affiliate partner (booking site). website is used to match outbound clicks.'],
+        'partner_link' => ['model' => Models\PartnerLink::class, 'title' => 'url', 'search' => ['url'], 'images' => ['image_path' => 'cover'],
+            'about' => '"Not found what you need?" card at the end of the activity list on the site: city_id (empty = all cities), partner_id, type (empty = every tab, or pass/product/package), url (partner city page), count_label (optional, e.g. "55"), image_path (image URL), image_focus (0-100), active, sort_order.'],
         'redirect' => ['model' => Models\Redirect::class, 'title' => 'from_path', 'search' => ['from_path', 'to_path'],
             'about' => '301 redirect from an old path to a new path (e.g. /en/old-page → /en/activities).'],
         'language' => ['model' => Models\Language::class, 'title' => 'native_name', 'search' => ['name', 'code'], 'readonly' => ['code'],

@@ -157,6 +157,22 @@
                 <input type="hidden" name="description" value="{{ old('description', $activity->description) }}" />
                 @error('description') <p class="mt-1.5 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
             </div>
+
+            {{-- Sayfadaki ayrı bloklar: Google ve yapay zekâ "ne dahil, nerede buluşuluyor" sorularını buradan okur --}}
+            <div class="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200">
+                <p class="text-sm font-semibold text-slate-900">{{ __('Sayfadaki bilgi kutuları') }}</p>
+                <p class="mt-0.5 text-sm text-slate-500">{{ __('Sitede açıklamanın yanında ayrı kutular olarak görünür. İngilizce yaz, sadece partnerin sayfasında yazan bilgileri kullan; boş bıraktığın kutu görünmez.') }}</p>
+                <div class="mt-4 grid gap-4 md:grid-cols-2">
+                    @foreach (\App\Models\Activity::DETAILS as $detail => [$detailLabel, $detailHint, $detailList])
+                        <label class="block">
+                            <span class="text-sm font-medium text-slate-700">{{ __($detailLabel) }}</span>
+                            <textarea name="{{ $detail }}" rows="{{ $detailList ? 5 : 3 }}" placeholder="{{ __($detailHint) }}"
+                                class="mt-1.5 block w-full resize-y rounded-xl border-slate-200 bg-white text-sm leading-relaxed focus:border-brand-900 focus:ring-brand-900">{{ old($detail, $activity->getTranslation($detail, 'en', false)) }}</textarea>
+                            @error($detail) <p class="mt-1.5 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
+                        </label>
+                    @endforeach
+                </div>
+            </div>
         </section>
 
         {{-- 4. SSS --}}

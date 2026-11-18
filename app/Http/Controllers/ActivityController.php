@@ -192,10 +192,17 @@ class ActivityController extends Controller
         $data = $request->validated();
         $data['description'] = HtmlSanitizer::clean($data['description'] ?? null);
 
-        $activity->fill(collect($data)->except(['name', 'description', 'meta_title', 'meta_description', 'images', 'remove_images', 'cover_image_id', 'faqs', 'reviews'])->all());
+        $details = array_keys(Activity::DETAILS);
+        foreach ($details as $field) {
+            // satır başı tire/nokta ve boş satırlar temizlenir; HTML yok
+            $lines = preg_split('/\R/u', strip_tags((string) ($data[$field] ?? '')));
+            $data[$field] = implode("\n", array_filter(array_map(fn ($l) => trim(preg_replace('/^\s*(?:[-•*·]|\d+[.)])\s*/u', '', $l)), $lines), 'strlen')) ?: null;
+        }
+
+        $activity->fill(collect($data)->except(['name', 'description', 'meta_title', 'meta_description', 'images', 'remove_images', 'cover_image_id', 'faqs', 'reviews', ...$details])->all());
 
         // Çok dilli alanlar: sadece İngilizce yazılır, diğer diller korunur
-        foreach (['name', 'description', 'meta_title', 'meta_description'] as $field) {
+        foreach (['name', 'description', 'meta_title', 'meta_description', ...$details] as $field) {
             filled($data[$field] ?? null)
                 ? $activity->setTranslation($field, 'en', $data[$field])
                 : $activity->forgetTranslation($field, 'en');

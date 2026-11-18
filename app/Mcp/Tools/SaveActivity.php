@@ -16,7 +16,7 @@ use Laravel\Mcp\Server\Attributes\Description;
 #[Description(<<<'TXT'
 Create a new activity, or update one when "activity" is given (only the fields you send change).
 Write all texts in English (other languages come from the translate tool). description_html is clean HTML: <h2>/<h3> section titles, <p>, <ul><li>, <strong>; no inline styles, no images inside.
-Typical description sections: short intro, Highlights, What's included / not included, Meeting point, Good to know.
+description_html is the story (intro + what you will see). Put the facts in their own fields with save-record (type activity, newline = one item): highlights, included, excluded, important_info (lists), meeting_point and cancellation (short text; cancellation only if the partner page states it).
 image_urls are downloaded and resized (first one becomes the cover; up to 15). faqs are added to the activity.
 New activities are saved as drafts (active=false) unless the user asks to publish. Always tell the user the edit_url.
 TXT)]
