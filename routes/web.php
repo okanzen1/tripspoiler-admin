@@ -114,6 +114,7 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
         Route::post('/yapistir', 'import')->name('import.store');
         Route::get('/{city}', 'show')->name('show');
         Route::put('/{city}/giris', 'updateIntro')->name('intro');
+        Route::put('/{city}/bilgiler', 'updateFacts')->name('facts');
         Route::patch('/{city}/sira', 'order')->name('order');
         Route::get('/{city}/alan/{section}', 'editSection')->name('sections.edit');
         Route::put('/{city}/alan/{section}', 'updateSection')->name('sections.update');

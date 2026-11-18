@@ -51,7 +51,7 @@ class ContentTypes
         'country' => ['model' => Models\Country::class, 'title' => 'name', 'search' => ['name', 'code'],
             'about' => 'Country. active = shown on the site.'],
         'city_guide' => ['model' => Models\CityGuide::class, 'title' => 'title', 'search' => ['title'],
-            'about' => 'City guide intro of a city (one per city_id): title, description, hero_cards ("sectionId,sectionId").'],
+            'about' => 'City guide intro of a city (one per city_id): title, description, hero_cards ("sectionId,sectionId"). Quick facts table on the city page (short English, approximate, only facts you are sure of): fact_best_time, fact_days, fact_budget, fact_airport, fact_transport, fact_currency, fact_language, fact_tipping, fact_power, fact_emergency; facts_checked_at = date the facts were checked (YYYY-MM-DD).'],
         'city_guide_section' => ['model' => Models\CityGuideSection::class, 'title' => 'title', 'search' => ['title'], 'html' => ['content'], 'images' => ['image_path' => 'section'],
             'about' => 'A topic section in a city guide (city_id + topic_id): title, HTML content, image.'],
         'city_guide_topic' => ['model' => Models\CityGuideTopic::class, 'title' => 'name', 'search' => ['name', 'key'], 'route' => 'city-guide-topics.edit',

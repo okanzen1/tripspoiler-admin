@@ -11,7 +11,7 @@ use App\Services\ImageUploader;
  */
 class HtmlSanitizer
 {
-    private const ALLOWED_TAGS = '<p><br><h1><h2><h3><h4><strong><b><em><i><u><s><a><ul><ol><li><blockquote><span><img>';
+    private const ALLOWED_TAGS = '<p><br><h1><h2><h3><h4><strong><b><em><i><u><s><a><ul><ol><li><blockquote><span><img><table><caption><thead><tbody><tfoot><tr><th><td>';
 
     public static function clean(?string $html): ?string
     {
@@ -25,6 +25,7 @@ class HtmlSanitizer
         $html = preg_replace('#\s(style|class)\s*=\s*("[^"]*"|\'[^\']*\')#i', '', $html) ?? '';
         $html = preg_replace('#href\s*=\s*(["\']?)\s*(javascript|data|vbscript):[^"\'>\s]*\1#i', 'href="#"', $html) ?? '';
         $html = preg_replace_callback('#<img\b[^>]*>#i', fn ($m) => self::image($m[0]), $html) ?? '';
+        $html = self::markdownTables($html);
         // Son kontrol (izin listesi): yukarıdaki kalıpları atlatan her şey (ör. <span/onclick=…>, java&#x73;cript:) burada düşer
         $html = self::scrub($html);
         // Editörün koyduğu bölünmez boşluklar (satır kırılmasın diye) normal boşluk olur
@@ -51,6 +52,39 @@ class HtmlSanitizer
     }
 
     /**
+     * Yapıştırılan "| Semt | Fiyat |" satırları (ChatGPT / Claude tablosu) gerçek tablo olur.
+     * Satırlar ayrı paragraflarda ya da tek paragrafta <br> ile olabilir; "|---|---|" ayıracı varsa ilk satır başlıktır.
+     */
+    public static function markdownTables(string $html): string
+    {
+        $line = '\s*\|(?:(?!</p>|<br)[^\n])*\|\s*';
+        // önce <br> ile ayrılmış tek paragrafı satır paragraflarına böl
+        $html = preg_replace_callback('#<p>((?:' . $line . '<br\s*/?>)+' . $line . ')</p>#iu', fn ($m) => implode('', array_map(fn ($row) => '<p>' . trim($row) . '</p>', preg_split('#<br\s*/?>#i', $m[1]))), $html) ?? $html;
+
+        return preg_replace_callback('#(?:<p>' . $line . '</p>\s*){2,}#iu', function ($m) use ($line) {
+            preg_match_all('#<p>(' . $line . ')</p>#iu', $m[0], $rows);
+            $cells = array_map(fn ($row) => array_map('trim', explode('|', trim(trim($row), '|'))), $rows[1]);
+            $isSeparator = fn (array $row) => $row !== [] && collect($row)->every(fn ($c) => (bool) preg_match('/^:?-{2,}:?$/', $c));
+            $head = null;
+            if (count($cells) >= 2 && $isSeparator($cells[1])) {
+                $head = $cells[0];
+                $cells = array_slice($cells, 2);
+            }
+            $cells = array_values(array_filter($cells, fn ($row) => !$isSeparator($row)));
+            if ($cells === [] && $head === null) {
+                return $m[0];
+            }
+            $out = '<table>';
+            if ($head) {
+                $out .= '<thead><tr>' . implode('', array_map(fn ($c) => '<th scope="col">' . $c . '</th>', $head)) . '</tr></thead>';
+            }
+            $out .= '<tbody>' . implode('', array_map(fn ($row) => '<tr>' . implode('', array_map(fn ($c) => '<td>' . $c . '</td>', $row)) . '</tr>', $cells)) . '</tbody>';
+
+            return $out . '</table>';
+        }, $html) ?? $html;
+    }
+
+    /**
      * Bütün media adresleri (ör. yazı içi görselleri silerken hangilerinin kullanıldığını bulmak için).
      *
      * @return list<string>  media diskindeki yollar
@@ -66,6 +100,8 @@ class HtmlSanitizer
     private const ALLOWED_ATTRIBUTES = [
         'a' => ['href', 'target', 'rel'],
         'img' => ['src', 'alt', 'width', 'loading'],
+        'th' => ['scope', 'colspan', 'rowspan'],
+        'td' => ['colspan', 'rowspan'],
     ];
 
     /**
@@ -138,6 +174,10 @@ class HtmlSanitizer
                     continue 2;
                 } elseif ($name === 'target' && $attr->value !== '_blank') {
                     $child->removeAttribute('target');
+                } elseif ($name === 'scope' && !in_array($attr->value, ['col', 'row'], true)) {
+                    $child->removeAttribute('scope');
+                } elseif (in_array($name, ['colspan', 'rowspan'], true) && !preg_match('/^(?:[2-9]|1\d|20)$/', $attr->value)) {
+                    $child->removeAttribute($attr->name);
                 }
             }
             if ($tag === 'a' && $child->getAttribute('target') === '_blank') {

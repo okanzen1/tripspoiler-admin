@@ -83,6 +83,42 @@
             </form>
         </x-admin.card>
 
+        {{-- KISA BİLGİLER: sitede şehir sayfasında tablo (Google ve yapay zekâ aramaları bu net cevapları alıntılar) --}}
+        <x-admin.card class="scroll-mt-24 p-6 sm:p-8" id="kisa-bilgiler">
+            <form action="{{ route('city-guides.facts', $city) }}" method="POST" class="space-y-5">
+                @csrf
+                @method('PUT')
+                @php
+                    $filledFacts = collect(\App\Models\CityGuide::FACTS)->keys()->filter(fn ($key) => filled($guide->getTranslation('fact_' . $key, 'en', false)))->count();
+                @endphp
+                <x-admin.step-heading :title="__('Kısa bilgiler')"
+                    :description="__('Şehir sayfasında küçük bir tablo olarak çıkar: en iyi zaman, kaç gün, bütçe, ulaşım… Kısa ve net yaz (İngilizce); boş bıraktığın satır sitede görünmez. Fiyat ve süreleri yaklaşık yaz, emin olmadığın bilgiyi yazma.')" />
+                <div class="grid gap-4 sm:grid-cols-2">
+                    @foreach (\App\Models\CityGuide::FACTS as $key => [$label, $example])
+                        <label class="block">
+                            <span class="text-sm font-medium text-slate-700">{{ __($label) }}</span>
+                            <input type="text" name="fact_{{ $key }}" maxlength="200" value="{{ old('fact_' . $key, $guide->getTranslation('fact_' . $key, 'en', false)) }}"
+                                placeholder="{{ __('Örn:') }} {{ $example }}" class="{{ $field }}">
+                        </label>
+                    @endforeach
+                </div>
+                <div class="flex flex-wrap items-end justify-between gap-4 rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200">
+                    <label class="block">
+                        <span class="text-sm font-medium text-slate-700">{{ __('Son kontrol tarihi') }}</span>
+                        <input type="date" name="facts_checked_at" max="{{ now()->toDateString() }}" value="{{ old('facts_checked_at', $guide->facts_checked_at?->toDateString()) }}" class="{{ $field }}">
+                        <span class="mt-1 block text-xs text-slate-500">{{ __('Sitede "Son kontrol" olarak görünür; bilgileri güncelleyince bugünü seç.') }}</span>
+                    </label>
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm text-slate-500">{{ __(':n / :total bilgi dolu', ['n' => $filledFacts, 'total' => count(\App\Models\CityGuide::FACTS)]) }}</span>
+                        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-brand-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800">
+                            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                            {{ __('Bilgileri kaydet') }}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </x-admin.card>
+
         {{-- ALANLAR --}}
         <x-admin.card class="overflow-hidden" data-page-sections-root>
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">

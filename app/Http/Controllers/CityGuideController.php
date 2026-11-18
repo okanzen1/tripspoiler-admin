@@ -72,6 +72,29 @@ class CityGuideController extends Controller
     }
 
     /**
+     * "Kısa bilgiler" tablosu (İngilizce; diğer diller Çeviriler'den). Boş bırakılan bilgi sitede görünmez.
+     */
+    public function updateFacts(Request $request, City $city)
+    {
+        $rules = ['facts_checked_at' => ['nullable', 'date', 'before_or_equal:today']];
+        foreach (array_keys(CityGuide::FACTS) as $key) {
+            $rules['fact_' . $key] = ['nullable', 'string', 'max:200'];
+        }
+        $data = $request->validate($rules, [], ['facts_checked_at' => __('kontrol tarihi')]);
+
+        $guide = CityGuide::firstOrNew(['city_id' => $city->id]);
+        foreach (array_keys(CityGuide::FACTS) as $key) {
+            $value = trim(preg_replace('/\s+/u', ' ', strip_tags((string) ($data['fact_' . $key] ?? ''))));
+            // İngilizcesi silinen bilgi tüm dillerden silinir (eski çevirisi tek başına kalmasın)
+            $value !== '' ? $guide->setTranslation('fact_' . $key, 'en', $value) : $guide->forgetTranslations('fact_' . $key, asNull: true);
+        }
+        $guide->facts_checked_at = $data['facts_checked_at'] ?? null;
+        $guide->save();
+
+        return redirect(route('city-guides.show', $city) . '#kisa-bilgiler')->with('success', __('Kısa bilgiler kaydedildi.'));
+    }
+
+    /**
      * Bu şehirde hangi alanlar açık (her değişiklikte tüm durum gelir: on = açık id'ler). Sıra Bölümler'de.
      */
     public function order(Request $request, City $city)

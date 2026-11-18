@@ -406,7 +406,7 @@ class ModelTranslator
             }
             $text = (string) $value;
             if ($html) {
-                $text = strip_tags(preg_replace('~<(br|/p|/h[1-6]|/li|/div|/tr|/blockquote)\b[^>]*>~i', ' ', $text));
+                $text = strip_tags(preg_replace('~<(br|/p|/h[1-6]|/li|/div|/tr|/td|/th|/caption|/blockquote)\b[^>]*>~i', ' ', $text));
             }
             $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 

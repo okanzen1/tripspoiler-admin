@@ -27,7 +27,7 @@ class GoogleTranslator
     /** Sitedeki dil kodu → Google dil kodu */
     private const TARGETS = ['zh' => 'zh-CN'];
 
-    private const BLOCKS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote', 'div', 'ul', 'ol', 'td', 'th', 'figcaption'];
+    private const BLOCKS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote', 'div', 'ul', 'ol', 'td', 'th', 'figcaption', 'table', 'caption', 'thead', 'tbody', 'tfoot', 'tr'];
 
     private ?GoogleTranslate $client = null;
 

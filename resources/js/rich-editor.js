@@ -6,6 +6,7 @@
 import { compressImage } from './image-compress';
 import { t } from './i18n';
 import { toast } from './toast';
+import { attachTables } from './rich-table';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
 
@@ -76,7 +77,7 @@ document.querySelectorAll('[data-rich-editor]').forEach((box) => {
         placeholder: box.dataset.placeholder || t('Yazmaya başla…'),
         // Yalnızca araç çubuğundaki biçimler: başka yerden (sohbet, web sayfası, Word) yapıştırılan arka plan rengi,
         // yazı rengi, yazı tipi ve boyutu editöre hiç girmez; başlıklar, kalın, liste ve bağlantılar kalır
-        formats: ['header', 'bold', 'italic', 'underline', 'list', 'indent', 'link', 'blockquote', 'image'],
+        formats: ['header', 'bold', 'italic', 'underline', 'list', 'indent', 'link', 'blockquote', 'image', 'tablo'],
         modules: {
             toolbar: {
                 container: [
@@ -84,6 +85,7 @@ document.querySelectorAll('[data-rich-editor]').forEach((box) => {
                     ['bold', 'italic', 'underline'],
                     [{ list: 'ordered' }, { list: 'bullet' }],
                     uploadUrl ? ['link', 'blockquote', 'image'] : ['link', 'blockquote'],
+                    ['tablo'],
                     ['clean'],
                 ],
                 handlers: {
@@ -106,6 +108,8 @@ document.querySelectorAll('[data-rich-editor]').forEach((box) => {
 
     // Başka yerden kopyalanan base64 ya da yabancı sitedeki görseller içeriğe girmez
     quill.clipboard.addMatcher('IMG', (node) => (node.getAttribute('src')?.startsWith(box.dataset.mediaUrl || '\0') ? new Delta().insert({ image: node.getAttribute('src') }) : new Delta()));
+
+    attachTables(quill, Delta);
 
     if (box.dataset.wordPaste !== undefined) {
         // Word listeleri: madde işareti (mso-list:Ignore) silinir, paragraf liste satırı olur
