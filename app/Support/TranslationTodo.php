@@ -20,6 +20,7 @@ class TranslationTodo
     /** Menüdeki yerler → kayıt türleri */
     public const AREAS = [
         'activities' => ['activity'],
+        'attractions' => ['attraction'],
         'blogs' => ['blog'],
         'city-guides' => ['city-guide', 'city-guide-section', 'city-guide-topic'],
         'faqs' => ['faq'],

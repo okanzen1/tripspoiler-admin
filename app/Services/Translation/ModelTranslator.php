@@ -39,6 +39,7 @@ class ModelTranslator
         'city-guide' => \App\Models\CityGuide::class,
         'city-guide-section' => \App\Models\CityGuideSection::class,
         'city-guide-topic' => \App\Models\CityGuideTopic::class,
+        'attraction' => \App\Models\Attraction::class,
     ];
 
     /**
@@ -84,7 +85,7 @@ class ModelTranslator
     public function children(Model $model): Collection
     {
         return match (true) {
-            $model instanceof Activity, $model instanceof Blog => $model->faqs()->get(),
+            $model instanceof Activity, $model instanceof Blog, $model instanceof \App\Models\Attraction => $model->faqs()->get(),
             default => collect(),
         };
     }
@@ -349,6 +350,7 @@ class ModelTranslator
             'hero' => ['url' => route('site-settings.hero') . '#adim-yazi', 'title' => __('Hero alanı yazıları')],
             'city-guide' => ['url' => route('city-guides.show', $model->city_id), 'title' => __('Şehir rehberi: :city', ['city' => $model->city?->name])],
             'city-guide-section' => ['url' => route('city-guides.sections.edit', [$model->city_id, $model]), 'title' => $model->city?->name . ' · ' . ($model->getTranslation('title', 'en', false) ?: $model->topic?->getTranslation('name', 'en'))],
+            'attraction' => ['url' => route('attractions.edit', $model), 'title' => __('Yer: :name', ['name' => $model->getTranslation('name', 'en')])],
             'city-guide-topic' => ['url' => route('city-guide-topics.edit', $model), 'title' => __('Rehber alanı: :name', ['name' => $model->getTranslation('name', 'en')])],
         };
     }

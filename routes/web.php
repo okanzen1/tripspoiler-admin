@@ -180,6 +180,12 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
         ->parameters(['duyurular' => 'announcement']);
     Route::patch('/duyurular/{announcement}/durum', [AnnouncementController::class, 'toggle'])->name('announcements.toggle');
 
+    // Yer sayfaları (sitede /attractions/{slug}): biletler, ziyaret bilgileri, SSS
+    Route::resource('yerler', \App\Http\Controllers\AttractionController::class)
+        ->except('show')
+        ->names('attractions')
+        ->parameters(['yerler' => 'attraction']);
+
     // Kampanyalar / indirim kodları (sitede /campaigns)
     Route::resource('kampanyalar', CampaignController::class)
         ->except('show')

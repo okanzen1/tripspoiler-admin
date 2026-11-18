@@ -58,6 +58,8 @@ class ContentTypes
             'about' => 'Guide topics shared by all cities (e.g. transport, food, neighbourhoods).'],
         'partner' => ['model' => Models\Partner::class, 'title' => 'name', 'search' => ['name', 'slug', 'website'], 'images' => ['logo_path' => 'logo'], 'route' => 'partners.edit',
             'about' => 'Affiliate partner (booking site). website is used to match outbound clicks.'],
+        'attraction' => ['model' => Models\Attraction::class, 'title' => 'name', 'search' => ['name', 'slug'], 'html' => ['content'], 'images' => ['image_path' => 'cover'], 'route' => 'attractions.edit',
+            'about' => 'Attraction page on the site (/attractions/{slug}), e.g. Topkapi Palace: city_id, slug, name, summary (1-2 sentences), content (HTML: history, highlights, how to visit), opening_hours, closed_days, getting_there, dress_code (short texts), good_to_know (one item per line), official_url (only a real official site), image_path (image URL), meta_title, meta_description, activity_ids (tickets for this place, e.g. "12,24"; combos can belong to several places), active, sort_order. FAQs: save-record type faq with attraction_id. Only facts you are sure of.'],
         'partner_link' => ['model' => Models\PartnerLink::class, 'title' => 'url', 'search' => ['url'], 'images' => ['image_path' => 'cover'],
             'about' => '"Not found what you need?" card at the end of the activity list on the site: city_id (empty = all cities), partner_id, type (empty = every tab, or pass/product/package), url (partner city page), count_label (optional, e.g. "55"), image_path (image URL), image_focus (0-100), active, sort_order.'],
         'redirect' => ['model' => Models\Redirect::class, 'title' => 'from_path', 'search' => ['from_path', 'to_path'],

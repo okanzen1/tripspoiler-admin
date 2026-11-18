@@ -84,6 +84,11 @@ class Activity extends Model
         return $this->hasOne(ActivityImage::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    public function attractions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Attraction::class);
+    }
+
     public function faqs(): HasMany
     {
         return $this->hasMany(Faq::class)->orderBy('sort_order')->orderBy('id');

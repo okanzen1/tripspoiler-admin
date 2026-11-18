@@ -14,7 +14,7 @@ class Faq extends Model
 {
     use HasTranslations;
 
-    protected $fillable = ['activity_id', 'blog_id', 'city_id', 'page_key', 'question', 'answer', 'sort_order', 'active'];
+    protected $fillable = ['activity_id', 'blog_id', 'attraction_id', 'city_id', 'page_key', 'question', 'answer', 'sort_order', 'active'];
 
     /** Çok dilli alanlar; panel İngilizce (en) düzenler, diğer diller korunur */
     public array $translatable = ['question', 'answer'];
