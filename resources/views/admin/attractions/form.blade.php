@@ -97,7 +97,7 @@
         ])
 
         <section data-step hidden class="space-y-5">
-            <x-admin.step-heading :title="__('SEO ve yayın')" :description="__('Boş bırakırsan sitede otomatik başlık kullanılır: “Topkapi Palace Tickets & Visitor Guide 2026”.')" />
+            <x-admin.step-heading :title="__('SEO ve yayın')" :description="__('Boş bırakırsan sitede otomatik başlık kullanılır: “:title”.', ['title' => ($attraction->getTranslation('name', 'en', false) ?: 'Topkapi Palace') . ' Visitor Guide & Things to Do ' . now()->year . ' | TripSpoiler'])" />
             <x-admin.input name="meta_title" :label="__('SEO başlığı')" :value="$attraction->getTranslation('meta_title', 'en', false)" maxlength="70" />
             <label class="block">
                 <span class="text-sm font-medium text-slate-700">{{ __('SEO açıklaması') }}</span>

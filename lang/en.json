@@ -926,5 +926,6 @@
     "Bu talep kalıcı olarak silinsin mi? Geri alınamaz.": "Delete this request permanently? This cannot be undone.",
     "Talebi sil": "Delete request",
     "Durum güncellendi: :status": "Status updated: :status",
-    "Talep silindi.": "Request deleted."
+    "Talep silindi.": "Request deleted.",
+    "Boş bırakırsan sitede otomatik başlık kullanılır: “:title”.": "If left empty, the site uses an automatic title: “:title”."
 }
