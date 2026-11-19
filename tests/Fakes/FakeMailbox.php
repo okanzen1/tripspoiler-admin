@@ -68,6 +68,11 @@ class FakeMailbox implements Mailbox
         return ['items' => $items->forPage($page, $perPage)->values()->all(), 'total' => $items->count()];
     }
 
+    public function cachedMessage(string $folder, int $uid): ?array
+    {
+        return $this->message($folder, $uid);
+    }
+
     public function message(string $folder, int $uid): ?array
     {
         $this->guard();

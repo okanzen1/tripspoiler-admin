@@ -36,6 +36,13 @@ interface Mailbox
     public function message(string $folder, int $uid): ?array;
 
     /**
+     * Az önce açılmış e-postanın içeriği (ör. iframe gövdesi için); önbellekte yoksa message() ile alınır.
+     *
+     * @return Detail|null
+     */
+    public function cachedMessage(string $folder, int $uid): ?array;
+
+    /**
      * @return array{name: string, mime: string, content: string}|null
      */
     public function attachment(string $folder, int $uid, int $index): ?array;

@@ -304,6 +304,16 @@
                 xhr.send(body);
             });
 
+            // Arka plandan gönderilemezse normal gönderim: basılan düğmenin adresi (formaction) ve adı/değeri korunur
+            const plainSubmit = (form, action, submitter) => {
+                form.action = action;
+                if (submitter?.name) {
+                    const field = Object.assign(document.createElement('input'), { type: 'hidden', name: submitter.name, value: submitter.value });
+                    form.appendChild(field);
+                }
+                form.submit();
+            };
+
             document.addEventListener('submit', async (e) => {
                 const form = e.target;
                 if (!(form instanceof HTMLFormElement)) return;
@@ -311,7 +321,10 @@
                 // Aktif/pasif anahtarları ve yıldızlar kendi işini yapar (resources/js/toggle.js); burada ikinci kez gönderilirse
                 // kayıt iki kez değişir (yıldız geri döner) ve sayfa yenilenip başa kayar
                 if (form.matches('[data-toggle]')) return;
-                const action = form.action || '';
+                // Basılan düğmenin kendi adresi (formaction) varsa oraya gider: ör. E-posta listesinde "Tümünü okundu yap",
+                // "Çöp kutusuna taşı" aynı formdadır ama her biri başka adrese gider
+                const submitter = e.submitter?.form === form ? e.submitter : null;
+                const action = (submitter?.hasAttribute('formaction') ? submitter.formAction : form.action) || '';
                 // Yerel/dil değiştirme ve çıkış formları normal çalışsın
                 if (action.includes('/dil') || action.includes('/logout') || action.includes('/cevir')) return;
                 // Sadece sunucuya giden POST formları (PUT/PATCH/DELETE de _method ile POST'tur).
@@ -347,7 +360,7 @@
                 let leaving = false;
 
                 try {
-                    const res = await send(form.action, new FormData(form, e.submitter?.form === form ? e.submitter : undefined), (percent) => {
+                    const res = await send(action, new FormData(form, submitter ?? undefined), (percent) => {
                         if (!hasFiles) return;
                         percent < 100 ? setLock(lockText.uploading, percent) : setLock(lockText.processing);
                     });
@@ -387,14 +400,14 @@
                         // Beklenmeyen yanıt: normal submit'e düş
                         leaving = true;
                         delete form.dataset.ajaxBusy;
-                        form.submit();
+                        plainSubmit(form, action, submitter);
                         return;
                     }
                 } catch (err) {
                     // Ağ hatası: normal submit'e düş
                     leaving = true;
                     delete form.dataset.ajaxBusy;
-                    form.submit();
+                    plainSubmit(form, action, submitter);
                     return;
                 } finally {
                     if (!leaving) {

@@ -63,6 +63,26 @@ class MailboxTest extends TestCase
             ->assertHeader('Content-Security-Policy');
     }
 
+    public function test_mark_all_read_works_from_the_panel_ajax_sender(): void
+    {
+        // panel formları arka planda (JSON) gönderir; "Tümünü okundu yap" seçim istemeden klasörün hepsini okundu yapar
+        $this->actingAs(User::factory()->create())
+            ->withHeader('X-Requested-With', 'XMLHttpRequest')->patchJson(route('mailbox.seen-all'), ['folder' => 'INBOX'])
+            ->assertOk()->assertJsonPath('success', 'Hepsi okundu olarak işaretlendi.');
+
+        $this->assertTrue($this->mailbox->messages['INBOX'][1]['seen']);
+        $this->assertSame(0, InboxUnreadCount::get());
+    }
+
+    public function test_mark_all_read_button_has_its_own_address_and_the_sender_honors_it(): void
+    {
+        $this->actingAs(User::factory()->create())->get(route('mailbox.index'))
+            ->assertOk()
+            ->assertSee('formaction="' . route('mailbox.seen-all') . '"', false)
+            // genel gönderici basılan düğmenin adresini (formaction) kullanır
+            ->assertSee("submitter?.hasAttribute('formaction') ? submitter.formAction : form.action", false);
+    }
+
     public function test_unavailable_server_shows_friendly_page(): void
     {
         $this->mailbox->down = true;

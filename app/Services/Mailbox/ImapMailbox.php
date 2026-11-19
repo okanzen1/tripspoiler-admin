@@ -26,6 +26,9 @@ class ImapMailbox implements Mailbox
 
     private const FOLDERS_CACHE_SECONDS = 60;
 
+    /** Açılan e-postanın içeriği kısa süre saklanır: sayfa ve içerik kutusu (iframe) aynı e-postayı iki kez indirmesin */
+    private const MESSAGE_CACHE_SECONDS = 600;
+
     private ?Client $client = null;
 
     /** @var array<string, Folder>|null */
@@ -100,7 +103,8 @@ class ImapMailbox implements Mailbox
 
         if (! $this->hasFlag($message, 'seen')) {
             $message->setFlag('Seen');
-            self::forgetFolders();
+            // Klasörlerin hepsini sunucuya yeniden sormak yerine bu klasörün okunmamış sayısını bir azalt
+            self::adjustUnseen($folder, -1);
         }
 
         $attachments = [];
@@ -115,7 +119,7 @@ class ImapMailbox implements Mailbox
             ];
         }
 
-        return [
+        $detail = [
             ...$this->summary($message),
             'seen' => true,
             'cc' => $this->addresses($message->getCc()),
@@ -126,6 +130,40 @@ class ImapMailbox implements Mailbox
             'text' => $message->hasTextBody() ? $message->getTextBody() : null,
             'attachments' => $attachments,
         ];
+
+        Cache::put(self::messageCacheKey($folder, $uid), $detail, self::MESSAGE_CACHE_SECONDS);
+
+        return $detail;
+    }
+
+    /**
+     * Az önce açılmış e-postanın içeriği (gövde, ekler); önbellekte yoksa sunucudan alınır.
+     * İçerik bir UID için değişmez; okundu/yıldız gibi bayraklar burada önemli değildir.
+     */
+    public function cachedMessage(string $folder, int $uid): ?array
+    {
+        return Cache::get(self::messageCacheKey($folder, $uid)) ?? $this->message($folder, $uid);
+    }
+
+    private static function messageCacheKey(string $folder, int $uid): string
+    {
+        return 'mailbox:message:' . md5($folder) . ':' . $uid;
+    }
+
+    /** Önbellekteki klasör listesinde bir klasörün okunmamış sayısını değiştirir (liste yoksa dokunmaz) */
+    private static function adjustUnseen(string $folder, int $by): void
+    {
+        $folders = Cache::get(self::FOLDERS_CACHE_KEY);
+        if (! is_array($folders)) {
+            return;
+        }
+        foreach ($folders as &$item) {
+            if ($item['path'] === $folder) {
+                $item['unseen'] = max(0, (int) $item['unseen'] + $by);
+            }
+        }
+        unset($item);
+        Cache::put(self::FOLDERS_CACHE_KEY, $folders, self::FOLDERS_CACHE_SECONDS);
     }
 
     public function attachment(string $folder, int $uid, int $index): ?array

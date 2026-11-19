@@ -97,7 +97,8 @@ class MailboxController extends Controller
         [$folder, $uid] = $this->target($request);
 
         try {
-            $message = $this->mailbox->message($folder, $uid);
+            // sayfa az önce aynı e-postayı açtı: içerik önbellekten gelir, sunucuya ikinci kez bağlanılmaz
+            $message = $this->mailbox->cachedMessage($folder, $uid);
         } catch (Throwable $exception) {
             Log::warning('E-posta gövdesi alınamadı.', ['error' => $exception->getMessage()]);
             abort(503);
