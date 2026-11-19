@@ -930,5 +930,11 @@
     "Talep no :ref · Gönderildi: :date · Site dili: :locale": "Request :ref · Sent: :date · Site language: :locale",
     "Talep no ara (TS-48217)": "Search request no (TS-48217)",
     "Bu numarayla talep yok": "No request with this number",
-    "Sayfanın üstü: fotoğraf (telefon dahil), başlık ve açıklama (12 dil), görünüm.": "Top of the page: photo (incl. phone), title and description (12 languages), appearance."
+    "Sayfanın üstü: fotoğraf (telefon dahil), başlık ve açıklama (12 dil), görünüm.": "Top of the page: photo (incl. phone), title and description (12 languages), appearance.",
+    ":n aktivite bağlı": ":n activities linked",
+    "Bu yere giriş içeren aktiviteleri seç. Kombolar birden fazla yere bağlanabilir; passler en üstte gösterilir.": "Pick the activities that include entry to this place. Combos can be linked to several places; passes are shown first.",
+    "Aktivite ara ve seç (ad, şehir ya da ID)…": "Search and pick an activity (name, city or ID)…",
+    "Henüz aktivite seçilmedi.": "No activities selected yet.",
+    "Bulunamadı.": "Nothing found.",
+    "Yayında değil, sitede görünmüyor": "Not published, not visible on the site"
 }

@@ -39,6 +39,18 @@ class AttractionController extends Controller
         return $this->form($attraction->load('faqs'));
     }
 
+    /** Listede Yayında/Kapalı anahtarı: sayfa yenilenmeden (JSON) ya da normal formla. */
+    public function toggle(Request $request, Attraction $attraction)
+    {
+        $attraction->update(['active' => !$attraction->active]);
+        $name = $attraction->getTranslation('name', 'en', false);
+        $message = __($attraction->active ? '":name" yayına alındı.' : '":name" yayından kaldırıldı.', ['name' => $name]);
+
+        return $request->expectsJson()
+            ? response()->json(['active' => $attraction->active, 'message' => $message])
+            : back()->with('success', $message);
+    }
+
     private function form(Attraction $attraction)
     {
         return view('admin.attractions.form', [

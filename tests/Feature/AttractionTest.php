@@ -63,4 +63,34 @@ class AttractionTest extends TestCase
             $this->assertDatabaseHas('redirects', ['from_path' => "/{$locale}/attractions/acropolis", 'to_path' => "/{$locale}/attractions/acropolis-of-athens"]);
         }
     }
+
+    public function test_list_toggle_works_without_reload_and_form_uses_activity_select(): void
+    {
+        $country = Country::create(['code' => 'TR', 'name' => 'Turkey', 'slug' => 'turkey', 'active' => true]);
+        $city = City::create(['country_id' => $country->id, 'name' => 'Istanbul', 'slug' => 'istanbul', 'active' => true]);
+        $act = Activity::create(['city_id' => $city->id, 'name' => ['en' => 'Topkapi ticket'], 'slug' => 'topkapi-ticket', 'type' => 'product']);
+        $place = Attraction::create(['city_id' => $city->id, 'slug' => 'topkapi', 'name' => ['en' => 'Topkapi Palace'], 'active' => false]);
+        $place->activities()->sync([$act->id]);
+        $admin = User::factory()->admin()->create();
+
+        // kapalıyken "Sitede aç" bağlantı değil (pasif)
+        $this->actingAs($admin)->get(route('attractions.index'))->assertOk()
+            ->assertSee(route('attractions.toggle', $place), false)
+            ->assertSee('rel="noopener" class="relative z-10 text-sm font-semibold text-slate-500 hover:text-brand-900 hidden"', false)
+            ->assertSee('cursor-not-allowed select-none text-sm font-semibold text-slate-300"', false);
+
+        $this->actingAs($admin)->patchJson(route('attractions.toggle', $place))
+            ->assertOk()->assertJson(['active' => true]);
+        $this->assertTrue($place->fresh()->active);
+
+        $this->actingAs($admin)->get(route('attractions.index'))
+            ->assertSee('rel="noopener" class="relative z-10 text-sm font-semibold text-slate-500 hover:text-brand-900"', false)
+            ->assertSee('text-slate-300 hidden"', false);
+
+        // formda "Aktiviteler" adımı, seçili aktivite etiket olarak gelir
+        $this->actingAs($admin)->get(route('attractions.edit', $place))->assertOk()
+            ->assertSee('Aktiviteler')->assertDontSee('Biletler')
+            ->assertSee('data-activity-select', false)
+            ->assertSee('name="activity_ids[]" value="' . $act->id . '"', false);
+    }
 }

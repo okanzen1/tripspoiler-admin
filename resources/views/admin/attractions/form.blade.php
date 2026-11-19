@@ -5,7 +5,7 @@
     $field = 'mt-1.5 block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-900 focus:ring-4 focus:ring-brand-900/10';
     $faqRows = old('faqs', $editing ? $attraction->faqs->map(fn ($f) => ['id' => $f->id, 'question' => $f->question, 'answer' => $f->answer])->all() : []);
     $linked = collect(old('activity_ids', $editing ? $attraction->activity_ids : []))->map(fn ($id) => (int) $id)->all();
-    $steps = ['Yer', 'Anlatım', 'Ziyaret bilgileri', 'Biletler', 'SSS', 'SEO ve yayın'];
+    $steps = ['Yer', 'Anlatım', 'Ziyaret bilgileri', 'Aktiviteler', 'SSS', 'SEO ve yayın'];
 @endphp
 
 @section('title', $editing ? 'Yeri düzenle' : 'Yeni yer')
@@ -72,23 +72,48 @@
         </section>
 
         <section data-step hidden class="space-y-5">
-            <x-admin.step-heading :title="__('Biletler')" :description="__('Bu yere giriş içeren aktiviteleri işaretle. Kombolar birden fazla yere bağlanabilir; passler en üstte gösterilir.')" />
-            @foreach ($activities->groupBy(fn ($a) => $a->city?->name) as $cityName => $group)
-                <fieldset class="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200">
-                    <legend class="px-1 text-xs font-bold uppercase tracking-wide text-slate-500">{{ $cityName }}</legend>
-                    <div class="mt-1 grid gap-2 sm:grid-cols-2">
-                        @foreach ($group as $activity)
-                            <label class="flex cursor-pointer items-start gap-3 rounded-xl bg-white px-3 py-2.5 text-sm ring-1 ring-slate-200 transition has-checked:ring-2 has-checked:ring-brand-900">
-                                <input type="checkbox" name="activity_ids[]" value="{{ $activity->id }}" class="mt-0.5 size-4 accent-brand-900" @checked(in_array($activity->id, $linked, true))>
-                                <span class="min-w-0">
-                                    <span class="block font-medium text-slate-900">{{ $activity->getTranslation('name', 'en', false) }}</span>
-                                    <span class="text-xs text-slate-500">{{ $activity->type }}{{ $activity->active ? '' : ' · ' . __('kapalı') }}</span>
-                                </span>
-                            </label>
+            <x-admin.step-heading :title="__('Aktiviteler')" :description="__('Bu yere giriş içeren aktiviteleri seç. Kombolar birden fazla yere bağlanabilir; passler en üstte gösterilir.')" />
+            @php $byId = $activities->keyBy('id'); @endphp
+            {{-- Aranabilir seçim: kutuya yaz, listeden seç; seçilenler aşağıda etiket olur (× ile çıkar) --}}
+            <div data-activity-select class="space-y-3">
+                <div class="relative">
+                    <x-admin.icon name="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input type="search" data-select-search autocomplete="off" placeholder="{{ __('Aktivite ara ve seç (ad, şehir ya da ID)…') }}"
+                        class="block w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm outline-none focus:border-brand-900 focus:ring-2 focus:ring-brand-900/15" />
+                    <ul data-select-list hidden class="absolute inset-x-0 top-full z-30 mt-1 max-h-80 overflow-y-auto rounded-xl bg-white py-1 shadow-lg ring-1 ring-slate-200">
+                        @foreach ($activities->groupBy(fn ($a) => $a->city?->name) as $cityName => $group)
+                            <li data-group class="px-3 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">{{ $cityName }}</li>
+                            @foreach ($group as $activity)
+                                <li data-option data-id="{{ $activity->id }}" data-search="{{ mb_strtolower($activity->getTranslation('name', 'en', false) . ' ' . $cityName . ' #' . $activity->id) }}"
+                                    class="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-brand-50">
+                                    <span class="min-w-0 flex-1 truncate font-medium text-slate-900">{{ $activity->getTranslation('name', 'en', false) }}</span>
+                                    <span class="shrink-0 text-xs text-slate-400">#{{ $activity->id }}{{ $activity->active ? '' : ' · ' . __('kapalı') }}</span>
+                                </li>
+                            @endforeach
                         @endforeach
-                    </div>
-                </fieldset>
-            @endforeach
+                        <li data-select-empty hidden class="px-3 py-3 text-sm text-slate-500">{{ __('Bulunamadı.') }}</li>
+                    </ul>
+                </div>
+                <ul data-select-chips class="flex flex-wrap gap-2">
+                    @foreach ($linked as $id)
+                        @if ($a = $byId->get($id))
+                            <li data-chip data-id="{{ $id }}" class="inline-flex items-center gap-1.5 rounded-full bg-brand-50 py-1 pl-3 pr-1 text-sm font-medium text-brand-900 ring-1 ring-brand-100">
+                                <input type="hidden" name="activity_ids[]" value="{{ $id }}">
+                                <span>{{ $a->getTranslation('name', 'en', false) }} <span class="text-xs text-slate-400">· {{ $a->city?->name }}</span></span>
+                                <button type="button" data-chip-remove class="grid size-6 place-items-center rounded-full text-slate-400 hover:bg-white hover:text-rose-600" aria-label="{{ __('Çıkar') }}">×</button>
+                            </li>
+                        @endif
+                    @endforeach
+                </ul>
+                <p data-select-none @class(['text-sm text-slate-500', 'hidden' => count($linked) > 0])>{{ __('Henüz aktivite seçilmedi.') }}</p>
+                <template data-chip-template>
+                    <li data-chip class="inline-flex items-center gap-1.5 rounded-full bg-brand-50 py-1 pl-3 pr-1 text-sm font-medium text-brand-900 ring-1 ring-brand-100">
+                        <input type="hidden" name="activity_ids[]">
+                        <span data-chip-label></span>
+                        <button type="button" data-chip-remove class="grid size-6 place-items-center rounded-full text-slate-400 hover:bg-white hover:text-rose-600" aria-label="{{ __('Çıkar') }}">×</button>
+                    </li>
+                </template>
+            </div>
         </section>
 
         @include('admin.partials.faq-step', [
@@ -113,4 +138,59 @@
     @if ($editing)
         <form id="delete-attraction" method="POST" action="{{ route('attractions.destroy', $attraction) }}" class="hidden">@csrf @method('DELETE')</form>
     @endif
+    @push('scripts')
+        <script>
+            // Aktivite seçimi: ara → seç → etiket; seçili olanlar listede gizlenir
+            document.querySelectorAll('[data-activity-select]').forEach((box) => {
+                const search = box.querySelector('[data-select-search]'), list = box.querySelector('[data-select-list]');
+                const chips = box.querySelector('[data-select-chips]'), none = box.querySelector('[data-select-none]');
+                const tpl = box.querySelector('[data-chip-template]'), empty = box.querySelector('[data-select-empty]');
+                const picked = () => new Set([...chips.querySelectorAll('[data-chip]')].map((c) => c.dataset.id));
+
+                const filter = () => {
+                    const q = search.value.trim().toLocaleLowerCase('tr'), have = picked();
+                    let shown = 0, group = null, groupHas = false;
+                    const closeGroup = () => { if (group) group.hidden = !groupHas; };
+                    list.querySelectorAll('[data-group], [data-option]').forEach((li) => {
+                        if (li.hasAttribute('data-group')) { closeGroup(); group = li; groupHas = false; return; }
+                        const ok = !have.has(li.dataset.id) && (!q || li.dataset.search.includes(q));
+                        li.hidden = !ok;
+                        if (ok) { shown++; groupHas = true; }
+                    });
+                    closeGroup();
+                    empty.hidden = shown > 0;
+                    none.classList.toggle('hidden', have.size > 0);
+                };
+                const open = () => { filter(); list.hidden = false; };
+
+                search.addEventListener('focus', open);
+                search.addEventListener('input', open);
+                search.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') list.hidden = true;
+                    if (e.key === 'Enter') {
+                        e.preventDefault(); // formu göndermesin; ilk sonucu seç
+                        list.querySelector('[data-option]:not([hidden])')?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+                    }
+                });
+                search.addEventListener('blur', () => setTimeout(() => { list.hidden = true; }, 120));
+                list.addEventListener('mousedown', (e) => {
+                    const option = e.target.closest('[data-option]');
+                    if (!option) return;
+                    e.preventDefault();
+                    const chip = tpl.content.firstElementChild.cloneNode(true);
+                    chip.dataset.id = option.dataset.id;
+                    chip.querySelector('input').value = option.dataset.id;
+                    chip.querySelector('[data-chip-label]').textContent = option.querySelector('span').textContent;
+                    chips.append(chip);
+                    search.value = '';
+                    filter();
+                });
+                chips.addEventListener('click', (e) => {
+                    if (!e.target.closest('[data-chip-remove]')) return;
+                    e.target.closest('[data-chip]').remove();
+                    filter();
+                });
+            });
+        </script>
+    @endpush
 @endsection

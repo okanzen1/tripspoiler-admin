@@ -185,6 +185,7 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
         ->except('show')
         ->names('attractions')
         ->parameters(['yerler' => 'attraction']);
+    Route::patch('/yerler/{attraction}/yayin', [\App\Http\Controllers\AttractionController::class, 'toggle'])->name('attractions.toggle');
 
     // Kampanyalar / indirim kodları (sitede /campaigns)
     Route::resource('kampanyalar', CampaignController::class)
