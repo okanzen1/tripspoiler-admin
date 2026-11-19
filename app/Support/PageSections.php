@@ -54,6 +54,7 @@ class PageSections
         'campaigns' => ['faq', 'reviews'],
         'weather' => ['faq'],
         'time' => ['faq'],
+        'plan' => ['faq', 'reviews'],
     ];
 
     /**
@@ -81,7 +82,7 @@ class PageSections
      * @return array<string, array{0: string, 1: string, 2: bool}>
      */
     /** Şehirle ilgisi olmayan sayfalar: şehre bağlı bölümler (popüler, blog, şehirler çağrısı) yok, SSS sadece sayfanın */
-    public const NO_CITY = ['contact', 'about', 'privacy', 'reviews', 'rates', 'campaigns', 'weather', 'time'];
+    public const NO_CITY = ['contact', 'about', 'privacy', 'reviews', 'rates', 'campaigns', 'weather', 'time', 'plan'];
 
     public const CITY_ONLY = ['popular', 'blog', 'city_entry', 'weather', 'time'];
 
