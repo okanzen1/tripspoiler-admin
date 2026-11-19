@@ -104,6 +104,17 @@ class TranslationTest extends TestCase
             ->assertSee(\App\Support\ActivityLogger::label($this->activity));
     }
 
+    public function test_stuck_running_job_is_marked_and_can_be_removed(): void
+    {
+        $id = \Illuminate\Support\Facades\DB::table('jobs')->insertGetId(['queue' => 'default', 'payload' => '{}', 'attempts' => 2,
+            'reserved_at' => now()->subHours(7)->timestamp, 'available_at' => now()->subHours(7)->timestamp, 'created_at' => now()->subHours(7)->timestamp]);
+        $admin = \App\Models\User::factory()->admin()->create();
+
+        $this->actingAs($admin)->get(route('queue.index'))->assertSee('Takıldı')->assertSee(route('queue.destroy', $id));
+        $this->actingAs($admin)->delete(route('queue.destroy', $id));
+        $this->assertDatabaseMissing('jobs', ['id' => $id]);
+    }
+
     public function test_split_pending_only_job_does_not_force_retranslation(): void
     {
         \Illuminate\Support\Facades\Queue::fake();

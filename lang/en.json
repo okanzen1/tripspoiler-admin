@@ -940,5 +940,7 @@
     "Son çevrilenler": "Recently translated",
     "Sıradan biten çeviriler, en yenisi üstte.": "Translations finished from the queue, newest first.",
     "Son 1 saatte :count çeviri bitti": ":count translations finished in the last hour",
-    "Henüz biten çeviri yok. Sıra işlendikçe burada görünür.": "No finished translations yet. They appear here as the queue is processed."
+    "Henüz biten çeviri yok. Sıra işlendikçe burada görünür.": "No finished translations yet. They appear here as the queue is processed.",
+    "Takıldı": "Stuck",
+    "Bu iş takılı kalmış. Sıradan çıkarılsın mı? Sonra kaydı panelden yeniden çevirebilirsin.": "This job is stuck. Remove it from the queue? You can translate the record again from the panel afterwards."
 }

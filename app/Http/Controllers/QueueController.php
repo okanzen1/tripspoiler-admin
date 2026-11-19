@@ -31,6 +31,8 @@ class QueueController extends Controller
                 'id' => $job->id,
                 'attempts' => $job->attempts,
                 'running' => $job->reserved_at !== null,
+                // retry_after'dan uzun süredir "işleniyor": işçi yarıda kesilmiş, iş takılı kalmış
+                'stuck' => $job->reserved_at !== null && $job->reserved_at < now()->subSeconds((int) config('queue.connections.database.retry_after', 960))->timestamp,
                 'created_at' => now()->setTimestamp($job->created_at),
                 'available_at' => now()->setTimestamp($job->available_at),
                 ...$this->describe($job->payload),

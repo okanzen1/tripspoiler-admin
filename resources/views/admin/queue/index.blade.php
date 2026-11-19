@@ -129,8 +129,8 @@
             <ul class="divide-y divide-slate-100 border-t border-slate-100">
                 @forelse ($pending as $job)
                     <li class="flex items-center gap-4 px-6 py-3">
-                        <span @class(['shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold ring-1', 'bg-sky-50 text-sky-700 ring-sky-200' => $job['running'], 'bg-amber-50 text-amber-800 ring-amber-200' => !$job['running']])>
-                            {{ $job['running'] ? __('İşleniyor') : __('Bekliyor') }}
+                        <span @class(['shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold ring-1', 'bg-red-50 text-red-700 ring-red-200' => $job['stuck'], 'bg-sky-50 text-sky-700 ring-sky-200' => $job['running'] && !$job['stuck'], 'bg-amber-50 text-amber-800 ring-amber-200' => !$job['running']])>
+                            {{ $job['stuck'] ? __('Takıldı') : ($job['running'] ? __('İşleniyor') : __('Bekliyor')) }}
                         </span>
                         <div class="min-w-0 flex-1">
                             <p class="truncate text-sm font-medium text-slate-900">{{ $job['name'] }}@if ($job['subject']) <span class="font-normal text-slate-500">· {{ $job['subject'] }}</span>@endif</p>
@@ -141,14 +141,14 @@
                                 @if ($job['available_at']->isFuture()) · {{ __(':time tekrar denenecek', ['time' => $job['available_at']->diffForHumans()]) }} @endif
                             </p>
                         </div>
-                        @unless ($job['running'])
-                            <form method="POST" action="{{ route('queue.destroy', $job['id']) }}" data-confirm="{{ __('Bu iş sıradan çıkarılsın mı? Yapılmayacak.') }}" data-confirm-title="{{ __('Sıradan çıkarılsın mı?') }}" data-confirm-button="{{ __('Evet, çıkar') }}">
+                        @if (!$job['running'] || $job['stuck'])
+                            <form method="POST" action="{{ route('queue.destroy', $job['id']) }}" data-confirm="{{ $job['stuck'] ? __('Bu iş takılı kalmış. Sıradan çıkarılsın mı? Sonra kaydı panelden yeniden çevirebilirsin.') : __('Bu iş sıradan çıkarılsın mı? Yapılmayacak.') }}" data-confirm-title="{{ __('Sıradan çıkarılsın mı?') }}" data-confirm-button="{{ __('Evet, çıkar') }}">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600" title="{{ __('Sıradan çıkar') }}">
                                     <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
                                 </button>
                             </form>
-                        @endunless
+                        @endif
                     </li>
                 @empty
                     <li class="px-6 py-8 text-center text-sm text-slate-400">{{ __('Sırada iş yok.') }}</li>
