@@ -34,7 +34,7 @@ class HelpRequest extends Model
         'budget' => ['economy' => 'Ekonomik', 'mid' => 'Orta', 'comfort' => 'Rahat'],
     ];
 
-    protected $fillable = ['name', 'email', 'answers', 'locale', 'status', 'newsletter', 'answered_at'];
+    protected $fillable = ['reference', 'name', 'email', 'answers', 'locale', 'status', 'newsletter', 'answered_at'];
 
     protected function casts(): array
     {
@@ -51,7 +51,18 @@ class HelpRequest extends Model
     {
         static::saving(function (self $request) {
             $request->email_hash = Privacy::hash($request->email);
+            $request->reference ??= self::newReference();
         });
+    }
+
+    /** Tekil talep numarası: TS- + 5 rakam (sitede de aynı biçim: tripspoiler/app/Models/HelpRequest) */
+    public static function newReference(): string
+    {
+        do {
+            $ref = 'TS-' . random_int(10000, 99999);
+        } while (static::where('reference', $ref)->exists());
+
+        return $ref;
     }
 
     /** Kişisel veri gereğinden uzun tutulmaz: 12 ayı geçen talepler silinir (model:prune) */

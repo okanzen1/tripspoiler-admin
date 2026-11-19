@@ -914,7 +914,6 @@
     "Tempo": "Pace",
     "İlgi alanları": "Interests",
     "Bütçe anlayışı": "Budget style",
-    "Gönderildi: :date · Site dili: :locale": "Sent: :date · Site language: :locale",
     "Cevapla": "Reply",
     "Misafirin notu": "Guest's note",
     "İletişim": "Contact",
@@ -927,5 +926,9 @@
     "Talebi sil": "Delete request",
     "Durum güncellendi: :status": "Status updated: :status",
     "Talep silindi.": "Request deleted.",
-    "Boş bırakırsan sitede otomatik başlık kullanılır: “:title”.": "If left empty, the site uses an automatic title: “:title”."
+    "Boş bırakırsan sitede otomatik başlık kullanılır: “:title”.": "If left empty, the site uses an automatic title: “:title”.",
+    "Talep no :ref · Gönderildi: :date · Site dili: :locale": "Request :ref · Sent: :date · Site language: :locale",
+    "Talep no ara (TS-48217)": "Search request no (TS-48217)",
+    "Bu numarayla talep yok": "No request with this number",
+    "Sayfanın üstü: fotoğraf (telefon dahil), başlık ve açıklama (12 dil), görünüm.": "Top of the page: photo (incl. phone), title and description (12 languages), appearance."
 }

@@ -83,7 +83,7 @@ class PageHeroTextController extends Controller
 
     /** Fotoğraflı hero'su olan sayfalar (kadraj + karartma) */
     // Blog, İletişim ve Gizlilik'te fotoğraflı banner yok: kadraj/karartma ayarı orada bir şeyi değiştirmez, gösterilmez
-    public const VISUAL = ['activities', 'cities', 'about', 'reviews', 'weather', 'time'];
+    public const VISUAL = ['activities', 'cities', 'about', 'reviews', 'weather', 'time', 'plan'];
 
     public const OVERLAYS = ['soft', 'medium', 'strong'];
 

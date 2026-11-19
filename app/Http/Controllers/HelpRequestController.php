@@ -16,7 +16,12 @@ class HelpRequestController extends Controller
     {
         $status = array_key_exists((string) $request->get('status'), HelpRequest::STATUSES) ? $request->get('status') : null;
 
+        // Talep numarasıyla arama (misafir "TS-48217" yazar; "48217" de olur)
+        $search = strtoupper(trim((string) $request->get('q')));
+        $reference = $search === '' ? null : (str_starts_with($search, 'TS-') ? $search : 'TS-' . ltrim($search, '#'));
+
         $requests = HelpRequest::query()
+            ->when($reference, fn ($q) => $q->where('reference', $reference))
             ->when($status, fn ($q) => $q->where('status', $status))
             ->latest()
             ->paginate(25)
@@ -32,6 +37,7 @@ class HelpRequestController extends Controller
         return view('admin.help-requests.index', [
             'requests' => $requests,
             'status' => $status,
+            'search' => $search,
             'counts' => $counts,
             'total' => $counts->sum(),
             'topCities' => $topCities,

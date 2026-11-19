@@ -41,7 +41,7 @@
 @endphp
 
 @section('header')
-    <x-admin.page-header :title="$item->name" :description="__('Gönderildi: :date · Site dili: :locale', ['date' => $item->created_at->format('d.m.Y H:i'), 'locale' => strtoupper($item->locale)])"
+    <x-admin.page-header :title="$item->name" :description="__('Talep no :ref · Gönderildi: :date · Site dili: :locale', ['ref' => $item->reference, 'date' => $item->created_at->format('d.m.Y H:i'), 'locale' => strtoupper($item->locale)])"
         :breadcrumb="['Yardım talepleri' => route('help-requests.index')]">
         <x-slot:icon><path d="M9 11a3 3 0 1 0 6 0 3 3 0 0 0-6 0Z" /><path d="M17.8 17.8A8.5 8.5 0 1 1 20.5 12c0 1.5-.4 3-1.1 4.2L21 21l-4.8-1.6" /></x-slot:icon>
         <a href="{{ route('mailbox.compose', ['to' => $item->email]) }}"

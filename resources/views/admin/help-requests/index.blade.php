@@ -43,7 +43,8 @@
     @endif
 
     <x-admin.card class="overflow-hidden">
-        <nav class="flex flex-wrap gap-1.5 border-b border-slate-100 px-4 py-3" aria-label="{{ __('Durum') }}">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
+        <nav class="flex flex-wrap gap-1.5" aria-label="{{ __('Durum') }}">
             @foreach (['' => [__('Tümü'), $total]] + collect(\App\Models\HelpRequest::STATUSES)->map(fn ($l, $k) => [__($l), $counts[$k] ?? 0])->all() as $key => [$label, $n])
                 <a href="{{ route('help-requests.index', array_filter(['status' => $key])) }}"
                     @class(['rounded-lg px-3 py-1.5 text-sm font-medium transition', 'bg-brand-900 text-white' => (string) $status === (string) $key, 'text-slate-600 hover:bg-slate-100' => (string) $status !== (string) $key])>
@@ -51,11 +52,17 @@
                 </a>
             @endforeach
         </nav>
+            <form method="GET" action="{{ route('help-requests.index') }}" class="relative w-full sm:w-64">
+                <x-admin.icon name="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input type="search" name="q" value="{{ $search }}" placeholder="{{ __('Talep no ara (TS-48217)') }}"
+                    class="block w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-900 focus:ring-4 focus:ring-brand-900/10" />
+            </form>
+        </div>
 
         @if ($requests->isEmpty())
             <div class="px-6 py-16 text-center">
                 <div class="mx-auto grid size-12 place-items-center rounded-2xl bg-pink-50 text-pink-700"><x-admin.icon name="mail" class="size-6" /></div>
-                <p class="mt-4 text-sm font-semibold text-slate-900">{{ __('Henüz talep yok') }}</p>
+                <p class="mt-4 text-sm font-semibold text-slate-900">{{ __($search ? 'Bu numarayla talep yok' : 'Henüz talep yok') }}</p>
                 <p class="mt-1 text-sm text-slate-500">{{ __('Sitedeki “Plan your trip” sayfasından gelen talepler burada görünür.') }}</p>
             </div>
         @else
@@ -65,7 +72,7 @@
                     <li class="relative flex items-center gap-4 px-6 py-4 transition hover:bg-slate-50/60">
                         <span class="grid size-10 shrink-0 place-items-center rounded-full bg-pink-50 text-sm font-semibold uppercase text-pink-700">{{ mb_substr($item->name, 0, 1) }}</span>
                         <div class="min-w-0 flex-1">
-                            <a href="{{ route('help-requests.show', $item) }}" class="block truncate font-semibold text-slate-900 after:absolute after:inset-0 hover:text-brand-900">{{ $item->name }}</a>
+                            <a href="{{ route('help-requests.show', $item) }}" class="block truncate font-semibold text-slate-900 after:absolute after:inset-0 hover:text-brand-900">{{ $item->name }} <span class="ms-1.5 rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-xs font-semibold text-slate-600">{{ $item->reference }}</span></a>
                             <p class="mt-0.5 truncate text-sm text-slate-500">
                                 {{ implode(', ', (array) ($a['city_names'] ?? [])) ?: '—' }}
                                 @if (!empty($a['days'])) · {{ __(':n gün', ['n' => $a['days']]) }} @endif

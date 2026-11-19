@@ -54,6 +54,11 @@ class HelpRequestTest extends TestCase
         $this->assertSame('answered', $item->fresh()->status);
         $this->assertNotNull($item->fresh()->answered_at);
 
+        // talep numarası: TS- + 5 rakam, panelde numarayla bulunur
+        $this->assertMatchesRegularExpression('/^TS-\\d{5}$/', $item->reference);
+        $this->get(route('help-requests.index', ['q' => substr($item->reference, 3)]))->assertOk()->assertSee($item->reference);
+        $this->get(route('help-requests.index', ['q' => 'TS-00000']))->assertOk()->assertSee('Bu numarayla talep yok');
+
         $this->delete(route('help-requests.destroy', $older))->assertRedirect(route('help-requests.index'));
         $this->assertNull(HelpRequest::find($older->id));
     }

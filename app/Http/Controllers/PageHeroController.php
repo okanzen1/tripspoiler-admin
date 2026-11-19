@@ -26,6 +26,14 @@ class PageHeroController extends Controller
             'mobile_ratio' => 'aspect-[4/5]',
             'layout' => 'Fotoğraf yerel saat sayfasının üstünü kaplar, koyulaştırılır; solda yazılar ve şehir seçici, sağda büyük canlı saat durur. Resim yüklemezsen seçili şehrin kendi banner resmi kullanılır.',
         ],
+        'plan' => [
+            'desktop' => [[2400, 1100], [1600, 700]],
+            'mobile' => [[1080, 1350], [720, 900]],
+            'ratio' => 'aspect-[24/11]',
+            'preview_width' => 'max-w-2xl',
+            'mobile_ratio' => 'aspect-[4/5]',
+            'layout' => 'Fotoğraf Gezini planla sayfasının üstünü kaplar ve koyulaştırılır; solda başlık ve güven rozetleri, sağda talep sorgulama kutusu durur. Form kartı resmin alt kısmına biner. Geniş bir şehir ya da yolculuk manzarası iyi gider.',
+        ],
         'weather' => [
             'desktop' => [[2400, 1000], [1600, 600]],
             'mobile' => [[1080, 1350], [720, 900]],
