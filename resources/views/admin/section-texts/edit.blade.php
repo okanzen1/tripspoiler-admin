@@ -68,7 +68,7 @@
         @endif
         @if ($key === 'popular')
             <a href="{{ route('activities.index') }}" class="flex items-center justify-between gap-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200 transition hover:bg-amber-100">
-                <span>{{ __('Kartlarda hangi aktivitelerin görüneceğini aktivite formundaki “Popüler” anahtarıyla seçersin.') }}</span>
+                <span>{{ __('Kartlar otomatik seçilir: anasayfada her şehirden en popülerler karışık, şehir sayfasında o şehrinkiler. Bir ürünü başa almak için Aktiviteler listesinde yıldızına bas.') }}</span>
                 <span class="shrink-0 font-semibold">{{ __('Aktiviteler') }} →</span>
             </a>
         @endif

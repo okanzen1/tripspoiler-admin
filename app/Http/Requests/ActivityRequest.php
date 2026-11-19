@@ -54,6 +54,7 @@ class ActivityRequest extends FormRequest
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
             'is_popular' => ['boolean'],
+            'wiki_title' => ['nullable', 'string', 'max:300'],
             'active' => ['boolean'],
             'images' => ['nullable', 'array', 'max:' . max(0, self::MAX_IMAGES - $existing)],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],

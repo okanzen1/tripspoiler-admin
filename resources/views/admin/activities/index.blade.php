@@ -26,7 +26,7 @@
                 ['name' => 'city', 'label' => 'Şehir', 'value' => $cityId, 'options' => $filterCities->mapWithKeys(fn ($c) => [$c->id => $c->country->flag . ' ' . $c->name])->all(), 'icon' => 'pin'],
                 ['name' => 'partner', 'label' => 'Partner', 'value' => $partnerId, 'options' => $filterPartners->all(), 'icon' => 'link'],
                 ['name' => 'type', 'label' => 'Tür', 'value' => $type?->value, 'options' => collect(\App\Enums\ActivityType::cases())->mapWithKeys(fn ($t) => [$t->value => $t->label()])->all(), 'icon' => 'ticket'],
-                ['name' => 'popular', 'label' => 'Popüler', 'value' => $popular, 'options' => ['yes' => __('Popüler olanlar'), 'no' => __('Popüler olmayanlar')], 'icon' => 'star'],
+                ['name' => 'popular', 'label' => 'Öne çıkan', 'value' => $popular, 'options' => ['yes' => __('Öne çıkarılanlar'), 'no' => __('Öne çıkarılmayanlar')], 'icon' => 'star'],
             ]" />
 
         @if ($activities->isEmpty())
@@ -45,7 +45,8 @@
                             <th class="px-6 py-3 font-medium">{{ __('Şehir') }}</th>
                             <th class="px-6 py-3 font-medium">{{ __('Partner') }}</th>
                             <th class="px-6 py-3 text-right font-medium">{{ __('Tıklama (30 gün)') }}</th>
-                            <th class="px-6 py-3 text-center font-medium">{{ __('Popüler') }}</th>
+                            <th class="px-6 py-3 text-right font-medium" title="{{ __('Wikipedia sayfasının son 30 gündeki okunma sayısı; her gece güncellenir. Yüksek olan önce gösterilir.') }}">{{ __('Wikipedia ilgisi') }}</th>
+                            <th class="px-6 py-3 text-center font-medium" title="{{ __('Yıldızlı ürünler şehrinin en başında gösterilir (elle seçim)') }}">{{ __('Öne çıkan') }}</th>
                             <th class="px-6 py-3 font-medium">{{ __('Yayında') }}</th>
                             <th class="px-6 py-3"><span class="sr-only">{{ __('İşlemler') }}</span></th>
                         </tr>
@@ -95,8 +96,19 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-3 text-right font-semibold tabular-nums text-slate-900">{{ number_format($clicks[$activity->id] ?? 0, 0, ',', '.') }}</td>
+                                <td class="whitespace-nowrap px-6 py-3 text-right tabular-nums">
+                                    @if ($activity->wiki_views !== null)
+                                        <span class="font-semibold text-slate-900" title="{{ $activity->wiki_title }}">{{ number_format($activity->wiki_views, 0, ',', '.') }}</span>
+                                    @elseif ($activity->wiki_title && $activity->wiki_views_at)
+                                        <span class="text-xs font-medium text-amber-700" title="{{ $activity->wiki_title }}">{{ __('Bulunamadı') }}</span>
+                                    @elseif ($activity->wiki_title)
+                                        <span class="text-xs text-slate-400">{{ __('Bekliyor') }}</span>
+                                    @else
+                                        <span class="text-slate-300" title="{{ __('Wikipedia sayfası girilmemiş') }}">—</span>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-3 text-center">
-                                    <x-admin.toggle variant="star" :action="route('activities.popular', $activity)" :active="$activity->is_popular" :label="__('Popüler (anasayfada öne çıkar)')" />
+                                    <x-admin.toggle variant="star" :action="route('activities.popular', $activity)" :active="$activity->is_popular" :label="__('Elle öne çıkar (şehrinde en başta)')" />
                                 </td>
                                 <td class="px-6 py-3">
                                     <x-admin.toggle :action="route('activities.toggle', $activity)" :active="$activity->active" :label="__(':name yayında', ['name' => $activity->name])" />

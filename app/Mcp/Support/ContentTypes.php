@@ -24,7 +24,7 @@ use Throwable;
 class ContentTypes
 {
     public const TYPES = [
-        'activity' => ['model' => Models\Activity::class, 'title' => 'name', 'search' => ['name', 'slug'], 'html' => ['description'], 'route' => 'activities.edit',
+        'activity' => ['model' => Models\Activity::class, 'title' => 'name', 'search' => ['name', 'slug'], 'html' => ['description'], 'readonly' => ['wiki_views', 'wiki_views_at'], 'route' => 'activities.edit',
             'about' => 'Bookable activity/ticket/tour/city pass linking to a partner. For a new activity from a product link prefer save-activity (it also handles the photo gallery).'],
         'blog' => ['model' => Models\Blog::class, 'title' => 'title', 'search' => ['title', 'slug'], 'html' => ['content'], 'images' => ['cover_path' => 'cover'], 'route' => 'blogs.edit',
             'about' => 'Blog post / travel guide. content is HTML. Prefer save-blog-post for writing a full post; set the cities it appears in only with save-blog-post "cities" (empty = general, every city).'],

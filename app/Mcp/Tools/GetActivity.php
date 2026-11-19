@@ -37,6 +37,8 @@ class GetActivity extends PanelTool
             'meta_description' => $a->getTranslation('meta_description', 'en', false),
             'active' => $a->active,
             'popular' => $a->is_popular,
+            'wiki_title' => $a->wiki_title,
+            'wiki_views_30d' => $a->wiki_views,
             'images' => $a->images->map(fn ($i) => $i->url())->all(),
             'faqs' => $a->faqs->map(fn ($f) => ['id' => $f->id, 'question' => $f->getTranslation('question', 'en'), 'answer' => $f->getTranslation('answer', 'en')])->all(),
             'reviews' => $a->reviews()->count(),

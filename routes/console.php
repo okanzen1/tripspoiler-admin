@@ -12,9 +12,6 @@ Schedule::command('model:prune', ['--model' => [\App\Models\ActivityLog::class, 
 // Şifre sıfırlama kayıtları (e-posta içerir) bir saatten fazla tutulmaz
 Schedule::command('auth:clear-resets')->hourly();
 
-// Sıradaki işler (ör. Diller ve çeviri › toplu çeviri): her dakika işlenir, sırada iş yoksa hemen biter.
-// Paylaşımlı sunucuda sürekli çalışan kuyruk işçisi olmadığı için (cron: * * * * * php artisan schedule:run)
-Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')->everyMinute()->withoutOverlapping();
 
 // Nabız: zamanlayıcı (cron) her dakika çalışıyor mu? Yönetim › Arka plan işleri bunu gösterir
 Schedule::call(fn () => \Illuminate\Support\Facades\Cache::forever('scheduler:last_run', now()->timestamp))->everyMinute()->name('scheduler-heartbeat');
@@ -30,3 +27,12 @@ Schedule::call(function () {
     // 13 Kasım 2026'daki bağlantı denemesinden kalan zararsız "probe" kaydı
     \Illuminate\Support\Facades\DB::table('oauth_clients')->where('name', 'probe')->where('redirect_uris', 'like', '%example.invalid%')->delete();
 })->everyMinute()->name('passport-keys')->withoutOverlapping();
+
+// Popülerlik: aktivitelerin Wikipedia ilgisi (son 30 gün okunma) her gece güncellenir; site her şehrin en ilgi göreni öne çıkarır
+Schedule::command('wiki:refresh')->dailyAt('05:00')->withoutOverlapping();
+
+// Sıradaki işler (ör. Diller ve çeviri › toplu çeviri): her dakika işlenir, sırada iş yoksa hemen biter.
+// Paylaşımlı sunucuda sürekli çalışan kuyruk işçisi olmadığı için (cron: * * * * * php artisan schedule:run)
+// EN SONDA: uzun bir çeviri dakikalarca sürebilir; zamanlayıcı işleri sırayla çalıştırdığı için yukarıdakiler
+// (nabız, gece işleri) onu beklemeden önce çalışır. Önceki işçi sürerken yenisi başlamaz (withoutOverlapping).
+Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')->everyMinute()->withoutOverlapping();

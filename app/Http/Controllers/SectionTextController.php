@@ -41,7 +41,7 @@ class SectionTextController extends Controller
         'social' => ['Sosyal medya', 'Instagram ve TikTok kartlarının yanındaki yazı.'],
         'reviews' => ['Yorumlar', 'Gezgin yorumlarının solundaki başlık ve açıklama.'],
         'partners' => ['Partnerler şeridi', 'Footer’ın üstünde kayan partner logoları. Logoları Yönetim > Partnerler’den seçersin.'],
-        'popular' => ['Popüler aktiviteler', 'Aktivite kartları ve en sondaki “Tüm aktiviteler” kartı. Hangi aktivitelerin görüneceğini aktivite formundaki “Popüler” anahtarıyla seçersin.'],
+        'popular' => ['Popüler aktiviteler', 'Aktivite kartları ve en sondaki “Tüm aktiviteler” kartı. Kartlar otomatik seçilir: her şehrin yıldızla öne çıkardığın ürünleri, yoksa Wikipedia ilgisi en yüksek olanlar.'],
         'city_entry' => ['Şehirler çağrısı', 'Büyük resimli kart: üstünde başlık, kısa yazı ve “Şehirleri keşfet” butonu.'],
     ];
 

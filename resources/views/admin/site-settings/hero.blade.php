@@ -347,7 +347,7 @@
                     {!! $badge(3, 'bg-amber-500') !!}
                     <div>
                         <p class="text-lg font-semibold text-slate-900">{{ __('Sağdaki kayan kart') }}</p>
-                        <p class="text-sm text-slate-600">{{ __('Aşağıdaki listeden en fazla :max aktivite ekle. Kartta eklediğin sırayla, birkaç saniyede bir değişerek gösterilir.', ['max' => $max]) }}</p>
+                        <p class="text-sm text-slate-600">{{ __('İstersen en fazla :max aktivite ekle; önce bunlar gösterilir, ardından listede olmayan şehirlerin en popüler ürünü otomatik eklenir. Boş bırakırsan tamamen otomatik.', ['max' => $max]) }}</p>
                     </div>
                 </div>
                 <span class="rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-800 ring-1 ring-amber-200" data-featured-count></span>
@@ -360,7 +360,7 @@
                     <button type="button" class="text-xs font-semibold text-slate-500 hover:text-red-600" data-featured-clear>{{ __('Hepsini çıkar') }}</button>
                 </div>
                 <p class="mt-2 text-sm text-amber-900" data-featured-empty>
-                    {{ __('Henüz bir şey eklemedin. Böyle bırakırsan Aktiviteler sayfasında "popüler" yaptığın aktiviteler otomatik gösterilir.') }}
+                    {{ __('Henüz bir şey eklemedin. Böyle bırakırsan otomatik çalışır: her şehrin en popüler ürünü sırayla döner (önce yıldızla öne çıkardıkların, yoksa Wikipedia ilgisi en yüksek olan).') }}
                 </p>
                 <ol class="mt-3 space-y-2" data-featured-tray></ol>
             </div>

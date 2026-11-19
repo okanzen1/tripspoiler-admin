@@ -281,10 +281,33 @@
             <label class="flex cursor-pointer gap-3.5 rounded-2xl border-2 border-slate-200 p-5 transition hover:border-slate-300 has-checked:border-amber-500 has-checked:bg-amber-50/60">
                 <input type="checkbox" name="is_popular" value="1" data-label="{{ __('Evet') }}" class="mt-0.5 size-4 accent-amber-500" @checked(old('is_popular', $activity->is_popular)) />
                 <span>
-                    <span class="flex items-center gap-1.5 text-sm font-semibold text-slate-900"><x-admin.icon name="star" class="size-4 fill-amber-400 text-amber-500" /> {{ __('Popüler') }}</span>
-                    <span class="mt-1 block text-xs text-slate-500">{{ __('Anasayfada ve şehir sayfasında "En popüler" bölümünde gösterilir.') }}</span>
+                    <span class="flex items-center gap-1.5 text-sm font-semibold text-slate-900"><x-admin.icon name="star" class="size-4 fill-amber-400 text-amber-500" /> {{ __('Elle öne çıkar') }}</span>
+                    <span class="mt-1 block text-xs text-slate-500">{{ __('İşaretlersen "En popüler" bölümlerinde bu şehrin en başında gösterilir. Şehirde işaretli ürün yoksa site, Wikipedia ilgisine göre kendisi seçer.') }}</span>
                 </span>
             </label>
+            {{-- Popülerlik: Wikipedia sayfasının son 30 gün okunması (her gece güncellenir) --}}
+            <div class="rounded-2xl border-2 border-slate-200 p-5">
+                <label for="wiki_title" class="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                    <svg class="size-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></svg>
+                    {{ __('Wikipedia sayfası') }} <span class="font-normal text-slate-400">({{ __('isteğe bağlı') }})</span>
+                </label>
+                <p class="mt-1 text-xs text-slate-500">{{ __('Ürünün asıl yerinin İngilizce Wikipedia adı ya da adresi. Örn: Galata Tower. Bu sayfa ne kadar okunuyorsa ürün o kadar üstte çıkar. Pass gibi tek bir yeri olmayan ürünlerde boş bırak.') }}</p>
+                <input type="text" id="wiki_title" name="wiki_title" value="{{ old('wiki_title', $activity->wiki_title) }}" maxlength="300" placeholder="Galata Tower"
+                    class="mt-3 w-full rounded-xl border-0 bg-white px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 focus:ring-2 focus:ring-brand-900" />
+                @error('wiki_title') <p class="mt-2 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
+                @if ($activity->wiki_title)
+                    <p class="mt-2 text-xs text-slate-600">
+                        @if ($activity->wiki_views !== null)
+                            {{ __('Son 30 günde :count okunma', ['count' => number_format($activity->wiki_views, 0, ',', '.')]) }}
+                            · <a href="https://en.wikipedia.org/wiki/{{ rawurlencode(str_replace(' ', '_', $activity->wiki_title)) }}" target="_blank" rel="noopener" class="font-semibold text-brand-900 hover:underline">{{ __('Sayfayı aç') }}</a>
+                        @elseif ($activity->wiki_views_at)
+                            <span class="text-amber-700">{{ __('Bu adla Wikipedia sayfası bulunamadı. Adı kontrol et.') }}</span>
+                        @else
+                            {{ __('Sayı birkaç dakika içinde gelecek.') }}
+                        @endif
+                    </p>
+                @endif
+            </div>
         </section>
 
         {{-- 9. Onay (sadece eklerken) --}}
@@ -292,7 +315,7 @@
             <section data-step hidden class="space-y-5">
                 <x-admin.step-heading :title="__('Onay')" :description="__('Bilgileri kontrol et, doğruysa aktiviteyi oluştur.')" />
                 <dl class="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
-                    @foreach (['Aktivite adı' => 'name', 'URL adı' => 'slug', 'Şehir' => 'city_id', 'Tür' => 'type', 'Partner' => 'partner_id', 'Partner linki' => 'affiliate_url', 'Süre' => 'duration', 'Görseller' => 'images[]', 'Durum' => 'active', 'Popüler' => 'is_popular'] as $label => $name)
+                    @foreach (['Aktivite adı' => 'name', 'URL adı' => 'slug', 'Şehir' => 'city_id', 'Tür' => 'type', 'Partner' => 'partner_id', 'Partner linki' => 'affiliate_url', 'Süre' => 'duration', 'Görseller' => 'images[]', 'Durum' => 'active', 'Öne çıkan' => 'is_popular'] as $label => $name)
                         <div class="grid grid-cols-3 gap-4 px-5 py-3.5 text-sm">
                             <dt class="text-slate-500">{{ __($label) }}</dt>
                             <dd class="col-span-2 break-all font-medium text-slate-900" data-summary-for="{{ $name }}">—</dd>

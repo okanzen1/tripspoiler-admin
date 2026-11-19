@@ -26,7 +26,7 @@ class Activity extends Model
     protected $fillable = [
         'city_id', 'partner_id', 'name', 'slug', 'type', 'affiliate_url', 'partner_product_id',
         'duration', 'audio_guide', 'setting', 'description', 'meta_title', 'meta_description',
-        'is_popular', 'active', 'sort_order',
+        'is_popular', 'wiki_title', 'active', 'sort_order',
         'highlights', 'included', 'excluded', 'meeting_point', 'important_info', 'cancellation',
     ];
 
@@ -61,7 +61,26 @@ class Activity extends Model
             'audio_guide' => 'boolean',
             'is_popular' => 'boolean',
             'active' => 'boolean',
+            'wiki_views' => 'integer',
+            'wiki_views_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // Wikipedia sayfası adres olarak da yapıştırılabilir; değişince sayısı arka planda hemen alınır
+        static::saving(function (self $activity) {
+            $activity->wiki_title = \App\Services\WikiViews::normalize($activity->wiki_title);
+            if ($activity->isDirty('wiki_title') && blank($activity->wiki_title)) {
+                $activity->wiki_views = null;
+                $activity->wiki_views_at = null;
+            }
+        });
+        static::saved(function (self $activity) {
+            if ($activity->wasChanged('wiki_title') && filled($activity->wiki_title) || $activity->wasRecentlyCreated && filled($activity->wiki_title)) {
+                \App\Jobs\RefreshWikiViews::dispatchAfterResponse($activity->id); // kuyruğu (çevirileri) beklemez
+            }
+        });
     }
 
     public function city(): BelongsTo

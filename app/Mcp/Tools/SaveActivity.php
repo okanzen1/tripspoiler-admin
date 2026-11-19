@@ -37,7 +37,8 @@ class SaveActivity extends PanelTool
             'description_html' => $schema->string()->description('English description as HTML'),
             'meta_title' => $schema->string()->description('SEO title, max ~60 chars, e.g. "Hagia Sophia Tickets & Audio Guide | TripSpoiler"'),
             'meta_description' => $schema->string()->description('SEO description, 120–160 chars'),
-            'popular' => $schema->boolean()->description('Show in "Most popular" on home/city pages'),
+            'popular' => $schema->boolean()->description('Pin it: shown first in "Most popular" for its city. Without pins the site ranks by Wikipedia interest.'),
+            'wiki_title' => $schema->string()->description('English Wikipedia article this activity is about (title or URL), e.g. "Galata Tower". Its last-30-day page views rank the activity in "Most popular". Leave empty for passes/bundles without one main sight.'),
             'active' => $schema->boolean()->description('Published on the site'),
             'image_urls' => $schema->array()->items($schema->string())->description('Image URLs to download and add (largest/best quality first)'),
             'faqs' => $schema->array()->items($schema->object([
@@ -65,6 +66,7 @@ class SaveActivity extends PanelTool
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
             'popular' => ['sometimes', 'boolean'],
+            'wiki_title' => ['nullable', 'string', 'max:300'],
             'active' => ['sometimes', 'boolean'],
             'image_urls' => ['nullable', 'array', 'max:15'],
             'image_urls.*' => ['url'],
@@ -93,7 +95,7 @@ class SaveActivity extends PanelTool
                     filled($value) ? $activity->setTranslation($field, 'en', $value) : $activity->forgetTranslation($field, 'en');
                 }
             }
-            foreach (['type' => 'type', 'affiliate_url' => 'affiliate_url', 'partner_product_id' => 'partner_product_id', 'duration' => 'duration', 'audio_guide' => 'audio_guide', 'popular' => 'is_popular', 'active' => 'active'] as $input => $field) {
+            foreach (['type' => 'type', 'affiliate_url' => 'affiliate_url', 'partner_product_id' => 'partner_product_id', 'duration' => 'duration', 'audio_guide' => 'audio_guide', 'popular' => 'is_popular', 'wiki_title' => 'wiki_title', 'active' => 'active'] as $input => $field) {
                 if (array_key_exists($input, $data)) {
                     $activity->{$field} = $data[$input];
                 }
