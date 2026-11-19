@@ -48,4 +48,19 @@ class AttractionTest extends TestCase
             'city_id' => $city->id, 'name' => 'Topkapi Palace', 'official_url' => 'not-a-url',
         ])->assertSessionHasErrors('official_url');
     }
+
+    public function test_changing_slug_redirects_old_address_in_every_language(): void
+    {
+        \App\Models\Language::create(['code' => 'en', 'name' => 'English', 'native_name' => 'English', 'sort_order' => 0, 'active' => true]);
+        \App\Models\Language::create(['code' => 'tr', 'name' => 'Turkish', 'native_name' => 'Türkçe', 'sort_order' => 1, 'active' => true]);
+        $country = Country::create(['code' => 'GR', 'name' => 'Greece', 'slug' => 'greece', 'active' => true]);
+        $city = City::create(['country_id' => $country->id, 'name' => 'Athens', 'slug' => 'athens', 'active' => true]);
+        $place = Attraction::create(['city_id' => $city->id, 'slug' => 'acropolis', 'name' => ['en' => 'Acropolis of Athens']]);
+
+        $place->update(['slug' => 'acropolis-of-athens']);
+
+        foreach (['en', 'tr'] as $locale) {
+            $this->assertDatabaseHas('redirects', ['from_path' => "/{$locale}/attractions/acropolis", 'to_path' => "/{$locale}/attractions/acropolis-of-athens"]);
+        }
+    }
 }

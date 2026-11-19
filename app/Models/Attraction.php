@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Concerns\HasSlugRedirects;
 use Spatie\Translatable\HasTranslations;
 
 /**
@@ -15,7 +16,10 @@ use Spatie\Translatable\HasTranslations;
  */
 class Attraction extends Model
 {
-    use HasTranslations;
+    use HasSlugRedirects, HasTranslations;
+
+    /** Adres değişince eski adres her dilde yeniye yönlenir (config/site.php) */
+    public const SITE_PATH = 'attraction';
 
     /** Ziyaret bilgileri: alan → [paneldeki ad, örnek, liste mi (her satır bir madde)] */
     public const VISIT_FIELDS = [

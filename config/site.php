@@ -10,5 +10,6 @@ return [
         'activity' => '/{locale}/activities/{slug}',
         'blog' => '/{locale}/blog/{slug}',
         'city' => '/{locale}/cities/{slug}',
+        'attraction' => '/{locale}/attractions/{slug}',
     ],
 ];
