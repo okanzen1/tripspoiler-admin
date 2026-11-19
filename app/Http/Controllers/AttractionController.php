@@ -24,8 +24,30 @@ class AttractionController extends Controller
 
     public function index(Request $request)
     {
+        $search = trim((string) $request->get('search'));
+        $status = in_array($request->get('status'), ['active', 'passive'], true) ? $request->get('status') : null;
+        $cityId = $request->integer('city') ?: null;
+        $image = in_array($request->get('image'), ['yes', 'no'], true) ? $request->get('image') : null;
+
+        $attractions = Attraction::with('city.country')->withCount('activities')
+            ->when($search, fn ($q) => $q->where(fn ($q) => $q->where('name->en', 'like', "%{$search}%")->orWhere('slug', 'like', "%{$search}%")))
+            ->when($status, fn ($q) => $q->where('active', $status === 'active'))
+            ->when($cityId, fn ($q) => $q->where('city_id', $cityId))
+            ->when($image, fn ($q) => $image === 'no' ? $q->whereNull('image_path') : $q->whereNotNull('image_path'))
+            ->orderBy('city_id')->ordered()->get();
+
         return view('admin.attractions.index', [
-            'attractions' => Attraction::with('city')->withCount('activities')->orderBy('city_id')->ordered()->get(),
+            // listede şehir başlıklarıyla gruplanır
+            'groups' => $attractions->groupBy(fn (Attraction $a) => $a->city_id),
+            'filtered' => filled($search) || $status || $cityId || $image,
+            'search' => $search,
+            'status' => $status,
+            'cityId' => $cityId,
+            'image' => $image,
+            'filterCities' => City::with('country')->whereIn('id', Attraction::distinct()->pluck('city_id'))->orderBy('name')->get(),
+            'totalCount' => Attraction::count(),
+            'activeCount' => Attraction::where('active', true)->count(),
+            'missingImages' => \App\Support\MissingImages::attractions(),
         ]);
     }
 

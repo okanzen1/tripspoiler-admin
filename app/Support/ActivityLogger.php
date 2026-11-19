@@ -42,6 +42,7 @@ class ActivityLogger
     public const TYPES = [
         'activity' => ['Aktivite', 'activities.edit'],
         'activity_image' => ['Aktivite görseli', null],
+        'attraction' => ['Yer', 'attractions.edit'],
         'announcement' => ['Duyuru', 'announcements.edit'],
         'blog' => ['Blog yazısı', 'blogs.edit'],
         'campaign' => ['Kampanya', 'campaigns.edit'],

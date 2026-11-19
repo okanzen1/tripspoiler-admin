@@ -942,5 +942,16 @@
     "Son 1 saatte :count çeviri bitti": ":count translations finished in the last hour",
     "Henüz biten çeviri yok. Sıra işlendikçe burada görünür.": "No finished translations yet. They appear here as the queue is processed.",
     "Takıldı": "Stuck",
-    "Bu iş takılı kalmış. Sıradan çıkarılsın mı? Sonra kaydı panelden yeniden çevirebilirsin.": "This job is stuck. Remove it from the queue? You can translate the record again from the panel afterwards."
+    "Bu iş takılı kalmış. Sıradan çıkarılsın mı? Sonra kaydı panelden yeniden çevirebilirsin.": "This job is stuck. Remove it from the queue? You can translate the record again from the panel afterwards.",
+    "Menüdeki kırmızı sayı: :n yerin resmi yok. Resimsiz yer sitede resimsiz görünür.": "Red number in the menu: :n places have no image. A place without an image shows without one on the site.",
+    "Resmi eksikleri göster": "Show places without images",
+    "Yer adı ya da URL ara…": "Search place name or URL…",
+    "Resmi eksik": "No image",
+    "Resmi var": "Has image",
+    "Yer bulunamadı": "No places found",
+    "Filtreyi değiştir.": "Change the filter.",
+    "Şehirsiz": "No city",
+    ":n yer": ":n places",
+    ":n resim eksik": ":n missing images",
+    "resmi eksik yer": "places without an image"
 }

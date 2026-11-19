@@ -3,7 +3,7 @@
 @section('title', 'Diller ve çeviri')
 
 @php
-    $typeNames = ['activity' => 'Aktiviteler', 'blog' => 'Blog yazıları', 'faq' => 'Sıkça sorulan sorular', 'page' => 'Sayfalar (SEO)', 'announcement' => 'Duyurular', 'campaign' => 'Fırsatlar (kampanyalar)', 'hero' => 'Hero alanı yazıları', 'feature' => 'Özellik kartları', 'section' => 'Bölüm yazıları', 'step' => 'Nasıl çalışır adımları', 'city-guide' => 'Şehir rehberleri (giriş)', 'city-guide-section' => 'Şehir rehberi bölümleri', 'city-guide-topic' => 'Rehber konuları'];
+    $typeNames = ['activity' => 'Aktiviteler', 'blog' => 'Blog yazıları', 'faq' => 'Sıkça sorulan sorular', 'page' => 'Sayfalar (SEO)', 'announcement' => 'Duyurular', 'campaign' => 'Fırsatlar (kampanyalar)', 'hero' => 'Hero alanı yazıları', 'feature' => 'Özellik kartları', 'section' => 'Bölüm yazıları', 'step' => 'Nasıl çalışır adımları', 'city-guide' => 'Şehir rehberleri (giriş)', 'city-guide-section' => 'Şehir rehberi bölümleri', 'city-guide-topic' => 'Rehber konuları', 'attraction' => 'Yerler'];
     $totalPending = array_sum($pendingByLocale);
 @endphp
 

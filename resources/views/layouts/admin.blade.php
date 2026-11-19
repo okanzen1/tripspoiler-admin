@@ -72,7 +72,7 @@
             <x-admin.nav-link route="activities.index" :todo="\App\Support\TranslationTodo::area('activities')" :match="['activities.*']" :label="__('Aktiviteler')">
                 <path d="M4 7h16v4a2 2 0 0 0 0 4v4H4v-4a2 2 0 0 0 0-4Z" /><path d="M14 7v2M14 12v1M14 16v1" />
             </x-admin.nav-link>
-            <x-admin.nav-link route="attractions.index" :todo="\App\Support\TranslationTodo::area('attractions')" :match="['attractions.*']" :label="__('Yerler')">
+            <x-admin.nav-link route="attractions.index" :todo="\App\Support\TranslationTodo::area('attractions')" :match="['attractions.*']" :label="__('Yerler')" :badge="\App\Support\MissingImages::attractions()" :badge-title="__('resmi eksik yer')">
                 <path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6" />
             </x-admin.nav-link>
 

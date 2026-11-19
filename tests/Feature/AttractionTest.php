@@ -93,4 +93,26 @@ class AttractionTest extends TestCase
             ->assertSee('data-activity-select', false)
             ->assertSee('name="activity_ids[]" value="' . $act->id . '"', false);
     }
+
+    public function test_list_groups_by_city_filters_and_flags_missing_images(): void
+    {
+        $country = Country::create(['code' => 'CZ', 'name' => 'Czechia', 'slug' => 'czechia', 'active' => true]);
+        $prague = City::create(['country_id' => $country->id, 'name' => 'Prague', 'slug' => 'prague', 'active' => true]);
+        $brno = City::create(['country_id' => $country->id, 'name' => 'Brno', 'slug' => 'brno', 'active' => true]);
+        Attraction::create(['city_id' => $prague->id, 'slug' => 'prague-castle', 'name' => ['en' => 'Prague Castle'], 'active' => true]);
+        Attraction::create(['city_id' => $brno->id, 'slug' => 'spilberk', 'name' => ['en' => 'Spilberk Castle'], 'active' => false]);
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)->get(route('attractions.index'))->assertOk()
+            ->assertSee('Prague')->assertSee('Brno')
+            ->assertSee('2 yerin resmi yok', false)
+            ->assertSee('Resmi eksikleri göster');
+
+        $this->actingAs($admin)->get(route('attractions.index', ['city' => $prague->id]))
+            ->assertSee('Prague Castle')->assertDontSee('Spilberk Castle');
+        $this->actingAs($admin)->get(route('attractions.index', ['status' => 'passive']))
+            ->assertSee('Spilberk Castle')->assertDontSee('Prague Castle');
+        $this->actingAs($admin)->get(route('attractions.index', ['search' => 'spil']))
+            ->assertSee('Spilberk Castle')->assertDontSee('Prague Castle');
+    }
 }

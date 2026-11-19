@@ -12,7 +12,7 @@
         ->values();
     $kinds = ['activity' => 'Aktivite', 'blog' => 'Blog yazısı', 'faq' => 'SSS', 'page' => 'Sayfa SEO', 'announcement' => 'Duyuru', 'campaign' => 'Kampanya',
         'hero' => 'Hero', 'feature' => 'Özellik kartı', 'section' => 'Bölüm yazısı', 'step' => 'Adım', 'city-guide' => 'Şehir rehberi girişi',
-        'city-guide-section' => 'Rehber yazısı', 'city-guide-topic' => 'Rehber alanının adı'];
+        'city-guide-section' => 'Rehber yazısı', 'city-guide-topic' => 'Rehber alanının adı', 'attraction' => 'Yer'];
 @endphp
 
 @if ($items->isNotEmpty())

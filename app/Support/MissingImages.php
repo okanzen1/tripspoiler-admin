@@ -17,6 +17,12 @@ class MissingImages
         return Blog::whereNull('cover_path')->count();
     }
 
+    /** Resmi olmayan yer sayfaları (Yerler) */
+    public static function attractions(): int
+    {
+        return \App\Models\Attraction::whereNull('image_path')->count();
+    }
+
     /**
      * Sayfa hero'sunda kendi resmi olmayan şehirler (Aktiviteler / Şehirler sayfası), sayfa anahtarına göre.
      *
