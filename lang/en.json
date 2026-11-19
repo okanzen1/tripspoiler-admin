@@ -936,5 +936,9 @@
     "Aktivite ara ve seç (ad, şehir ya da ID)…": "Search and pick an activity (name, city or ID)…",
     "Henüz aktivite seçilmedi.": "No activities selected yet.",
     "Bulunamadı.": "Nothing found.",
-    "Yayında değil, sitede görünmüyor": "Not published, not visible on the site"
+    "Yayında değil, sitede görünmüyor": "Not published, not visible on the site",
+    "Son çevrilenler": "Recently translated",
+    "Sıradan biten çeviriler, en yenisi üstte.": "Translations finished from the queue, newest first.",
+    "Son 1 saatte :count çeviri bitti": ":count translations finished in the last hour",
+    "Henüz biten çeviri yok. Sıra işlendikçe burada görünür.": "No finished translations yet. They appear here as the queue is processed."
 }

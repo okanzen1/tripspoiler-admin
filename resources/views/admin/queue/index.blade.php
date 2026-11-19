@@ -87,6 +87,28 @@
             </ul>
         </x-admin.card>
 
+        {{-- Toplu çeviride biten diller: sıranın ilerlediği buradan görülür --}}
+        <x-admin.card class="overflow-hidden">
+            <div class="flex flex-wrap items-center justify-between gap-3 px-6 pb-3 pt-6">
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-900">{{ __('Son çevrilenler') }}</h2>
+                    <p class="text-xs text-slate-500">{{ __('Sıradan biten çeviriler, en yenisi üstte.') }}</p>
+                </div>
+                <span class="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">{{ __('Son 1 saatte :count çeviri bitti', ['count' => $recentHour]) }}</span>
+            </div>
+            <ul class="max-h-96 divide-y divide-slate-100 overflow-y-auto border-t border-slate-100">
+                @forelse ($recent as $item)
+                    <li class="flex items-center gap-4 px-6 py-2.5">
+                        <span class="shrink-0 rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">{{ $item['locales'] }}</span>
+                        <p class="min-w-0 flex-1 truncate text-sm text-slate-900">{{ $item['subject'] }}</p>
+                        <span class="shrink-0 text-xs tabular-nums text-slate-400">{{ now()->setTimestamp($item['at'])->diffForHumans() }}</span>
+                    </li>
+                @empty
+                    <li class="px-6 py-8 text-center text-sm text-slate-400">{{ __('Henüz biten çeviri yok. Sıra işlendikçe burada görünür.') }}</li>
+                @endforelse
+            </ul>
+        </x-admin.card>
+
         {{-- Sırada bekleyen --}}
         <x-admin.card class="overflow-hidden">
             <div class="flex flex-wrap items-center justify-between gap-3 px-6 pb-3 pt-6">

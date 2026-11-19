@@ -60,5 +60,6 @@ class TranslateModel implements ShouldBeUnique, ShouldQueue
         }
 
         $translator->translate($this->model, $locales, null, !$onlyPending);
+        \App\Support\RecentTranslations::push($this->model, $locales);
     }
 }

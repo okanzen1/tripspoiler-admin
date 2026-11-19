@@ -93,6 +93,17 @@ class TranslationTest extends TestCase
         \Illuminate\Support\Facades\Queue::assertPushed(TranslateModel::class, fn (TranslateModel $job) => $job->locales === ['de'] && !$job->onlyPending);
     }
 
+    public function test_finished_queue_translation_shows_on_background_jobs_page(): void
+    {
+        (new TranslateModel($this->activity, ['tr']))->handle(app(ModelTranslator::class));
+
+        $this->assertSame('TR', \App\Support\RecentTranslations::all()[0]['locales']);
+        $this->actingAs(\App\Models\User::factory()->admin()->create())
+            ->get(route('queue.index'))->assertOk()
+            ->assertSee('Son çevrilenler')
+            ->assertSee(\App\Support\ActivityLogger::label($this->activity));
+    }
+
     public function test_split_pending_only_job_does_not_force_retranslation(): void
     {
         \Illuminate\Support\Facades\Queue::fake();

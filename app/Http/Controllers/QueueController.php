@@ -25,6 +25,8 @@ class QueueController extends Controller
             'lastRun' => $lastRun ? now()->setTimestamp($lastRun) : null,
             'schedulerOk' => $lastRun && $lastRun >= now()->subMinutes(3)->timestamp,
             'translations' => TranslationJobs::history(),
+            'recent' => \App\Support\RecentTranslations::all(),
+            'recentHour' => \App\Support\RecentTranslations::lastHour(),
             'pending' => DB::table('jobs')->orderBy('id')->limit(200)->get()->map(fn ($job) => [
                 'id' => $job->id,
                 'attempts' => $job->attempts,
