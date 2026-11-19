@@ -880,5 +880,7 @@
     "Öne çıkarılanlar": "Pinned",
     "Öne çıkarılmayanlar": "Not pinned",
     "Henüz bir şey eklemedin. Böyle bırakırsan otomatik çalışır: her şehrin en popüler ürünü sırayla döner (önce yıldızla öne çıkardıkların, yoksa Wikipedia ilgisi en yüksek olan).": "Nothing added yet. Left like this it works automatically: the most popular product of every city rotates (first the ones you starred, otherwise the highest Wikipedia interest).",
-    "İstersen en fazla :max aktivite ekle; önce bunlar gösterilir, ardından listede olmayan şehirlerin en popüler ürünü otomatik eklenir. Boş bırakırsan tamamen otomatik.": "Optionally add up to :max activities; they are shown first, then the most popular product of every other city is added automatically. Leave empty for fully automatic."
+    "İstersen en fazla :max aktivite ekle; önce bunlar gösterilir, ardından listede olmayan şehirlerin en popüler ürünü otomatik eklenir. Boş bırakırsan tamamen otomatik.": "Optionally add up to :max activities; they are shown first, then the most popular product of every other city is added automatically. Leave empty for fully automatic.",
+    "Önerilen: yatay, en az 1600 × 900 piksel (16:9). Yerin kendisi ortada olsun; kenarlar telefonda kırpılabilir. JPG, PNG ya da WebP, en fazla 15 MB.": "Recommended: landscape, at least 1600 × 900 pixels (16:9). Keep the place itself in the centre; the edges may be cropped on phones. JPG, PNG or WebP, up to 15 MB.",
+    "Yatay resim · en az 1600 × 900 px · en fazla 15 MB": "Landscape image · at least 1600 × 900 px · up to 15 MB"
 }

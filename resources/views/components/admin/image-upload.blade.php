@@ -1,10 +1,12 @@
-@props(['name', 'label', 'current' => null, 'focus' => 50, 'placeholder' => '', 'shape' => 'square', 'accept' => 'image/jpeg,image/png,image/webp', 'hint' => 'JPG, PNG ya da WebP · büyükse otomatik küçültülür'])
+@props(['name', 'label', 'current' => null, 'focus' => 50, 'placeholder' => '', 'shape' => 'square', 'accept' => 'image/jpeg,image/png,image/webp', 'hint' => 'JPG, PNG ya da WebP · büyükse otomatik küçültülür', 'note' => null])
 
 {{-- Resim yükleme: seçilen dosya anında önizlenir (resources/js/image-upload.js). "Kaldır" → remove_{name}=1
      shape="wide": büyük yatay önizleme (kapak görselleri); resim üstüne sürüklenip bırakılabilir --}}
 @if ($shape === 'wide')
 <div data-image-upload>
     <span class="block text-sm font-medium text-slate-700">{{ __($label) }}</span>
+    {{-- önerilen boyut gibi kalıcı not (resim seçiliyken de görünür) --}}
+    @if ($note)<span class="mt-1 block text-xs text-slate-500">{{ $note }}</span>@endif
     <div class="mt-2 grid gap-5 lg:grid-cols-[minmax(0,1fr)_17rem]">
         <label data-drop class="group relative block aspect-[16/9] cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 transition hover:border-brand-400 hover:bg-brand-50/40 data-[over]:border-brand-600 data-[over]:bg-brand-50">
             <img data-preview src="{{ $current }}" alt="" @class(['absolute inset-0 size-full object-cover', 'hidden' => !$current]) style="object-position: {{ $focus }}% center" />

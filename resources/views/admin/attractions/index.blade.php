@@ -22,22 +22,23 @@
         @else
             <ul class="divide-y divide-slate-100">
                 @foreach ($attractions as $attraction)
-                    <li class="flex items-center gap-4 px-6 py-4 transition hover:bg-slate-50/60">
+                    <li class="relative flex items-center gap-4 px-6 py-4 transition hover:bg-slate-50/60">
                         <span class="size-14 shrink-0 overflow-hidden rounded-xl bg-slate-100">
                             @if ($attraction->image_path)<img src="{{ $attraction->imageUrl('sm') }}" alt="" class="size-full object-cover">@endif
                         </span>
                         <div class="min-w-0 flex-1">
-                            <a href="{{ route('attractions.edit', $attraction) }}" class="block truncate font-semibold text-slate-900 hover:text-brand-900">{{ $attraction->getTranslation('name', 'en', false) }}</a>
+                            {{-- satırın her yeri tıklanır (bağlantı satırı kaplar); sağdaki rozet ve "Sitede aç" üstte kalır --}}
+                            <a href="{{ route('attractions.edit', $attraction) }}" class="block truncate font-semibold text-slate-900 after:absolute after:inset-0 hover:text-brand-900">{{ $attraction->getTranslation('name', 'en', false) }}</a>
                             <p class="mt-0.5 text-sm text-slate-500">
                                 {{ $attraction->city?->name }} · {{ __(':n bilet bağlı', ['n' => $attraction->activities_count]) }}
                                 @unless ($attraction->image_path)<span class="ms-1 font-semibold text-rose-600">· {{ __('Resim eksik') }}</span>@endunless
                             </p>
                         </div>
-                        <x-admin.todo-pill type="attraction" :id="$attraction->id" />
+                        <span class="relative z-10"><x-admin.todo-pill type="attraction" :id="$attraction->id" /></span>
                         <span @class(['rounded-md px-2 py-0.5 text-xs font-semibold ring-1', 'bg-emerald-50 text-emerald-700 ring-emerald-200' => $attraction->active, 'bg-slate-100 text-slate-500 ring-slate-200' => !$attraction->active])>
                             {{ $attraction->active ? __('Yayında') : __('Kapalı') }}
                         </span>
-                        <a href="{{ config('site.url') }}/en/attractions/{{ $attraction->slug }}" target="_blank" rel="noopener" class="text-sm font-semibold text-slate-500 hover:text-brand-900">{{ __('Sitede aç') }} ↗</a>
+                        <a href="{{ config('site.url') }}/en/attractions/{{ $attraction->slug }}" target="_blank" rel="noopener" class="relative z-10 text-sm font-semibold text-slate-500 hover:text-brand-900">{{ __('Sitede aç') }} ↗</a>
                     </li>
                 @endforeach
             </ul>

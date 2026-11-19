@@ -45,7 +45,9 @@
                 <span class="text-sm font-medium text-slate-700">{{ __('Kısa tanıtım') }}</span>
                 <textarea name="summary" rows="3" maxlength="400" class="{{ $field }} resize-y leading-relaxed" placeholder="The palace of the Ottoman sultans for almost 400 years…">{{ old('summary', $attraction->getTranslation('summary', 'en', false)) }}</textarea>
             </label>
-            <x-admin.image-upload name="image" :label="__('Kapak resmi')" :current="$attraction->imageUrl()" shape="wide" />
+            <x-admin.image-upload name="image" :label="__('Kapak resmi')" :current="$attraction->imageUrl()" shape="wide"
+                :note="__('Önerilen: yatay, en az 1600 × 900 piksel (16:9). Yerin kendisi ortada olsun; kenarlar telefonda kırpılabilir. JPG, PNG ya da WebP, en fazla 15 MB.')"
+                :hint="__('Yatay resim · en az 1600 × 900 px · en fazla 15 MB')" />
         </section>
 
         <section data-step hidden class="space-y-5">
