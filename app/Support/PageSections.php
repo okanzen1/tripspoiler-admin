@@ -140,6 +140,16 @@ class PageSections
         ],
     ];
 
+    /**
+     * Şehirler sayfasının kendi blokları: Kısa bilgiler ve Gezilecek yerler (+ pass karşılaştırması).
+     * Eskiden kodda sabitti (banner'ın hemen altında); kayıtlı sırada yoksa yine en üstte, açık başlar.
+     * Site de aynı anahtarları bilir (tripspoiler/app/Support/PageSections.php CITY_BLOCKS).
+     */
+    public const CITY_BLOCKS = [
+        'city_facts' => ['Kısaca şehir (kısa bilgiler)', 'Şehir rehberindeki Kısa bilgiler tablosu: en iyi zaman, bütçe, ulaşım, para birimi… Bilgi girilmemişse görünmez.', true],
+        'city_places' => ['Gezilecek yerler ve pass karşılaştırması', 'Yerler kartları ve hangi pass / kombonun hangi yeri kapsadığı tablosu (Yerler). Şehirde yer yoksa görünmez.', true],
+    ];
+
     public static function guideLabels(string $page): array
     {
         if (isset(self::EXTRA[$page])) {
@@ -149,7 +159,7 @@ class PageSections
             return [];
         }
 
-        return \App\Models\CityGuideTopic::orderBy('sort_order')->orderBy('id')->get()
+        return array_map(fn ($l) => [__($l[0]), __($l[1]), $l[2]], self::CITY_BLOCKS) + \App\Models\CityGuideTopic::orderBy('sort_order')->orderBy('id')->get()
             ->mapWithKeys(fn ($topic) => ['guide:' . $topic->id => [
                 $topic->getTranslation('name', 'tr', false) ?: $topic->name,
                 __('Şehir rehberi alanı: her şehir kendi yazısını yazar (Şehir rehberi). O şehirde yazılmamışsa ya da kapalıysa görünmez.'),
@@ -174,6 +184,10 @@ class PageSections
         $order = array_values(array_intersect($saved['order'] ?? [], [...$main, ...$keys]));
         // Ana içerik varsayılan olarak en üstte (sitedeki ile aynı); rehber alanları varsayılanda içerikten önce
         $order = array_values(array_unique([...(in_array('main', $order, true) ? [] : $main), ...$order, ...$guide, ...$defaults, ...$keys]));
+        // Şehir blokları kayıtlı sırada yoksa eski yerlerinde (en üstte) başlar
+        if ($page === 'cities') {
+            $order = array_values(array_unique([...array_diff(array_keys(self::CITY_BLOCKS), $saved['order'] ?? []), ...$order]));
+        }
         $on = is_array($saved['on'] ?? null) ? $saved['on'] : [...$defaults, ...array_keys(self::FIXED)];
         // Kaydedilmiş sırada hiç olmayan rehber alanı yenidir: açık başlar
         $on = [...$on, ...array_diff($guide, $saved['order'] ?? [])];

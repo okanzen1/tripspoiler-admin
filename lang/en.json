@@ -856,5 +856,9 @@
     "Her satıra bir madde. Örn: Hotel pickup, Food and drinks": "One item per line. e.g. Hotel pickup, Food and drinks",
     "Kısa metin: nereye gidilir, adres. Örn: Main entrance on Theorias Street": "Short text: where to go, address. e.g. Main entrance on Theorias Street",
     "Her satıra bir madde. Örn: Closed on Tuesdays": "One item per line. e.g. Closed on Tuesdays",
-    "Partnerin sayfasında yazanı yaz; emin değilsen boş bırak. Örn: Free cancellation up to 24 hours before": "Copy what the partner page says; leave empty if unsure. e.g. Free cancellation up to 24 hours before"
+    "Partnerin sayfasında yazanı yaz; emin değilsen boş bırak. Örn: Free cancellation up to 24 hours before": "Copy what the partner page says; leave empty if unsure. e.g. Free cancellation up to 24 hours before",
+    "Kısaca şehir (kısa bilgiler)": "City at a glance (quick facts)",
+    "Şehir rehberindeki Kısa bilgiler tablosu: en iyi zaman, bütçe, ulaşım, para birimi… Bilgi girilmemişse görünmez.": "The quick facts table from the city guide: best time, budget, transport, currency… Hidden if no facts are filled in.",
+    "Gezilecek yerler ve pass karşılaştırması": "Places to visit and pass comparison",
+    "Yerler kartları ve hangi pass / kombonun hangi yeri kapsadığı tablosu (Yerler). Şehirde yer yoksa görünmez.": "Place cards and a table of which pass or combo covers which place (Places). Hidden if the city has no places."
 }

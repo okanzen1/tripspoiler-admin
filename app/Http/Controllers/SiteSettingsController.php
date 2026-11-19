@@ -57,7 +57,6 @@ class SiteSettingsController extends Controller
             'maxMb' => self::MAX_KB / 1024,
             'serverMaxMb' => round(\App\Support\UploadLimit::fileBytes() / 1024 ** 2, 1),
             'activities' => Activity::with(['city', 'cover'])->orderByDesc('active')->orderBy('city_id')->orderBy('sort_order')->orderBy('id')->get(),
-            'blogs' => Blog::with('city')->orderByDesc('active')->orderByDesc('published_at')->orderByDesc('id')->get(),
         ]);
     }
 
@@ -72,8 +71,6 @@ class SiteSettingsController extends Controller
             'hero_overlay' => ['required', Rule::in(HeroSettings::OVERLAYS)],
             'hero_featured' => ['nullable', 'array', 'max:' . HeroSettings::FEATURED_MAX],
             'hero_featured.*' => ['nullable', 'integer', Rule::exists('activities', 'id')],
-            'hero_pass_id' => ['nullable', 'integer', Rule::exists('activities', 'id')->where('type', 'pass')],
-            'hero_guide_id' => ['nullable', 'integer', Rule::exists('blogs', 'id')],
             'text' => ['array'],
             'text.eyebrow' => ['nullable', 'string', 'max:60'],
             'text.title_1' => ['required', 'string', 'max:40'],
@@ -92,8 +89,6 @@ class SiteSettingsController extends Controller
             'hero_image_mobile' => __('telefon görseli'),
             'hero_featured' => __('popüler kartı'),
             'hero_featured.*' => __('popüler aktivite'),
-            'hero_pass_id' => __('şehir kartı'),
-            'hero_guide_id' => __('blog yazısı'),
             'text.title_1' => __('başlık 1. satır'),
         ]);
 
@@ -123,8 +118,6 @@ class SiteSettingsController extends Controller
         // Kart seçimleri: boş bırakılanlar sitede otomatik dolar
         $featured = array_values(array_unique(array_filter(array_map('intval', $data['hero_featured'] ?? []))));
         Setting::put('hero_featured', $featured ? implode(',', $featured) : null);
-        Setting::put('hero_pass_id', isset($data['hero_pass_id']) ? (string) $data['hero_pass_id'] : null);
-        Setting::put('hero_guide_id', isset($data['hero_guide_id']) ? (string) $data['hero_guide_id'] : null);
 
         // Yazılar: sadece İngilizce yazılır; diğer diller Çeviriler'den (değişen dil "İngilizce değişti" olur)
         if ($request->has('text')) {

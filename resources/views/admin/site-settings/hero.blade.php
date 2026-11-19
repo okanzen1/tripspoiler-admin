@@ -4,8 +4,6 @@
 
 @php
     $featured = array_map('intval', (array) old('hero_featured', $hero['featured']));
-    $passId = (int) old('hero_pass_id', $hero['pass_id']);
-    $guideId = (int) old('hero_guide_id', $hero['guide_id']);
     $max = \App\Support\HeroSettings::FEATURED_MAX;
     $passes = $activities->filter(fn ($activity) => $activity->type?->value === 'pass');
     // Sitede görünmeyecekse nedeni (seçilemez)
@@ -85,13 +83,6 @@
                     <a href="#adim-3" class="absolute right-[6%] top-[18%] grid h-[44%] w-[28%] place-items-center rounded-xl border-2 border-dashed border-amber-300 bg-white/15 backdrop-blur transition hover:bg-white/25">
                         <span class="grid size-8 place-items-center rounded-full bg-amber-500 text-sm font-bold text-white shadow-lg">3</span>
                     </a>
-                    {{-- 3 ve 4: beyaz kartlar --}}
-                    <a href="#adim-4" class="absolute bottom-[12%] left-[6%] grid h-[18%] w-[43%] place-items-center rounded-lg border-2 border-sky-400 bg-white transition hover:scale-[1.02]">
-                        <span class="grid size-8 place-items-center rounded-full bg-sky-500 text-sm font-bold text-white">4</span>
-                    </a>
-                    <a href="#adim-5" class="absolute bottom-[12%] right-[6%] grid h-[18%] w-[43%] place-items-center rounded-lg border-2 border-emerald-400 bg-white transition hover:scale-[1.02]">
-                        <span class="grid size-8 place-items-center rounded-full bg-emerald-500 text-sm font-bold text-white">5</span>
-                    </a>
                 </div>
 
                 <ol class="space-y-3 text-sm lg:col-span-2">
@@ -99,8 +90,6 @@
                         [1, 'bg-rose-500', 'Arka plan resmi', 'Her şeyin arkasındaki büyük fotoğraf.'],
                         [2, 'bg-violet-500', 'Yazılar', 'Büyük başlık, üstündeki küçük yazı ve açıklama.'],
                         [3, 'bg-amber-500', 'Sağdaki kayan kart', 'Seçtiğin aktiviteler sırayla değişir.'],
-                        [4, 'bg-sky-500', 'Sol beyaz kart', 'Öne çıkardığın şehir kartı (pass).'],
-                        [5, 'bg-emerald-500', 'Sağ beyaz kart', 'Öne çıkardığın blog yazısı.'],
                     ] as [$n, $color, $title, $text])
                         <li>
                             <a href="#adim-{{ $n }}" class="flex items-center gap-3 rounded-xl p-2 transition hover:bg-slate-50">
@@ -412,86 +401,6 @@
             </div>
             @error('hero_featured') <p class="mt-3 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
             @error('hero_featured.*') <p class="mt-3 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
-        </x-admin.card>
-
-        {{-- ADIM 3: ŞEHİR KARTI --}}
-        <x-admin.card class="scroll-mt-20 p-6 sm:p-8" id="adim-4" data-single="hero_pass_id">
-            <div class="flex items-start gap-3">
-                {!! $badge(4, 'bg-sky-500') !!}
-                <div>
-                    <p class="text-lg font-semibold text-slate-900">{{ __('Sol beyaz kart: hangi şehir kartı öne çıksın?') }}</p>
-                    <p class="text-sm text-slate-600">{{ __('Listeden birini seç. Kartta adı ve o şehirde kaç şehir kartı olduğu yazar.') }}</p>
-                </div>
-            </div>
-            <p class="mt-5 rounded-2xl bg-sky-50 px-4 py-3 text-sm text-sky-900 ring-1 ring-sky-200/70">
-                {{ __('Şu an seçili:') }} <strong data-single-current></strong>
-            </p>
-            <div class="mt-4" data-filter>
-                {!! $filterBar(__('Şehir kartı ara…'), $passes->map($cityOf)->unique()->values()) !!}
-                <div class="mt-3 max-h-[22rem] divide-y divide-slate-100 overflow-y-auto rounded-2xl ring-1 ring-slate-200" data-filter-list>
-                    <label class="flex cursor-pointer items-center gap-3 px-3 py-2.5 transition hover:bg-slate-50 has-[:checked]:bg-sky-50" data-filter-pinned>
-                        <input type="radio" name="hero_pass_id" value="" class="size-4 border-slate-300 text-sky-600 focus:ring-sky-500" @checked(!$passId) data-label="{{ __('Otomatik (sıralamadaki ilk şehir kartı)') }}">
-                        <span class="grid h-10 w-14 shrink-0 place-items-center rounded-lg bg-sky-100">✨</span>
-                        <span><span class="block text-sm font-semibold text-slate-900">{{ __('Otomatik') }}</span><span class="text-xs text-slate-500">{{ __('Aktivite sıralamasındaki ilk şehir kartı') }}</span></span>
-                    </label>
-                    @foreach ($passes as $activity)
-                        <label @class(['flex items-center gap-3 px-3 py-2.5 transition has-[:checked]:bg-sky-50', 'cursor-pointer hover:bg-slate-50' => $activity->active, 'cursor-not-allowed opacity-50' => !$activity->active])
-                            data-filter-item data-name="{{ $activity->name }}" data-keywords="{{ $keywords($activity, 'name') }}" data-city="{{ $cityOf($activity) }}" @unless ($activity->active) data-unavailable @endunless>
-                            <input type="radio" name="hero_pass_id" value="{{ $activity->id }}" class="size-4 border-slate-300 text-sky-600 focus:ring-sky-500" @checked($passId === $activity->id) @disabled(!$activity->active) data-label="{{ $activity->name }}">
-                            <span class="h-10 w-14 shrink-0 overflow-hidden rounded-lg bg-slate-100">
-                                @if ($activity->cover) <img src="{{ $activity->cover->url('sm') }}" alt="" loading="lazy" class="size-full object-cover"> @endif
-                            </span>
-                            <span class="min-w-0">
-                                <span class="block truncate text-sm font-medium text-slate-900" title="{{ $activity->name }}">{{ $activity->name }}</span>
-                                <span class="text-xs text-slate-500">{{ $cityOf($activity) }}@unless ($activity->active) · <span class="font-semibold text-red-600">{{ __('Pasif — sitede görünmez') }}</span>@endunless</span>
-                            </span>
-                        </label>
-                    @endforeach
-                    <p class="hidden px-4 py-8 text-center text-sm text-slate-500" data-filter-empty>{{ __('Aramana uyan şehir kartı yok.') }}</p>
-                </div>
-                @include('admin.site-settings._filter-footer', ['unit' => __('şehir kartı')])
-            </div>
-            @error('hero_pass_id') <p class="mt-3 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
-        </x-admin.card>
-
-        {{-- ADIM 4: BLOG YAZISI --}}
-        <x-admin.card class="scroll-mt-20 p-6 sm:p-8" id="adim-5" data-single="hero_guide_id">
-            <div class="flex items-start gap-3">
-                {!! $badge(5, 'bg-emerald-500') !!}
-                <div>
-                    <p class="text-lg font-semibold text-slate-900">{{ __('Sağ beyaz kart: hangi blog yazısı öne çıksın?') }}</p>
-                    <p class="text-sm text-slate-600">{{ __('Listeden birini seç. Kartta başlığı, kısa özeti ve okuma süresi yazar.') }}</p>
-                </div>
-            </div>
-            <p class="mt-5 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-900 ring-1 ring-emerald-200/70">
-                {{ __('Şu an seçili:') }} <strong data-single-current></strong>
-            </p>
-            <div class="mt-4" data-filter>
-                {!! $filterBar(__('Blog yazısı ara…'), $blogs->map($cityOf)->unique()->values()) !!}
-                <div class="mt-3 max-h-[22rem] divide-y divide-slate-100 overflow-y-auto rounded-2xl ring-1 ring-slate-200" data-filter-list>
-                    <label class="flex cursor-pointer items-center gap-3 px-3 py-2.5 transition hover:bg-slate-50 has-[:checked]:bg-emerald-50" data-filter-pinned>
-                        <input type="radio" name="hero_guide_id" value="" class="size-4 border-slate-300 text-emerald-600 focus:ring-emerald-500" @checked(!$guideId) data-label="{{ __('Otomatik (her zaman en yeni yazı)') }}">
-                        <span class="grid h-10 w-14 shrink-0 place-items-center rounded-lg bg-emerald-100">✨</span>
-                        <span><span class="block text-sm font-semibold text-slate-900">{{ __('Otomatik') }}</span><span class="text-xs text-slate-500">{{ __('Her zaman en yeni yazı') }}</span></span>
-                    </label>
-                    @foreach ($blogs as $blog)
-                        <label @class(['flex items-center gap-3 px-3 py-2.5 transition has-[:checked]:bg-emerald-50', 'cursor-pointer hover:bg-slate-50' => $blog->active, 'cursor-not-allowed opacity-50' => !$blog->active])
-                            data-filter-item data-name="{{ $blog->title }}" data-keywords="{{ $keywords($blog, 'title') }}" data-city="{{ $cityOf($blog) }}" @unless ($blog->active) data-unavailable @endunless>
-                            <input type="radio" name="hero_guide_id" value="{{ $blog->id }}" class="size-4 border-slate-300 text-emerald-600 focus:ring-emerald-500" @checked($guideId === $blog->id) @disabled(!$blog->active) data-label="{{ $blog->title }}">
-                            <span class="h-10 w-14 shrink-0 overflow-hidden rounded-lg bg-slate-100">
-                                @if ($blog->cover_path) <img src="{{ $blog->coverUrl('sm') }}" alt="" loading="lazy" class="size-full object-cover" style="object-position: {{ $blog->cover_focus ?? 50 }}% center"> @endif
-                            </span>
-                            <span class="min-w-0">
-                                <span class="block truncate text-sm font-medium text-slate-900" title="{{ $blog->title }}">{{ $blog->title }}</span>
-                                <span class="text-xs text-slate-500">{{ $cityOf($blog) }} · {{ $blog->published_at?->translatedFormat('j F Y') }}@unless ($blog->active) · <span class="font-semibold text-red-600">{{ __('Yayında değil — sitede görünmez') }}</span>@endunless</span>
-                            </span>
-                        </label>
-                    @endforeach
-                    <p class="hidden px-4 py-8 text-center text-sm text-slate-500" data-filter-empty>{{ __('Aramana uyan yazı yok.') }}</p>
-                </div>
-                @include('admin.site-settings._filter-footer', ['unit' => __('yazı')])
-            </div>
-            @error('hero_guide_id') <p class="mt-3 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
         </x-admin.card>
 
     </form>

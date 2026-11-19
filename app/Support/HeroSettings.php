@@ -14,8 +14,6 @@ use App\Services\ImageUploader;
  * hero_focus_mobile  telefonda (dik ekran) yatay odak noktası; boşsa telefon görseli varken 50, yoksa hero_focus
  * hero_overlay       yazının okunması için koyulaştırma: soft | medium | strong
  * hero_featured      "Şu an popüler" kartında dönen aktiviteler, sırayla ("3,7,1"); boşsa popüler işaretliler
- * hero_pass_id       sol beyaz kart: şehir kartı (pass); boşsa sıralamadaki ilk şehir kartı
- * hero_guide_id      sağ beyaz kart: blog yazısı; boşsa en yeni yazı
  */
 class HeroSettings
 {
@@ -38,8 +36,6 @@ class HeroSettings
             'focus_mobile' => (int) (Setting::get('hero_focus_mobile') ?? ($mobile ? 50 : $focus)),
             'overlay' => in_array(Setting::get('hero_overlay'), self::OVERLAYS, true) ? Setting::get('hero_overlay') : 'medium',
             'featured' => array_values(array_filter(array_map('intval', explode(',', (string) Setting::get('hero_featured'))))),
-            'pass_id' => (int) Setting::get('hero_pass_id') ?: null,
-            'guide_id' => (int) Setting::get('hero_guide_id') ?: null,
         ];
     }
 }
