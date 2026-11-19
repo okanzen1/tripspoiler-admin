@@ -33,15 +33,32 @@ class TranslateModel implements ShouldBeUnique, ShouldQueue
         return $this->model->getMorphClass() . ':' . $this->model->getKey() . ':' . implode(',', $this->locales ?? ['*']);
     }
 
+    /** Bölünmüş tek dil işi, kaynak iş "yalnızca eksikleri" (dil verilmeden) sıraya alındıysa: güncel kaydı zorla yeniden çevirme */
+    public bool $onlyPending = false;
+
     public function handle(ModelTranslator $translator): void
     {
         // Sıraya girdikten sonra başka bir iş (ör. sorunun ait olduğu blog yazısı) bu dilleri zaten çevirmiş olabilir:
         // çalıştığı anda hâlâ eksik/eskimiş olan dillerle sınırla, güncel olanı baştan çevirme
-        $locales = $this->locales === null ? null : array_values(array_intersect($this->locales, $translator->fullPending($this->model)));
+        $pending = $translator->fullPending($this->model);
+        $locales = $this->locales === null ? $pending : array_values(array_intersect($this->locales, $pending));
         if ($locales === []) {
             return;
         }
+        $onlyPending = $this->locales === null || $this->onlyPending;
 
-        $translator->translate($this->model, $locales);
+        // Birden çok dil: her dil ayrı, kısa bir iş olsun. Tek işte 11 dil dakikalar sürüyor; paylaşımlı sunucu
+        // işlemi yarıda kesince iş takılı kalıyor ve sıra donuyordu. Kesilen tek dil işi sadece o dili tekrar dener.
+        if (count($locales) > 1) {
+            foreach ($locales as $locale) {
+                $job = new self($this->model, [$locale]);
+                $job->onlyPending = $onlyPending;
+                dispatch($job);
+            }
+
+            return;
+        }
+
+        $translator->translate($this->model, $locales, null, !$onlyPending);
     }
 }

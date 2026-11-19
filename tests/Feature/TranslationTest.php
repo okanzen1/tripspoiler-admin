@@ -83,6 +83,24 @@ class TranslationTest extends TestCase
         $this->assertSame($translated, $faq->fresh()->getTranslation('question', 'tr'));
     }
 
+    public function test_bulk_job_with_many_languages_splits_into_one_short_job_per_language(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        (new TranslateModel($this->activity, ['de', 'tr']))->handle(app(ModelTranslator::class));
+
+        $this->assertSame([], $this->google->requests); // kendisi çevirmedi, dillere böldü
+        \Illuminate\Support\Facades\Queue::assertPushed(TranslateModel::class, 2);
+        \Illuminate\Support\Facades\Queue::assertPushed(TranslateModel::class, fn (TranslateModel $job) => $job->locales === ['de'] && !$job->onlyPending);
+    }
+
+    public function test_split_pending_only_job_does_not_force_retranslation(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        // "eksikleri çevir" (dil verilmeden) bölününce güncel kayıt zorla yeniden çevrilmez
+        (new TranslateModel($this->activity))->handle(app(ModelTranslator::class));
+        \Illuminate\Support\Facades\Queue::assertPushed(TranslateModel::class, fn (TranslateModel $job) => $job->locales === ['tr'] && $job->onlyPending);
+    }
+
     public function test_panel_translation_runs_language_by_language_in_the_queue_when_cron_is_alive(): void
     {
         $admin = \App\Models\User::factory()->admin()->create();

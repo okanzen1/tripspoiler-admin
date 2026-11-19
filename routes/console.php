@@ -35,4 +35,5 @@ Schedule::command('wiki:refresh')->dailyAt('05:00')->withoutOverlapping();
 // Paylaşımlı sunucuda sürekli çalışan kuyruk işçisi olmadığı için (cron: * * * * * php artisan schedule:run)
 // EN SONDA: uzun bir çeviri dakikalarca sürebilir; zamanlayıcı işleri sırayla çalıştırdığı için yukarıdakiler
 // (nabız, gece işleri) onu beklemeden önce çalışır. Önceki işçi sürerken yenisi başlamaz (withoutOverlapping).
-Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')->everyMinute()->withoutOverlapping();
+// Kilit en fazla 20 dk: işçi sunucu tarafından yarıda öldürülürse kilit 24 saat kalıp sırayı dondurmasın
+Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')->everyMinute()->withoutOverlapping(20);
