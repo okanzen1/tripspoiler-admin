@@ -200,6 +200,12 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
         ->parameters(['yorumlar' => 'review']);
     Route::patch('/yorumlar/{review}/onay', [ReviewController::class, 'toggle'])->name('reviews.toggle');
 
+    // Yardım talepleri (sitedeki "Plan your trip" formu)
+    Route::get('/yardim-talepleri', [\App\Http\Controllers\HelpRequestController::class, 'index'])->name('help-requests.index');
+    Route::get('/yardim-talepleri/{helpRequest}', [\App\Http\Controllers\HelpRequestController::class, 'show'])->name('help-requests.show');
+    Route::patch('/yardim-talepleri/{helpRequest}', [\App\Http\Controllers\HelpRequestController::class, 'update'])->name('help-requests.update');
+    Route::delete('/yardim-talepleri/{helpRequest}', [\App\Http\Controllers\HelpRequestController::class, 'destroy'])->name('help-requests.destroy');
+
     // Blog aboneleri
     Route::get('/blog-aboneleri', [BlogSubscriberController::class, 'index'])->name('subscribers.index');
     Route::get('/blog-aboneleri/indir', [BlogSubscriberController::class, 'export'])->name('subscribers.export');

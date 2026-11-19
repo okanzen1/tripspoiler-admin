@@ -22,6 +22,7 @@ class SectionColor
         'mail-templates' => 'blue',
         'bulk-email' => 'blue',
         'subscribers' => 'teal',
+        'help-requests' => 'pink',
         'management' => 'orange',
         'locations' => 'cyan',
         'countries' => 'cyan',
