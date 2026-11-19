@@ -80,7 +80,7 @@
                     <x-admin.icon name="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input type="search" data-select-search autocomplete="off" placeholder="{{ __('Aktivite ara ve seç (ad, şehir ya da ID)…') }}"
                         class="block w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm outline-none focus:border-brand-900 focus:ring-2 focus:ring-brand-900/15" />
-                    <ul data-select-list hidden class="absolute inset-x-0 top-full z-30 mt-1 max-h-80 overflow-y-auto rounded-xl bg-white py-1 shadow-lg ring-1 ring-slate-200">
+                    <ul data-select-list hidden class="mt-1 max-h-80 overflow-y-auto rounded-xl bg-white py-1 shadow-lg ring-1 ring-slate-200">
                         @foreach ($activities->groupBy(fn ($a) => $a->city?->name) as $cityName => $group)
                             <li data-group class="px-3 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">{{ $cityName }}</li>
                             @foreach ($group as $activity)
@@ -163,7 +163,8 @@
                 };
                 const open = () => { filter(); list.hidden = false; };
 
-                search.addEventListener('focus', open);
+                // adıma geçince imleç kutuya kendiliğinden gelir; liste sadece tıklayınca ya da yazınca açılsın
+                search.addEventListener('click', open);
                 search.addEventListener('input', open);
                 search.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') list.hidden = true;
