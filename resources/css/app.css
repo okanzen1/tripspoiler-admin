@@ -105,3 +105,11 @@ main a[href] {
 button:not(:disabled), [role="button"]:not([aria-disabled="true"]), label[for], select, summary, input[type="checkbox"], input[type="radio"], input[type="file"] {
   cursor: pointer;
 }
+
+/* Tıklarken fare/touchpad azıcık kayınca Chrome bağlantıyı "sürükler" ve gri hayalet kutu gösterir
+   (satırın tamamı tıklanan listelerde sık olur). Panelde sürüklenecek bağlantı yok; sıralama tutamaçları ayrı (draggable span). */
+a,
+a img {
+    -webkit-user-drag: none;
+    user-drag: none;
+}
