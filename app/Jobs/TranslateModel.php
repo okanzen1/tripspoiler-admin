@@ -35,6 +35,13 @@ class TranslateModel implements ShouldBeUnique, ShouldQueue
 
     public function handle(ModelTranslator $translator): void
     {
-        $translator->translate($this->model, $this->locales);
+        // Sıraya girdikten sonra başka bir iş (ör. sorunun ait olduğu blog yazısı) bu dilleri zaten çevirmiş olabilir:
+        // çalıştığı anda hâlâ eksik/eskimiş olan dillerle sınırla, güncel olanı baştan çevirme
+        $locales = $this->locales === null ? null : array_values(array_intersect($this->locales, $translator->fullPending($this->model)));
+        if ($locales === []) {
+            return;
+        }
+
+        $translator->translate($this->model, $locales);
     }
 }

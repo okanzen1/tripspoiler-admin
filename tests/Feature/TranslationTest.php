@@ -68,6 +68,21 @@ class TranslationTest extends TestCase
         $this->assertSame(0, \App\Support\TranslationTodo::count("activity", "faq"));
     }
 
+    public function test_queued_job_skips_languages_already_translated_by_another_job(): void
+    {
+        $faq = \App\Models\Faq::create(['activity_id' => $this->activity->id, 'question' => ['en' => 'Open?'], 'answer' => ['en' => 'Yes.']]);
+        // toplu çeviri: aktivite (sorusuyla birlikte) ve soru ayrı ayrı sıraya girer
+        $faqJob = new TranslateModel($faq, ['de', 'tr']);
+        (new TranslateModel($this->activity, ['de', 'tr']))->handle(app(ModelTranslator::class));
+        $translated = $faq->fresh()->getTranslation('question', 'tr');
+
+        $this->google->requests = [];
+        $faqJob->handle(app(ModelTranslator::class));
+
+        $this->assertSame([], $this->google->requests); // soru zaten çevrilmişti: Google'a gidilmedi
+        $this->assertSame($translated, $faq->fresh()->getTranslation('question', 'tr'));
+    }
+
     public function test_panel_translation_runs_language_by_language_in_the_queue_when_cron_is_alive(): void
     {
         $admin = \App\Models\User::factory()->admin()->create();
