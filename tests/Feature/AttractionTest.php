@@ -99,14 +99,17 @@ class AttractionTest extends TestCase
         $country = Country::create(['code' => 'CZ', 'name' => 'Czechia', 'slug' => 'czechia', 'active' => true]);
         $prague = City::create(['country_id' => $country->id, 'name' => 'Prague', 'slug' => 'prague', 'active' => true]);
         $brno = City::create(['country_id' => $country->id, 'name' => 'Brno', 'slug' => 'brno', 'active' => true]);
-        Attraction::create(['city_id' => $prague->id, 'slug' => 'prague-castle', 'name' => ['en' => 'Prague Castle'], 'active' => true]);
-        Attraction::create(['city_id' => $brno->id, 'slug' => 'spilberk', 'name' => ['en' => 'Spilberk Castle'], 'active' => false]);
+        $castle = Attraction::create(['city_id' => $prague->id, 'slug' => 'prague-castle', 'name' => ['en' => 'Prague Castle'], 'active' => true]);
+        $spilberk = Attraction::create(['city_id' => $brno->id, 'slug' => 'spilberk', 'name' => ['en' => 'Spilberk Castle'], 'active' => false]);
         $admin = User::factory()->admin()->create();
 
         $this->actingAs($admin)->get(route('attractions.index'))->assertOk()
             ->assertSee('Prague')->assertSee('Brno')
             ->assertSee('2 yerin resmi yok', false)
-            ->assertSee('Resmi eksikleri göster');
+            ->assertSee('Resmi eksikleri göster')
+            // menü şeklinde: varsayılan ilk şehir (ada göre Brno) açılır, diğeri menüde bağlantı
+            ->assertSee(route('attractions.toggle', $spilberk), false)->assertDontSee(route('attractions.toggle', $castle), false)
+            ->assertSee(route('attractions.index', ['city' => $prague->id]), false);
 
         $this->actingAs($admin)->get(route('attractions.index', ['city' => $prague->id]))
             ->assertSee('Prague Castle')->assertDontSee('Spilberk Castle');

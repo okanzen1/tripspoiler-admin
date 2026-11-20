@@ -29,22 +29,30 @@ class AttractionController extends Controller
         $cityId = $request->integer('city') ?: null;
         $image = in_array($request->get('image'), ['yes', 'no'], true) ? $request->get('image') : null;
 
-        $attractions = Attraction::with('city.country')->withCount('activities')
+        // diğer filtrelere uyan bütün yerler; şehir menüsü bunlardan sayılır, liste seçili şehri gösterir
+        $matching = Attraction::with('city.country')->withCount('activities')
             ->when($search, fn ($q) => $q->where(fn ($q) => $q->where('name->en', 'like', "%{$search}%")->orWhere('slug', 'like', "%{$search}%")))
             ->when($status, fn ($q) => $q->where('active', $status === 'active'))
-            ->when($cityId, fn ($q) => $q->where('city_id', $cityId))
             ->when($image, fn ($q) => $image === 'no' ? $q->whereNull('image_path') : $q->whereNotNull('image_path'))
-            ->orderBy('city_id')->ordered()->get();
+            ->ordered()->get();
+
+        // şehir menüsü: ada göre, her şehrin yer sayısı ve resmi eksik sayısıyla
+        $menu = $matching->groupBy('city_id')
+            ->map(fn ($items) => ['city' => $items->first()->city, 'count' => $items->count(), 'missing' => $items->whereNull('image_path')->count()])
+            ->sortBy(fn ($m) => $m['city']?->name ?? '~')->values();
+
+        // seçili şehir yoksa (ya da sonucu yoksa) menüdeki ilk şehir açılır
+        $selected = $menu->first(fn ($m) => $m['city']?->id === $cityId) ?? $menu->first();
+        $items = $selected ? $matching->where('city_id', $selected['city']?->id)->values() : collect();
 
         return view('admin.attractions.index', [
-            // listede şehir başlıklarıyla gruplanır
-            'groups' => $attractions->groupBy(fn (Attraction $a) => $a->city_id),
-            'filtered' => filled($search) || $status || $cityId || $image,
+            'menu' => $menu,
+            'selectedCity' => $selected['city'] ?? null,
+            'items' => $items,
+            'filtered' => filled($search) || $status || $image,
             'search' => $search,
             'status' => $status,
-            'cityId' => $cityId,
             'image' => $image,
-            'filterCities' => City::with('country')->whereIn('id', Attraction::distinct()->pluck('city_id'))->orderBy('name')->get(),
             'totalCount' => Attraction::count(),
             'activeCount' => Attraction::where('active', true)->count(),
             'missingImages' => \App\Support\MissingImages::attractions(),
