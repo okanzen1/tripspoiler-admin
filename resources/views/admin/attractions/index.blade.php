@@ -13,6 +13,7 @@
 
 @section('content')
     <x-admin.todo-list :types="['attraction']" />
+    <x-admin.content-todo :types="['attraction']" />
     <x-admin.badge-note :count="$missingImages" :text="__('Menüdeki kırmızı sayı: :n yerin resmi yok. Resimsiz yer sitede resimsiz görünür.', ['n' => $missingImages])"
         :href="route('attractions.index', ['image' => 'no'])" :link="__('Resmi eksikleri göster')" />
     <x-admin.card class="overflow-hidden">

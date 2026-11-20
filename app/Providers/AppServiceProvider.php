@@ -41,6 +41,12 @@ class AppServiceProvider extends ServiceProvider
             $class::deleted(fn () => \App\Support\TranslationTodo::forget());
         }
 
+        // "SEO'su / içeriği eksik olanlar" (App\Support\ContentTodo): içerik değişince yeniden hesaplanır
+        foreach (\App\Support\ContentTodo::MODELS as $class) {
+            $class::saved(fn () => \App\Support\ContentTodo::forget());
+            $class::deleted(fn () => \App\Support\ContentTodo::forget());
+        }
+
         // Claude bağlantısının (OAuth) şifreleme anahtarları git'e gönderilmez: sunucuda yoksa ilk istekte bir kez oluşturulur
         // (yoksa /mcp ve /oauth/authorize "500 Server Error" verir). Zamanlayıcı da aynısını yapar (routes/console.php).
         if (!file_exists(storage_path('oauth-private.key')) || !file_exists(storage_path('oauth-public.key'))) {

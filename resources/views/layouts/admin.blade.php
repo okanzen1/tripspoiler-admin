@@ -69,18 +69,18 @@
                 <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
             </x-admin.nav-link>
 
-            <x-admin.nav-link route="activities.index" :todo="\App\Support\TranslationTodo::area('activities')" :match="['activities.*']" :label="__('Aktiviteler')">
+            <x-admin.nav-link route="activities.index" :todo="\App\Support\TranslationTodo::area('activities')" :seo="\App\Support\ContentTodo::area('activities')" :match="['activities.*']" :label="__('Aktiviteler')">
                 <path d="M4 7h16v4a2 2 0 0 0 0 4v4H4v-4a2 2 0 0 0 0-4Z" /><path d="M14 7v2M14 12v1M14 16v1" />
             </x-admin.nav-link>
-            <x-admin.nav-link route="attractions.index" :todo="\App\Support\TranslationTodo::area('attractions')" :match="['attractions.*']" :label="__('Yerler')" :badge="\App\Support\MissingImages::attractions()" :badge-title="__('resmi eksik yer')">
+            <x-admin.nav-link route="attractions.index" :todo="\App\Support\TranslationTodo::area('attractions')" :seo="\App\Support\ContentTodo::area('attractions')" :match="['attractions.*']" :label="__('Yerler')" :badge="\App\Support\MissingImages::attractions()" :badge-title="__('resmi eksik yer')">
                 <path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6" />
             </x-admin.nav-link>
 
-            <x-admin.nav-link route="blogs.index" :todo="\App\Support\TranslationTodo::area('blogs')" :match="['blogs.*']" :label="__('Blog')" :badge="\App\Support\MissingImages::blogs()" :badge-title="__('kapak resmi eksik yazı')">
+            <x-admin.nav-link route="blogs.index" :todo="\App\Support\TranslationTodo::area('blogs')" :seo="\App\Support\ContentTodo::area('blogs')" :match="['blogs.*']" :label="__('Blog')" :badge="\App\Support\MissingImages::blogs()" :badge-title="__('kapak resmi eksik yazı')">
                 <path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
             </x-admin.nav-link>
 
-            <x-admin.nav-link route="city-guides.index" :todo="\App\Support\TranslationTodo::area('city-guides')" :match="['city-guides.*', 'city-guide-topics.*']" :label="__('Şehir rehberi')" :badge="\App\Support\MissingImages::guideSections()->count()" :badge-title="__('kapak resmi eksik alan')">
+            <x-admin.nav-link route="city-guides.index" :todo="\App\Support\TranslationTodo::area('city-guides')" :seo="\App\Support\ContentTodo::area('city-guides')" :match="['city-guides.*', 'city-guide-topics.*']" :label="__('Şehir rehberi')" :badge="\App\Support\MissingImages::guideSections()->count()" :badge-title="__('kapak resmi eksik alan')">
                 <path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6z" /><path d="M9 4v14M15 6v14" />
             </x-admin.nav-link>
 
@@ -113,7 +113,7 @@
             </x-admin.nav-link>
 
             @can('admin')
-                <x-admin.nav-link route="management.index" :todo="\App\Support\TranslationTodo::area('management')" :match="['management.*', 'users.*', 'roles.*', 'locations.*', 'countries.*', 'cities.*', 'partners.*', 'pages.*', 'translations.index', 'redirects.*', 'media-trash.*', 'site-settings.*', 'features.*', 'steps.*', 'blog-section.*', 'section-texts.*']" :label="__('Yönetim')" :badge="array_sum(\App\Support\MissingImages::cityBanners())" :badge-title="__('şehrin sayfa resmi eksik')">
+                <x-admin.nav-link route="management.index" :todo="\App\Support\TranslationTodo::area('management')" :seo="\App\Support\ContentTodo::area('management')" :match="['management.*', 'users.*', 'roles.*', 'locations.*', 'countries.*', 'cities.*', 'partners.*', 'pages.*', 'translations.index', 'redirects.*', 'media-trash.*', 'site-settings.*', 'features.*', 'steps.*', 'blog-section.*', 'section-texts.*']" :label="__('Yönetim')" :badge="array_sum(\App\Support\MissingImages::cityBanners())" :badge-title="__('şehrin sayfa resmi eksik')">
                     <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
                 </x-admin.nav-link>

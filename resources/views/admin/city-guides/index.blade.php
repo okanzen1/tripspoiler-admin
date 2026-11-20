@@ -30,6 +30,7 @@
 
 @section('content')
     <x-admin.todo-list :types="['city-guide', 'city-guide-section', 'city-guide-topic']" />
+    <x-admin.content-todo :types="['city-guide', 'city-guide-section']" />
     @php
         $missingSections = \App\Support\MissingImages::guideSections();
     @endphp

@@ -25,6 +25,7 @@
 
 @section('content')
     <x-admin.todo-list :under="route('city-guides.show', $city)" />
+    <x-admin.content-todo :under="route('city-guides.show', $city)" />
     <x-admin.todo-list :types="['city-guide-topic']" />
     <div class="space-y-6">
         {{-- GENEL GİRİŞ --}}

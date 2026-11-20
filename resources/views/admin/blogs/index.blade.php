@@ -29,6 +29,7 @@
 
 @section('content')
     <x-admin.todo-list :types="['blog']" />
+    <x-admin.content-todo :types="['blog']" />
     @php
         $missingCovers = \App\Support\MissingImages::blogs();
     @endphp

@@ -18,6 +18,7 @@
 
 @section('content')
     <x-admin.todo-list :under="[route('pages.index'), route('site-settings.hero')]" />
+    <x-admin.content-todo :types="['page']" />
     @php
         $missingBanners = \App\Support\MissingImages::cityBanners();
     @endphp

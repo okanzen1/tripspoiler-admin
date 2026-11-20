@@ -13,7 +13,19 @@
         'stale' => [__('İngilizce değişti'), 'bg-amber-500', 'text-amber-700'],
         'missing' => [__('Çevrilmedi'), 'bg-slate-300', 'text-slate-400'],
     ];
+    // bu kaydın boş kalan SEO / içerik alanları (App\Support\ContentTodo)
+    $contentMissing = \App\Support\ContentTodo::missing($type, $model->getKey());
 @endphp
+
+@if ($contentMissing)
+    <div class="mb-3 flex items-start gap-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm ring-1 ring-amber-200">
+        <span class="grid size-7 shrink-0 place-items-center rounded-lg bg-amber-500 text-white">
+            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
+        </span>
+        <p class="text-amber-900"><span class="font-semibold">{{ __('Eksik: :list', ['list' => implode(', ', $contentMissing)]) }}</span>
+            <span class="block text-amber-800">{{ __('Bu alanlar boş kalırsa sayfa Google\'da eksik görünür. Doldurup kaydet.') }}</span></p>
+    </div>
+@endif
 
 <x-admin.card {{ $attributes->class('mb-5 overflow-hidden')->merge(['data-live' => 'translations-' . $type . '-' . $model->getKey()]) }}>
     <div class="flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4">

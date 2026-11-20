@@ -13,6 +13,7 @@
 
 @section('content')
     <x-admin.todo-list :types="['page', 'hero', 'section', 'step', 'feature']" />
+    <x-admin.content-todo :types="['page']" />
     @php
         $missingBanners = \App\Support\MissingImages::cityBanners();
     @endphp

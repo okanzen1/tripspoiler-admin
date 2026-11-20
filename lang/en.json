@@ -953,5 +953,14 @@
     "Şehirsiz": "No city",
     ":n yer": ":n places",
     ":n resim eksik": ":n missing images",
-    "resmi eksik yer": "places without an image"
+    "resmi eksik yer": "places without an image",
+    "Kısa özet": "Short summary",
+    "Giriş yazısı": "Intro text",
+    "Boş alan: :list": "Empty topics: :list",
+    "Eksik: :list": "Missing: :list",
+    "SEO'su ya da içeriği eksik olanlar (:count)": "Missing SEO or content (:count)",
+    "Google'da eksik görünür. Tıkla, boş alanları doldur.": "These look incomplete on Google. Click and fill in the empty fields.",
+    "Bu alanlar boş kalırsa sayfa Google'da eksik görünür. Doldurup kaydet.": "If these stay empty, the page looks incomplete on Google. Fill them in and save.",
+    ":count kaydın SEO'su ya da içeriği eksik": ":count records with missing SEO or content",
+    "Şehir rehberi: :city": "City guide: :city"
 }
