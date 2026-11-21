@@ -86,7 +86,7 @@
                 'description' => 'Yeni ve değişen sayfalar Bing, Yandex gibi arama motorlarına anında bildirilir.',
                 'url' => route('indexnow.index'),
                 'stat' => ($last = \App\Services\IndexNow::last()) && !$last['error']
-                    ? __('Son: :date', ['date' => \Illuminate\Support\Carbon::createFromTimestamp($last['at'])->format('d.m H:i')])
+                    ? __('Son: :date', ['date' => \Illuminate\Support\Carbon::createFromTimestamp($last['at'], config('app.timezone'))->format('d.m H:i')])
                     : (($last['error'] ?? null) ? __('Hata var') : __('Henüz gönderilmedi')),
                 'color' => 'sky',
                 'icon' => '<path d="M13 2 4 14h7l-1 8 9-12h-7Z" />',

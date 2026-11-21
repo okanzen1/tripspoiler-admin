@@ -4,7 +4,7 @@
 
 @php
     $fmt = fn ($n) => number_format($n, 0, ',', '.');
-    $lastAt = $last ? \Illuminate\Support\Carbon::createFromTimestamp($last['at']) : null;
+    $lastAt = $last ? \Illuminate\Support\Carbon::createFromTimestamp($last['at'], config('app.timezone')) : null;
 @endphp
 
 @section('header')
@@ -45,7 +45,7 @@
                 @foreach ([
                     [__('Bugün bildirilen'), $fmt($today)],
                     [__('Otomatik kontrol'), __('Saatte bir')],
-                    [__('Son kontrol'), $lastRun ? \Illuminate\Support\Carbon::createFromTimestamp($lastRun)->diffForHumans() : '—'],
+                    [__('Son kontrol'), $lastRun ? \Illuminate\Support\Carbon::createFromTimestamp($lastRun, config('app.timezone'))->diffForHumans() : '—'],
                     [__('Anahtar dosyası'), $keyOk ? __('Doğru ✓') : __('Bulunamadı')],
                 ] as [$label, $value])
                     <div class="rounded-2xl bg-white/12 px-4 py-3 ring-1 ring-white/20">
