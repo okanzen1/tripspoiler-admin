@@ -6,11 +6,12 @@
     $field = 'mt-1.5 block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-900 focus:ring-4 focus:ring-brand-900/10';
     $btn = 'inline-flex items-center justify-center gap-2 rounded-xl bg-brand-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800';
     $red = 'inline-flex items-center justify-center gap-2 rounded-xl bg-[#e60023] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#c8001f]';
-    $ready = $connected && $boardId && $enabled;
+    $boardReady = $connected && ($boardId || $canCreateBoards);
+    $ready = $boardReady && $enabled;
     $steps = [
         [__('Uygulama'), $hasApp],
         [__('Hesap'), $connected],
-        [__('Pano'), $connected && $boardId],
+        [__('Pano'), $boardReady],
         [__('Otomatik gönderim'), $ready],
     ];
     $thumb = fn ($blog) => $blog?->coverUrl('sm');
@@ -33,9 +34,11 @@
                 <p class="mt-2 text-4xl font-extrabold tracking-tight tabular-nums">{{ $sentToday }} <span class="text-lg font-semibold text-white/80">/ {{ $daily }}</span></p>
                 <p class="mt-1 text-sm text-white/85">
                     @if ($ready)
-                        {{ __(':board panosuna, 09:00–21:00 arası yaklaşık saatte bir.', ['board' => $boardName ?? __('Seçili pano')]) }}
+                        {{ $boardId ? __(':board panosuna, 09:00–21:00 arası yaklaşık saatte bir.', ['board' => $boardName]) : __('Her şehrin kendi panosuna, 09:00–21:00 arası yaklaşık saatte bir.') }}
+                    @elseif ($connected && !$boardReady)
+                        {{ __('Pano açma izni yok: aşağıda "Bağlantıyı kaldır" deyip yeniden bağlan.') }}
                     @elseif ($connected)
-                        {{ __('Bağlı; pano seçip otomatik gönderimi açınca başlar.') }}
+                        {{ __('Bağlı; otomatik gönderimi açınca başlar.') }}
                     @else
                         {{ __('Henüz bağlı değil; aşağıdaki adımları tamamla.') }}
                     @endif
@@ -94,7 +97,7 @@
                             <p class="mt-0.5 line-clamp-2 text-xs text-red-600">{{ $last?->error }}</p>
                             <p class="text-[11px] text-slate-400">{{ __(':count deneme · son: :date', ['count' => $blog->pinterest_pins_count, 'date' => $last?->created_at->format('d.m H:i')]) }}</p>
                         </div>
-                        @if ($blog->cover_path && $connected && $boardId)
+                        @if ($blog->cover_path && $connected)
                             <form method="POST" action="{{ route('pinterest.send', $blog) }}">
                                 @csrf
                                 <button type="submit" class="{{ $red }} !px-3.5 !py-2">{{ __('Şimdi gönder') }}</button>
@@ -124,7 +127,7 @@
                             <a href="{{ route('blogs.edit', $blog) }}" class="line-clamp-1 text-sm font-medium text-slate-800 hover:text-brand-900 hover:underline">{{ $blog->getTranslation('title', 'en', false) }}</a>
                             <p class="text-[11px] text-slate-400">{{ $blog->published_at?->format('d.m.Y') }}</p>
                         </div>
-                        @if ($connected && $boardId)
+                        @if ($connected)
                             <form method="POST" action="{{ route('pinterest.send', $blog) }}">
                                 @csrf
                                 <button type="submit" class="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#e60023] ring-1 ring-[#e60023]/25 transition hover:bg-red-50">{{ __('Şimdi gönder') }}</button>
@@ -164,6 +167,20 @@
             </ul>
         </x-admin.card>
     </div>
+
+    @if ($boardMap && !$boardId)
+        <x-admin.card class="mt-6 p-6">
+            <h2 class="text-sm font-semibold text-slate-900">{{ __('Panolar (:count)', ['count' => count($boardMap)]) }}</h2>
+            <p class="text-xs text-slate-500">{{ __('Her şehrin blogları kendi panosuna gider.') }}</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+                @foreach (collect($boardMap)->sortBy('name') as $board)
+                    <span class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-[#e60023] ring-1 ring-red-100">
+                        <span class="size-1.5 rounded-full bg-[#e60023]"></span>{{ $board['name'] }}
+                    </span>
+                @endforeach
+            </div>
+        </x-admin.card>
+    @endif
 
     {{-- AYARLAR --}}
     <h2 class="mt-10 text-sm font-bold uppercase tracking-wide text-slate-500">{{ __('Ayarlar') }}</h2>
@@ -215,24 +232,26 @@
         <x-admin.card class="p-6">
             <p class="text-xs font-bold text-slate-400">3</p>
             <h3 class="text-sm font-semibold text-slate-900">{{ __('Pano ve günlük sayı') }}</h3>
+            @if ($connected && !$boardReady)
+                <p class="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 ring-1 ring-amber-200">{{ __('Pano açma izni yok: 2. kutuda "Bağlantıyı kaldır" deyip yeniden bağlan; pano otomatik açılır.') }}</p>
+            @endif
             @if (!$connected)
                 <p class="mt-1 text-xs text-slate-500">{{ __('Bağlandıktan sonra panolarını burada seçersin.') }}</p>
             @elseif ($boardsError)
                 <p class="mt-2 text-xs font-medium text-red-600">{{ $boardsError }}</p>
-            @elseif (!$boards)
-                <p class="mt-2 text-xs font-medium text-amber-700">{{ __('Pinterest hesabında pano yok. Pinterest\'te bir pano aç, sonra bu sayfayı yenile.') }}</p>
             @else
                 <form method="POST" action="{{ route('pinterest.settings') }}" class="mt-3 space-y-3">
                     @csrf @method('PUT')
                     <label class="block">
                         <span class="text-sm font-medium text-slate-700">{{ __('Pano') }}</span>
-                        <select name="board_id" required class="{{ $field }}">
-                            <option value="">{{ __('Seç…') }}</option>
+                        <select name="board_id" class="{{ $field }}">
+                            <option value="">{{ __('Otomatik: her şehre kendi panosu') }}</option>
                             @foreach ($boards as $board)
                                 <option value="{{ $board['id'] }}" @selected($boardId === $board['id'])>{{ $board['name'] }}</option>
                             @endforeach
                         </select>
                     </label>
+                    <p class="-mt-1 text-[11px] text-slate-500">{{ __('Otomatikte "Rome Travel Guide" gibi şehir panoları kullanılır; yoksa Pinterest\'te açılır. Şehri olmayan yazılar ":name" panosuna gider. Bir pano seçersen hepsi o panoya gider.', ['name' => $autoBoard]) }}</p>
                     <x-admin.input name="daily" type="number" :label="__('Günde kaç blog')" :value="$daily" min="1" max="50" required
                         :hint="__('09:00–21:00 arasına yayılarak gönderilir.')" />
                     <label class="flex items-center gap-2 text-sm font-medium text-slate-700">

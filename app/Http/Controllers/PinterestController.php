@@ -43,7 +43,10 @@ class PinterestController extends Controller
             'boards' => $boards,
             'boardsError' => $boardsError,
             'boardId' => Pinterest::boardId(),
-            'boardName' => collect($boards)->firstWhere('id', Pinterest::boardId())['name'] ?? null,
+            'boardName' => collect($boards)->firstWhere('id', Pinterest::boardId())['name'] ?? Setting::get('pinterest_board_name'),
+            'autoBoard' => Pinterest::BOARD_NAME,
+            'boardMap' => Pinterest::boardMap(),
+            'canCreateBoards' => Pinterest::canCreateBoards(),
             'enabled' => Pinterest::enabled(),
             'daily' => Pinterest::daily(),
             'redirectUri' => Pinterest::redirectUri(),
@@ -99,7 +102,7 @@ class PinterestController extends Controller
             return redirect()->route('pinterest.index')->with('error', $e->getMessage());
         }
 
-        return redirect()->route('pinterest.index')->with('success', __('Pinterest bağlandı. Şimdi panoyu seç.'));
+        return redirect()->route('pinterest.index')->with('success', __('Pinterest bağlandı. Bloglar günde :count tane, her şehrin kendi panosuna otomatik gidecek.', ['count' => Pinterest::daily()]));
     }
 
     public function disconnect()
@@ -114,11 +117,13 @@ class PinterestController extends Controller
     public function saveSettings(Request $request)
     {
         $data = $request->validate([
-            'board_id' => ['required', 'string', 'max:64', 'regex:/^\d+$/'],
+            'board_id' => ['nullable', 'string', 'max:64', 'regex:/^\d+$/'],
             'daily' => ['required', 'integer', 'between:1,50'],
             'enabled' => ['boolean'],
         ]);
-        Setting::put('pinterest_board_id', $data['board_id']);
+        // boş: otomatik pano (TripSpoiler Travel Guides) ilk gönderimde açılır / bulunur
+        Setting::put('pinterest_board_id', $data['board_id'] ?? null);
+        Setting::put('pinterest_board_name', $data['board_id'] ? (collect($this->pinterest->boards())->firstWhere('id', $data['board_id'])['name'] ?? null) : null);
         Setting::put('pinterest_daily', (string) $data['daily']);
         Setting::put('pinterest_enabled', $request->boolean('enabled') ? '1' : '0');
 
@@ -139,8 +144,8 @@ class PinterestController extends Controller
     /** Blog düzenleme sayfasından elle gönder: sadece hiç gönderilmemiş ve kapak resmi olan blog */
     public function send(Blog $blog)
     {
-        if (!Pinterest::connected() || !Pinterest::boardId()) {
-            return back()->with('error', __('Önce Yönetim › Pinterest\'ten bağlan ve panoyu seç.'));
+        if (!Pinterest::connected()) {
+            return back()->with('error', __('Önce Yönetim › Pinterest\'ten bağlan.'));
         }
         if ($blog->pinterestPins()->whereNotNull('pin_id')->exists()) {
             return back()->with('error', __('Bu blog zaten Pinterest\'e gönderildi; aynı blog tekrar gönderilmez.'));

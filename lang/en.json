@@ -1070,5 +1070,16 @@
     "Bir kez giden blog tekrar gitmez.": "A post that was sent is never sent again.",
     "Ayarlar": "Settings",
     "Pinterest'e gönderildi": "Sent to Pinterest",
-    "Pinterest'e gönderilemedi (:date): :error": "Could not be sent to Pinterest (:date): :error"
+    "Pinterest'e gönderilemedi (:date): :error": "Could not be sent to Pinterest (:date): :error",
+    "Pinterest'te pano açma izni yok. Yönetim › Pinterest'te \"Bağlantıyı kaldır\" deyip yeniden bağlan.": "No permission to create boards on Pinterest. In Management › Pinterest, disconnect and connect again.",
+    "Pinterest bağlandı. Bloglar günde :count tane, her şehrin kendi panosuna otomatik gidecek.": "Pinterest is connected. Posts will go automatically, :count a day, each to its city's board.",
+    "Her şehrin kendi panosuna, 09:00–21:00 arası yaklaşık saatte bir.": "To each city's own board, about once an hour between 09:00 and 21:00.",
+    "Pano açma izni yok: aşağıda \"Bağlantıyı kaldır\" deyip yeniden bağlan.": "No permission to create boards: disconnect below and connect again.",
+    "Bağlı; otomatik gönderimi açınca başlar.": "Connected; it starts once automatic sending is on.",
+    "Pano açma izni yok: 2. kutuda \"Bağlantıyı kaldır\" deyip yeniden bağlan; pano otomatik açılır.": "No permission to create boards: disconnect in box 2 and connect again; boards are then created automatically.",
+    "Otomatik: her şehre kendi panosu": "Automatic: one board per city",
+    "Otomatikte \"Rome Travel Guide\" gibi şehir panoları kullanılır; yoksa Pinterest'te açılır. Şehri olmayan yazılar \":name\" panosuna gider. Bir pano seçersen hepsi o panoya gider.": "Automatic uses city boards like \"Rome Travel Guide\", created on Pinterest if missing. Posts without a city go to \":name\". If you choose a board, everything goes there.",
+    "Panolar (:count)": "Boards (:count)",
+    "Her şehrin blogları kendi panosuna gider.": "Each city's posts go to its own board.",
+    "Önce Yönetim › Pinterest'ten bağlan.": "Connect in Management › Pinterest first."
 }

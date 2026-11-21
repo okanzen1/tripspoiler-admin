@@ -158,6 +158,62 @@ class PinterestTest extends TestCase
         $this->assertSame(['old'], $sent->pinterestPins()->pluck('pin_id')->all());
     }
 
+    public function test_without_a_chosen_board_each_city_gets_its_own_board(): void
+    {
+        $this->connect();
+        Setting::put('pinterest_board_id', null);
+        Setting::put('pinterest_scope', 'boards:read,boards:write,pins:read,pins:write,user_accounts:read');
+        $country = \App\Models\Country::create(['code' => 'IT', 'name' => 'Italy', 'slug' => 'italy', 'active' => true]);
+        $rome = \App\Models\City::create(['country_id' => $country->id, 'name' => 'Rome', 'slug' => 'rome', 'active' => true]);
+        $milan = \App\Models\City::create(['country_id' => $country->id, 'name' => 'Milan', 'slug' => 'milan', 'active' => true]);
+        $romeA = $this->blog('rome-a');
+        $romeA->cities()->attach($rome);
+        $romeB = $this->blog('rome-b');
+        $romeB->cities()->attach($rome);
+        $milanBlog = $this->blog('milan');
+        $milanBlog->cities()->attach($milan);
+        $general = $this->blog('general');
+
+        $created = [];
+        Http::fake([
+            // Milan panosu Pinterest'te zaten var: yenisi açılmaz
+            'api.pinterest.com/v5/boards?*' => Http::response(['items' => [['id' => '700', 'name' => 'Milan Travel Guide']], 'bookmark' => null]),
+            'api.pinterest.com/v5/boards' => function ($request) use (&$created) {
+                $created[] = $request['name'];
+
+                return Http::response(['id' => (string) (800 + count($created)), 'name' => $request['name']]);
+            },
+            'api.pinterest.com/v5/pins' => fn ($request) => Http::response(['id' => 'pin-' . $request['board_id']]),
+        ]);
+
+        $service = app(Pinterest::class);
+        foreach ([$romeA, $romeB, $milanBlog, $general] as $blog) {
+            $service->send($blog);
+        }
+
+        $this->assertSame(['Rome Travel Guide', 'TripSpoiler Travel Guides'], $created);
+        $this->assertSame(['801', '801', '700', '802'], PinterestPin::orderBy('id')->pluck('board_id')->all());
+        $this->assertSame('Rome Travel Guide', Pinterest::boardMap()['city:' . $rome->id]['name']);
+
+        $admin = User::factory()->admin()->create();
+        $this->actingAs($admin)->get(route('pinterest.index'))->assertOk()->assertSee('Rome Travel Guide')->assertSee('Milan Travel Guide');
+    }
+
+    public function test_old_connection_without_board_permission_asks_to_reconnect(): void
+    {
+        $this->connect();
+        Setting::put('pinterest_board_id', null);
+        Setting::put('pinterest_scope', 'boards:read,pins:read,pins:write,user_accounts:read');
+        $blog = $this->blog('one');
+        Http::fake(['api.pinterest.com/v5/boards*' => Http::response(['items' => [], 'bookmark' => null])]);
+
+        $pin = app(Pinterest::class)->send($blog);
+
+        $this->assertNull($pin->pin_id);
+        $this->assertStringContainsString('yeniden bağlan', $pin->error);
+        Http::assertNotSent(fn ($r) => $r->method() === 'POST');
+    }
+
     public function test_expired_token_is_refreshed_before_sending(): void
     {
         $this->connect();
@@ -186,7 +242,7 @@ class PinterestTest extends TestCase
         parse_str(parse_url($redirect, PHP_URL_QUERY), $query);
 
         Http::fake([
-            'api.pinterest.com/v5/oauth/token' => Http::response(['access_token' => 'acc', 'refresh_token' => 'ref', 'expires_in' => 2592000]),
+            'api.pinterest.com/v5/oauth/token' => Http::response(['access_token' => 'acc', 'refresh_token' => 'ref', 'expires_in' => 2592000, 'scope' => 'boards:read,boards:write,pins:read,pins:write,user_accounts:read']),
             'api.pinterest.com/v5/user_account' => Http::response(['username' => 'tripspoiler']),
             'api.pinterest.com/v5/boards*' => Http::response(['items' => [['id' => '55', 'name' => 'Travel Guides']], 'bookmark' => null]),
         ]);
