@@ -271,6 +271,19 @@ class PinterestTest extends TestCase
         $this->assertSame('55', Pinterest::boardId());
     }
 
+    public function test_disconnect_clears_tokens_and_stops_sending(): void
+    {
+        $this->connect();
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)->from(route('pinterest.index'))->delete(route('pinterest.disconnect'))
+            ->assertRedirect(route('pinterest.index'))->assertSessionHas('success');
+
+        $this->assertFalse(Pinterest::connected());
+        $this->assertFalse(Pinterest::enabled());
+        $this->get(route('pinterest.index'))->assertOk()->assertSee(__('Pinterest\'e bağlan'));
+    }
+
     public function test_editor_cannot_open_pinterest_settings(): void
     {
         $this->actingAs(User::factory()->create())->get(route('pinterest.index'))->assertRedirect();

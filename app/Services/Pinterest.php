@@ -110,6 +110,13 @@ class Pinterest
         return $scope === '' || str_contains($scope, 'boards:write');
     }
 
+    public function disconnect(): void
+    {
+        foreach (['pinterest_access_token', 'pinterest_refresh_token', 'pinterest_token_expires_at', 'pinterest_account', 'pinterest_scope'] as $key) {
+            Setting::put($key, null);
+        }
+    }
+
     /**
      * Blogun gideceği pano. Panelden tek pano seçildiyse hep o. Seçilmediyse her şehrin kendi panosu
      * ("Rome Travel Guide"); şehri olmayan genel yazılar "TripSpoiler Travel Guides". Pano Pinterest'te aynı adla
