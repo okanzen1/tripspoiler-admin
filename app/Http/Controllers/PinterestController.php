@@ -31,6 +31,9 @@ class PinterestController extends Controller
         }
 
         $published = Blog::where('active', true)->where(fn ($q) => $q->whereNull('published_at')->orWhere('published_at', '<=', now()));
+        // gönderilemeyenler: hiç başarılı gönderimi olmayan, en az bir hatası olan bloglar (son hata ve deneme sayısıyla)
+        $failing = Blog::whereDoesntHave('pinterestPins', fn ($q) => $q->whereNotNull('pin_id'))->whereHas('pinterestPins')
+            ->withCount('pinterestPins')->with(['pinterestPins' => fn ($q) => $q->limit(1)])->latest('updated_at')->limit(20)->get();
 
         return view('admin.pinterest.index', [
             'hasApp' => Pinterest::hasApp(),
@@ -40,16 +43,19 @@ class PinterestController extends Controller
             'boards' => $boards,
             'boardsError' => $boardsError,
             'boardId' => Pinterest::boardId(),
+            'boardName' => collect($boards)->firstWhere('id', Pinterest::boardId())['name'] ?? null,
             'enabled' => Pinterest::enabled(),
             'daily' => Pinterest::daily(),
             'redirectUri' => Pinterest::redirectUri(),
             'sentToday' => Pinterest::sentToday(),
             'queueCount' => Pinterest::queue()->count(),
-            'next' => Pinterest::queue()->limit(5)->get(),
+            'next' => Pinterest::queue()->limit(6)->get(),
             'sentBlogs' => PinterestPin::sent()->distinct()->count('blog_id'),
             'noCover' => (clone $published)->whereNull('cover_path')->whereDoesntHave('pinterestPins', fn ($q) => $q->whereNotNull('pin_id'))->count(),
-            'recent' => PinterestPin::with('blog')->latest('id')->limit(15)->get(),
-            'failed' => PinterestPin::failed()->where('manual', false)->count(),
+            'sent' => PinterestPin::sent()->with('blog')->latest('id')->limit(12)->get(),
+            'failing' => $failing,
+            'maxTries' => Pinterest::MAX_TRIES,
+            'retryHours' => Pinterest::RETRY_HOURS,
         ]);
     }
 
@@ -121,10 +127,11 @@ class PinterestController extends Controller
             : __('Kaydedildi. Otomatik gönderim kapalı.'));
     }
 
-    /** Otomatik sırada hata veren blogları sıraya geri koyar */
+    /** Gönderilemeyen blogların hata kayıtlarını siler: hepsi hemen yeniden sıraya girer */
     public function retryFailed()
     {
-        $count = PinterestPin::failed()->where('manual', false)->delete();
+        $count = PinterestPin::failed()->distinct()->count('blog_id');
+        PinterestPin::failed()->delete();
 
         return back()->with('success', __(':count blog tekrar sıraya alındı.', ['count' => $count]));
     }

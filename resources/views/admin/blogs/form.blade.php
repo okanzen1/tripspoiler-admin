@@ -45,6 +45,7 @@
         @can('admin')
             @php
                 $lastPin = $blog->pinterestPins()->sent()->first();
+                $failedPin = $lastPin ? null : $blog->pinterestPins()->failed()->first();
             @endphp
             <div class="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white px-5 py-3.5 text-sm ring-1 ring-slate-200">
                 <p class="flex items-center gap-2.5 text-slate-700">
@@ -52,6 +53,8 @@
                     @if ($lastPin)
                         <span>{{ __('Pinterest\'e gönderildi: :date', ['date' => $lastPin->created_at->format('d.m.Y H:i')]) }}
                             · <a href="{{ $lastPin->url() }}" target="_blank" rel="noopener" class="font-semibold text-brand-900 hover:underline">{{ __('Pini aç') }} ↗</a></span>
+                    @elseif ($failedPin)
+                        <span class="text-red-600">{{ __('Pinterest\'e gönderilemedi (:date): :error', ['date' => $failedPin->created_at->format('d.m H:i'), 'error' => $failedPin->error]) }}</span>
                     @elseif (!$blog->cover_path)
                         <span class="text-slate-500">{{ __('Pinterest\'e gitmesi için kapak resmi gerekli.') }}</span>
                     @else

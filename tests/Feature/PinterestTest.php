@@ -86,23 +86,52 @@ class PinterestTest extends TestCase
         $this->assertSame(0, PinterestPin::count());
     }
 
-    public function test_failed_pin_is_recorded_and_not_retried_automatically_until_requeued(): void
+    public function test_failed_pin_is_retried_automatically_after_a_pause_up_to_three_times(): void
     {
         $this->connect();
-        $this->travelTo(now()->setTime(21, 7));
+        Setting::put('pinterest_daily', '50');
+        $this->travelTo(now()->setTime(9, 7));
         $blog = $this->blog('one');
-        Http::fake(['api.pinterest.com/v5/pins' => Http::response(['message' => 'Invalid image'], 400)]);
+        $works = false;
+        Http::fake(['api.pinterest.com/v5/pins' => function () use (&$works) {
+            return $works ? Http::response(['id' => 'ok1']) : Http::response(['message' => 'Invalid image'], 400);
+        }]);
 
         $this->artisan('pinterest:send');
         $pin = PinterestPin::first();
         $this->assertNull($pin->pin_id);
         $this->assertStringContainsString('Invalid image', $pin->error);
-        $this->assertSame(0, Pinterest::queue()->count());
+        $this->assertSame(0, Pinterest::queue()->count()); // hemen tekrar denenmez
+
+        $this->travelTo(now()->addHours(2));
+        $this->artisan('pinterest:send');
+        $this->assertSame(1, PinterestPin::count());
+
+        $this->travelTo(now()->addHours(2)); // 4 saat geçti: yeniden denenir
+        $this->artisan('pinterest:send');
+        $this->travelTo(now()->addHours(4));
+        $this->artisan('pinterest:send');
+        $this->assertSame(3, PinterestPin::count());
+
+        $this->travelTo(now()->addHours(4)); // 3 denemede durur
+        $this->artisan('pinterest:send');
+        $this->assertSame(3, PinterestPin::count());
+        $this->assertSame(1, Pinterest::givenUp()->count());
 
         $admin = User::factory()->admin()->create();
-        $this->actingAs($admin)->post(route('pinterest.retry'))->assertRedirect();
-        $this->assertSame(1, Pinterest::queue()->count());
+        $this->actingAs($admin)->get(route('pinterest.index'))->assertOk()
+            ->assertSee(__('Gönderilemeyenler (:count)', ['count' => 1]))->assertSee('Invalid image')->assertSee(route('pinterest.send', $blog));
+        $this->get(route('blogs.edit', $blog))->assertSee('Invalid image')->assertSee(route('pinterest.send', $blog));
+
+        // "Hepsini yeniden sıraya al": hata kayıtları silinir, blog hemen sıraya döner
+        $this->post(route('pinterest.retry'))->assertRedirect();
         $this->assertTrue($blog->is(Pinterest::queue()->first()));
+
+        // elle gönderim: başarılı olunca blog listesinde "Pinterest ✓"
+        $works = true;
+        $this->post(route('pinterest.send', $blog))->assertSessionHas('success');
+        $this->get(route('blogs.index'))->assertSee('Pinterest ✓');
+        $this->get(route('pinterest.index'))->assertSee('https://www.pinterest.com/pin/ok1/');
     }
 
     public function test_manual_send_never_resends_and_needs_a_cover(): void

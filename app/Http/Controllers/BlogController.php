@@ -25,6 +25,7 @@ class BlogController extends Controller
         $cover = in_array($request->get('cover'), ['yes', 'no'], true) ? $request->get('cover') : null;
 
         $blogs = Blog::with(['city.country', 'cities.country'])->withCount('activities')
+            ->withExists(['pinterestPins as on_pinterest' => fn ($q) => $q->whereNotNull('pin_id')])
             ->when($search, fn ($q) => $q->where(fn ($q) => $q->where('title->en', 'like', "%{$search}%")->orWhere('slug', 'like', "%{$search}%")))
             ->when($status, fn ($q) => $q->where('active', $status === 'active'))
             ->when($cityId === 'none', fn ($q) => $q->doesntHave('cities'))

@@ -29,6 +29,11 @@ class Pinterest
 
     public const LAST_HOUR = 21;
 
+    /** Gönderilemeyen blog otomatik olarak en fazla bu kadar denenir, denemeler arası en az RETRY_HOURS saat */
+    public const MAX_TRIES = 3;
+
+    public const RETRY_HOURS = 3;
+
     public static function appId(): ?string
     {
         return Setting::get('pinterest_app_id') ?: null;
@@ -155,8 +160,10 @@ class Pinterest
         return Blog::where('active', true)->where(fn ($q) => $q->whereNull('published_at')->orWhere('published_at', '<=', now()))
             ->whereNotNull('cover_path')
             ->whereDoesntHave('pinterestPins', fn ($q) => $q->whereNotNull('pin_id'))
-            // otomatik sıra bir kez hata veren blogu tekrar denemez (panelde "Tekrar dene" ile sıraya döner)
-            ->whereDoesntHave('pinterestPins', fn ($q) => $q->whereNull('pin_id')->where('manual', false))
+            // gönderilemeyen blog RETRY_HOURS saat sonra yeniden denenir; MAX_TRIES kez olmazsa durur
+            // (panelde "Tekrar sıraya al" ya da blog sayfasında "Pinterest'e gönder" ile yine gönderilebilir)
+            ->whereDoesntHave('pinterestPins', fn ($q) => $q->whereNull('pin_id')->where('created_at', '>', now()->subHours(self::RETRY_HOURS)))
+            ->has('pinterestPins', '<', self::MAX_TRIES)
             ->orderByRaw('published_at IS NULL')->orderBy('published_at')->orderBy('id');
     }
 
@@ -258,5 +265,12 @@ class Pinterest
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    /** Otomatik denemesi biten (MAX_TRIES kez gönderilemeyen) bloglar */
+    public static function givenUp()
+    {
+        return Blog::whereDoesntHave('pinterestPins', fn ($q) => $q->whereNotNull('pin_id'))
+            ->has('pinterestPins', '>=', self::MAX_TRIES);
     }
 }

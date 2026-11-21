@@ -116,6 +116,9 @@
                                                 @unless ($blog->cover_path)
                                                     <a href="{{ route('blogs.edit', $blog) }}" class="rounded-md bg-rose-50 px-1.5 py-0.5 font-semibold text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100">{{ __('Resim eksik') }}</a>
                                                 @endunless
+                                                @if ($blog->on_pinterest)
+                                                    <span class="rounded-md bg-red-50 px-1.5 py-0.5 font-semibold text-[#e60023] ring-1 ring-red-100" title="{{ __('Pinterest\'e gönderildi') }}">Pinterest ✓</span>
+                                                @endif
                                                 <span>{{ $blog->readingMinutes() }} dk okuma</span>
                                                 @if ($blog->activities_count)
                                                     <span class="rounded-md bg-slate-100 px-1.5 py-0.5 font-medium text-slate-600">{{ $blog->activities_count }} aktivite</span>
