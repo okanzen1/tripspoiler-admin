@@ -99,10 +99,15 @@ class Pinterest
         Setting::put('pinterest_enabled', '1');
     }
 
-    /** Bağlanırken izin verilen kapsamlar arasında pano açma izni var mı (eski bağlantılarda yok) */
+    /**
+     * Pano açma izni var mı. Pinterest izinleri bağlanırken bildirirse ona bakılır; bildirmediyse bilinmiyor sayılır
+     * ve doğrudan denenir (Pinterest reddederse "yeniden bağlan" uyarısı çıkar).
+     */
     public static function canCreateBoards(): bool
     {
-        return str_contains((string) Setting::get('pinterest_scope'), 'boards:write');
+        $scope = (string) Setting::get('pinterest_scope');
+
+        return $scope === '' || str_contains($scope, 'boards:write');
     }
 
     /**
@@ -125,16 +130,21 @@ class Pinterest
         $name = $city ? $city->name . ' Travel Guide' : self::BOARD_NAME;
         $board = collect($this->boards())->first(fn ($b) => mb_strtolower($b['name']) === mb_strtolower($name));
         if (!$board) {
-            if (!self::canCreateBoards()) {
-                throw new \RuntimeException(__('Pinterest\'te pano açma izni yok. Yönetim › Pinterest\'te "Bağlantıyı kaldır" deyip yeniden bağlan.'));
-            }
-            $created = $this->request('post', '/boards', [
+            try {
+                $created = $this->request('post', '/boards', [
                 'name' => $name,
                 'description' => $city
                     ? "Things to do, travel tips, itineraries and guides for {$city->name} from tripspoiler.com."
                     : self::BOARD_DESCRIPTION,
                 'privacy' => 'PUBLIC',
-            ]);
+                ]);
+            } catch (\RuntimeException $e) {
+                // izin yok (eski bağlantı pano açma iznini içermiyor)
+                if (in_array($e->getCode(), [401, 403], true)) {
+                    throw new \RuntimeException(__('Pinterest\'te pano açma izni yok. Yönetim › Pinterest\'te "Bağlantıyı kaldır" deyip yeniden bağlan.') . ' (' . $e->getMessage() . ')', $e->getCode());
+                }
+                throw $e;
+            }
             $board = ['id' => (string) $created['id'], 'name' => (string) ($created['name'] ?? $name)];
             $this->boards = null; // yeni pano listeye girsin
         }

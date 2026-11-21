@@ -25,6 +25,8 @@
 @endsection
 
 @section('content')
+    {{-- gönder / tekrar sıraya al sonrası sayfa yenilenmeden güncellenir (live-refresh.js); ayar formları dışarıda --}}
+    <div data-live="pinterest-status">
     {{-- DURUM --}}
     <div class="relative isolate overflow-hidden rounded-3xl bg-gradient-to-br from-[#e60023] via-rose-600 to-pink-500 p-6 text-white shadow-[0_24px_50px_-30px_rgba(230,0,35,0.9)] sm:p-8">
         <div class="pointer-events-none absolute -right-16 -top-20 -z-10 size-72 rounded-full bg-white/10 blur-2xl" aria-hidden="true"></div>
@@ -181,6 +183,8 @@
             </div>
         </x-admin.card>
     @endif
+
+    </div>
 
     {{-- AYARLAR --}}
     <h2 class="mt-10 text-sm font-bold uppercase tracking-wide text-slate-500">{{ __('Ayarlar') }}</h2>

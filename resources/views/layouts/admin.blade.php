@@ -400,6 +400,8 @@
                         }
                     } else if (data.error) {
                         showToast(data.error, false);
+                        // hata da sayfadaki durumu değiştirmiş olabilir (ör. Pinterest'e gönderilemedi kaydı): yerinde yenile
+                        if (!isDelete) await window.liveRefresh?.(form);
                     } else {
                         // Beklenmeyen yanıt: normal submit'e düş
                         leaving = true;

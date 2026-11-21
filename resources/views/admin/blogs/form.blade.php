@@ -47,7 +47,7 @@
                 $lastPin = $blog->pinterestPins()->sent()->first();
                 $failedPin = $lastPin ? null : $blog->pinterestPins()->failed()->first();
             @endphp
-            <div class="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white px-5 py-3.5 text-sm ring-1 ring-slate-200">
+            <div data-live="pinterest-blog-{{ $blog->id }}" class="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white px-5 py-3.5 text-sm ring-1 ring-slate-200">
                 <p class="flex items-center gap-2.5 text-slate-700">
                     <span class="grid size-8 shrink-0 place-items-center rounded-lg bg-[#e60023] text-sm font-black text-white">P</span>
                     @if ($lastPin)

@@ -205,13 +205,18 @@ class PinterestTest extends TestCase
         Setting::put('pinterest_board_id', null);
         Setting::put('pinterest_scope', 'boards:read,pins:read,pins:write,user_accounts:read');
         $blog = $this->blog('one');
-        Http::fake(['api.pinterest.com/v5/boards*' => Http::response(['items' => [], 'bookmark' => null])]);
+        Setting::put('pinterest_scope', null); // Pinterest izinleri bildirmedi: denenir
+        Http::fake([
+            'api.pinterest.com/v5/boards?*' => Http::response(['items' => [], 'bookmark' => null]),
+            'api.pinterest.com/v5/boards' => Http::response(['code' => 3, 'message' => 'Authorization failed.'], 403),
+        ]);
 
         $pin = app(Pinterest::class)->send($blog);
 
         $this->assertNull($pin->pin_id);
         $this->assertStringContainsString('yeniden bağlan', $pin->error);
-        Http::assertNotSent(fn ($r) => $r->method() === 'POST');
+        $this->assertStringContainsString('Authorization failed', $pin->error);
+        Http::assertNotSent(fn ($r) => str_ends_with($r->url(), '/pins'));
     }
 
     public function test_expired_token_is_refreshed_before_sending(): void
