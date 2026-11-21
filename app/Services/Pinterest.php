@@ -1,0 +1,258 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Blog;
+use App\Models\PinterestPin;
+use App\Models\Setting;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
+
+/**
+ * Pinterest API v5 (ücretsiz): blogları pin olarak gönderir (Yönetim › Pinterest).
+ * Uygulama kimliği / gizli anahtarı panelden girilir; "Pinterest'e bağlan" ile alınan erişim anahtarları
+ * şifreli saklanır ve süresi dolmadan kendiliğinden yenilenir.
+ *
+ * Otomatik sıra (php artisan pinterest:send, saat başı): yayında + kapak resmi olan, daha önce başarıyla
+ * gönderilmemiş bloglar, yayın tarihine göre eskiden yeniye; günde en fazla "pinterest_daily" (varsayılan 10)
+ * gönderim, gün içine yayılır. Elle "Tekrar gönder" her zaman yeni bir pin açar.
+ */
+class Pinterest
+{
+    public const API = 'https://api.pinterest.com/v5';
+
+    public const SCOPES = 'boards:read,pins:read,pins:write,user_accounts:read';
+
+    /** Otomatik gönderimin yapıldığı saatler (sunucu saati) */
+    public const FIRST_HOUR = 9;
+
+    public const LAST_HOUR = 21;
+
+    public static function appId(): ?string
+    {
+        return Setting::get('pinterest_app_id') ?: null;
+    }
+
+    public static function appSecret(): ?string
+    {
+        return self::decrypt(Setting::get('pinterest_app_secret'));
+    }
+
+    public static function hasApp(): bool
+    {
+        return self::appId() && self::appSecret();
+    }
+
+    public static function connected(): bool
+    {
+        return filled(Setting::get('pinterest_refresh_token'));
+    }
+
+    public static function boardId(): ?string
+    {
+        return Setting::get('pinterest_board_id') ?: null;
+    }
+
+    public static function enabled(): bool
+    {
+        return Setting::get('pinterest_enabled') === '1';
+    }
+
+    public static function daily(): int
+    {
+        return max(1, min(50, (int) (Setting::get('pinterest_daily') ?: 10)));
+    }
+
+    public static function redirectUri(): string
+    {
+        return route('pinterest.callback');
+    }
+
+    public function authorizeUrl(string $state): string
+    {
+        return 'https://www.pinterest.com/oauth/?' . http_build_query([
+            'client_id' => self::appId(),
+            'redirect_uri' => self::redirectUri(),
+            'response_type' => 'code',
+            'scope' => self::SCOPES,
+            'state' => $state,
+        ]);
+    }
+
+    /** "Pinterest'e bağlan" dönüşü: gelen kodu erişim anahtarlarına çevirir */
+    public function connect(string $code): void
+    {
+        $this->storeTokens($this->tokenRequest(['grant_type' => 'authorization_code', 'code' => $code, 'redirect_uri' => self::redirectUri()]));
+        Setting::put('pinterest_account', $this->get('/user_account')['username'] ?? null);
+    }
+
+    public function disconnect(): void
+    {
+        foreach (['pinterest_access_token', 'pinterest_refresh_token', 'pinterest_token_expires_at', 'pinterest_account'] as $key) {
+            Setting::put($key, null);
+        }
+    }
+
+    /** @return list<array{id: string, name: string}> */
+    public function boards(): array
+    {
+        $boards = [];
+        $bookmark = null;
+        do {
+            $page = $this->get('/boards', array_filter(['page_size' => 100, 'bookmark' => $bookmark]));
+            foreach ($page['items'] ?? [] as $board) {
+                $boards[] = ['id' => (string) $board['id'], 'name' => (string) $board['name']];
+            }
+            $bookmark = $page['bookmark'] ?? null;
+        } while ($bookmark && count($boards) < 1000);
+
+        return $boards;
+    }
+
+    /**
+     * Blogu seçili panoya pin olarak gönderir; sonucu (başarılı ya da hatalı) kaydeder.
+     */
+    public function send(Blog $blog, bool $manual = false): PinterestPin
+    {
+        $board = self::boardId();
+        $pin = new PinterestPin(['blog_id' => $blog->id, 'board_id' => $board, 'manual' => $manual]);
+
+        try {
+            if (!$board) {
+                throw new \RuntimeException(__('Pinterest panosu seçilmemiş.'));
+            }
+            if (!$blog->cover_path) {
+                throw new \RuntimeException(__('Blogun kapak resmi yok; Pinterest resimsiz pin kabul etmez.'));
+            }
+            // her zaman İngilizce (panel dili ne olursa olsun)
+            $title = (string) $blog->getTranslation('title', 'en', false);
+            $description = (string) ($blog->getTranslation('excerpt', 'en', false) ?: $blog->getTranslation('meta_description', 'en', false));
+            $response = $this->request('post', '/pins', [
+                'board_id' => $board,
+                'title' => Str::limit($title, 97),
+                'description' => Str::limit(strip_tags($description), 490),
+                'link' => $blog->siteUrl(),
+                'alt_text' => Str::limit($title, 490),
+                'media_source' => ['source_type' => 'image_url', 'url' => $blog->coverUrl()],
+            ]);
+            $pin->pin_id = (string) $response['id'];
+        } catch (\Throwable $e) {
+            $pin->error = Str::limit($e->getMessage(), 490);
+        }
+        $pin->save();
+
+        return $pin;
+    }
+
+    /** Otomatik sıradaki bloglar: yayında, kapaklı, hiç başarıyla gönderilmemiş, eskiden yeniye */
+    public static function queue()
+    {
+        return Blog::where('active', true)->where(fn ($q) => $q->whereNull('published_at')->orWhere('published_at', '<=', now()))
+            ->whereNotNull('cover_path')
+            ->whereDoesntHave('pinterestPins', fn ($q) => $q->whereNotNull('pin_id'))
+            // otomatik sıra bir kez hata veren blogu tekrar denemez (panelde "Tekrar dene" ile sıraya döner)
+            ->whereDoesntHave('pinterestPins', fn ($q) => $q->whereNull('pin_id')->where('manual', false))
+            ->orderByRaw('published_at IS NULL')->orderBy('published_at')->orderBy('id');
+    }
+
+    /** Bugün otomatik sırayla yapılan gönderimler (hatalılar da sayılır: hata tekrar tekrar denenip günü doldurmasın) */
+    public static function sentToday(): int
+    {
+        return PinterestPin::where('manual', false)->where('created_at', '>=', now()->startOfDay())->count();
+    }
+
+    /**
+     * Saat başı çalışır: günlük hakkı kalan saatlere bölerek gönderir (10/gün ≈ saatte 1).
+     *
+     * @return int gönderilmeye çalışılan blog sayısı
+     */
+    public function sendScheduled(): int
+    {
+        if (!self::enabled() || !self::connected() || !self::boardId()) {
+            return 0;
+        }
+        $hour = (int) now()->format('G');
+        if ($hour < self::FIRST_HOUR || $hour > self::LAST_HOUR) {
+            return 0;
+        }
+        $left = self::daily() - self::sentToday();
+        if ($left <= 0) {
+            return 0;
+        }
+        $now = (int) ceil($left / (self::LAST_HOUR - $hour + 1));
+
+        $blogs = self::queue()->limit($now)->get();
+        foreach ($blogs as $blog) {
+            $this->send($blog);
+        }
+
+        return $blogs->count();
+    }
+
+    private function get(string $path, array $query = []): array
+    {
+        return $this->request('get', $path, $query);
+    }
+
+    private function request(string $method, string $path, array $data = []): array
+    {
+        $response = Http::withToken($this->token())->acceptJson()->timeout(30)->{$method}(self::API . $path, $data);
+        if ($response->failed()) {
+            throw new \RuntimeException(__('Pinterest hatası (:code): :message', [
+                'code' => $response->status(),
+                'message' => $response->json('message') ?? Str::limit($response->body(), 200),
+            ]));
+        }
+
+        return $response->json() ?? [];
+    }
+
+    /** Geçerli erişim anahtarı; süresi bir günden az kaldıysa önce yenilenir */
+    private function token(): string
+    {
+        if (!self::connected()) {
+            throw new \RuntimeException(__('Pinterest bağlı değil.'));
+        }
+        if ((int) Setting::get('pinterest_token_expires_at') < now()->addDay()->timestamp) {
+            $this->storeTokens($this->tokenRequest([
+                'grant_type' => 'refresh_token',
+                'refresh_token' => self::decrypt(Setting::get('pinterest_refresh_token')),
+            ]));
+        }
+
+        return (string) self::decrypt(Setting::get('pinterest_access_token'));
+    }
+
+    private function tokenRequest(array $form): array
+    {
+        $response = Http::asForm()->withBasicAuth((string) self::appId(), (string) self::appSecret())
+            ->acceptJson()->timeout(30)->post(self::API . '/oauth/token', $form);
+        if ($response->failed() || !$response->json('access_token')) {
+            throw new \RuntimeException(__('Pinterest bağlantısı yapılamadı (:code): :message', [
+                'code' => $response->status(),
+                'message' => $response->json('message') ?? Str::limit($response->body(), 200),
+            ]));
+        }
+
+        return $response->json();
+    }
+
+    private function storeTokens(array $tokens): void
+    {
+        Setting::put('pinterest_access_token', Crypt::encryptString($tokens['access_token']));
+        if (!empty($tokens['refresh_token'])) { // yenilemede yeni refresh_token gelmeyebilir
+            Setting::put('pinterest_refresh_token', Crypt::encryptString($tokens['refresh_token']));
+        }
+        Setting::put('pinterest_token_expires_at', (string) (now()->timestamp + (int) ($tokens['expires_in'] ?? 2592000)));
+    }
+
+    private static function decrypt(?string $value): ?string
+    {
+        try {
+            return filled($value) ? Crypt::decryptString($value) : null;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+}

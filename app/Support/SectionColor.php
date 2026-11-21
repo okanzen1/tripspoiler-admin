@@ -24,6 +24,7 @@ class SectionColor
         'subscribers' => 'teal',
         'help-requests' => 'pink',
         'management' => 'orange',
+        'pinterest' => 'rose',
         'locations' => 'cyan',
         'countries' => 'cyan',
         'cities' => 'cyan',

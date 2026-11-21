@@ -40,6 +40,35 @@
 @section('content')
     @if ($editing)
         <x-admin.translation-bar type="blog" :model="$blog" />
+
+        {{-- Pinterest: son gönderim ve elle gönder / tekrar gönder (Yönetim › Pinterest, sadece admin) --}}
+        @can('admin')
+            @php
+                $lastPin = $blog->pinterestPins()->sent()->first();
+            @endphp
+            <div class="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white px-5 py-3.5 text-sm ring-1 ring-slate-200">
+                <p class="flex items-center gap-2.5 text-slate-700">
+                    <span class="grid size-8 shrink-0 place-items-center rounded-lg bg-[#e60023] text-sm font-black text-white">P</span>
+                    @if ($lastPin)
+                        <span>{{ __('Pinterest\'e gönderildi: :date', ['date' => $lastPin->created_at->format('d.m.Y H:i')]) }}
+                            · <a href="{{ $lastPin->url() }}" target="_blank" rel="noopener" class="font-semibold text-brand-900 hover:underline">{{ __('Pini aç') }} ↗</a></span>
+                    @elseif (!$blog->cover_path)
+                        <span class="text-slate-500">{{ __('Pinterest\'e gitmesi için kapak resmi gerekli.') }}</span>
+                    @else
+                        <span class="text-slate-500">{{ __('Henüz Pinterest\'e gönderilmedi.') }}</span>
+                    @endif
+                </p>
+                @if ($blog->cover_path)
+                    <form method="POST" action="{{ route('pinterest.send', $blog) }}" data-no-ajax
+                        @if ($lastPin) data-confirm="{{ __('Bu blog daha önce gönderildi. Pinterest\'te yeni bir pin daha açılsın mı?') }}" @endif>
+                        @csrf
+                        <button type="submit" class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold text-[#e60023] ring-1 ring-[#e60023]/30 transition hover:bg-red-50">
+                            {{ $lastPin ? __('Tekrar gönder') : __('Pinterest\'e gönder') }}
+                        </button>
+                    </form>
+                @endif
+            </div>
+        @endcan
     @endif
 
     <x-admin.wizard :action="$editing ? route('blogs.update', $blog) : route('blogs.store')" :method="$editing ? 'PUT' : null"

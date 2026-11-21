@@ -49,6 +49,18 @@ class Blog extends Model
     }
 
     /** Yayınlandığı şehirler (blog_city). Hiç şehri yoksa yazı genel: her şehirde görünür. */
+    /** Pinterest'e gönderimleri (Yönetim › Pinterest), en yenisi önce */
+    public function pinterestPins(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PinterestPin::class)->latest('id');
+    }
+
+    /** Sitedeki İngilizce adresi (Pinterest pininin bağlantısı) */
+    public function siteUrl(): string
+    {
+        return rtrim(config('site.url'), '/') . '/en/blog/' . $this->slug;
+    }
+
     public function cities(): BelongsToMany
     {
         return $this->belongsToMany(City::class, 'blog_city');

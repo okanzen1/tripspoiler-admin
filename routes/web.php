@@ -221,6 +221,15 @@ Route::middleware(['auth', 'role:admin'])->prefix('yonetim')->group(function () 
     Route::put('/analitik-ayarlari/istenmeyen-ip', [\App\Http\Controllers\AnalyticsSettingsController::class, 'saveBlocked'])->name('analytics-settings.blocked');
     Route::delete('/analitik-ayarlari/kayitlar', [\App\Http\Controllers\AnalyticsSettingsController::class, 'purge'])->name('analytics-settings.purge');
     Route::get('/roller', [ManagementController::class, 'roles'])->name('roles.index');
+    // Pinterest: bağlantı, pano, günlük sayı; yayındaki bloglar sırayla pin olarak gider (App\Services\Pinterest)
+    Route::get('/pinterest', [\App\Http\Controllers\PinterestController::class, 'index'])->name('pinterest.index');
+    Route::put('/pinterest/uygulama', [\App\Http\Controllers\PinterestController::class, 'saveApp'])->name('pinterest.app');
+    Route::get('/pinterest/baglan', [\App\Http\Controllers\PinterestController::class, 'connect'])->name('pinterest.connect');
+    Route::get('/pinterest/donus', [\App\Http\Controllers\PinterestController::class, 'callback'])->name('pinterest.callback');
+    Route::delete('/pinterest/baglanti', [\App\Http\Controllers\PinterestController::class, 'disconnect'])->name('pinterest.disconnect');
+    Route::put('/pinterest/ayarlar', [\App\Http\Controllers\PinterestController::class, 'saveSettings'])->name('pinterest.settings');
+    Route::post('/pinterest/tekrar-dene', [\App\Http\Controllers\PinterestController::class, 'retryFailed'])->name('pinterest.retry');
+    Route::post('/pinterest/blog/{blog}', [\App\Http\Controllers\PinterestController::class, 'send'])->middleware('throttle:20,1')->name('pinterest.send');
     Route::get('/islem-kaydi', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index');
     // Silinen resimler (çöp kutusu, 30 gün)
     Route::get('/silinen-resimler', [\App\Http\Controllers\MediaTrashController::class, 'index'])->name('media-trash.index');

@@ -31,6 +31,9 @@ Schedule::call(function () {
 // Popülerlik: aktivitelerin Wikipedia ilgisi (son 30 gün okunma) her gece güncellenir; site her şehrin en ilgi göreni öne çıkarır
 Schedule::command('wiki:refresh')->dailyAt('05:00')->withoutOverlapping();
 
+// Pinterest: yayındaki bloglar sırayla, günde en fazla Yönetim › Pinterest'teki sayı (09–21 arası saat başı, güne yayılır)
+Schedule::command('pinterest:send')->hourlyAt(7)->withoutOverlapping(10);
+
 // Sıradaki işler (ör. Diller ve çeviri › toplu çeviri): her dakika işlenir, sırada iş yoksa hemen biter.
 // Paylaşımlı sunucuda sürekli çalışan kuyruk işçisi olmadığı için (cron: * * * * * php artisan schedule:run)
 // EN SONDA: uzun bir çeviri dakikalarca sürebilir; zamanlayıcı işleri sırayla çalıştırdığı için yukarıdakiler

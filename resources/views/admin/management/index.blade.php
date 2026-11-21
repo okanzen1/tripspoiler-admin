@@ -70,6 +70,17 @@
                 'icon' => '<circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.8-3.4 3.4-5.5 6.5-5.5s5.7 2.1 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.9.8 3.1 2.6 3.5 5.2" />',
             ],
             [
+                'key' => 'pinterest',
+                'title' => 'Pinterest',
+                'description' => 'Yayındaki blogları sırayla Pinterest\'e pin olarak gönder.',
+                'url' => route('pinterest.index'),
+                'stat' => \App\Services\Pinterest::connected()
+                    ? (\App\Services\Pinterest::enabled() ? __('Açık · günde :count', ['count' => \App\Services\Pinterest::daily()]) : __('Kapalı'))
+                    : __('Bağlı değil'),
+                'color' => 'rose',
+                'icon' => '<circle cx="12" cy="12" r="9" /><path d="M10.5 8.5c3-1.5 6 0 5.5 3s-3 4-4.5 3M11.5 10l-2.5 11" />',
+            ],
+            [
                 'key' => 'roles',
                 'title' => 'Roller',
                 'description' => 'Hangi rolün nelere erişebildiğini gör.',
