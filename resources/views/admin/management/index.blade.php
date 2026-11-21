@@ -81,6 +81,17 @@
                 'icon' => '<circle cx="12" cy="12" r="9" /><path d="M10.5 8.5c3-1.5 6 0 5.5 3s-3 4-4.5 3M11.5 10l-2.5 11" />',
             ],
             [
+                'key' => 'indexnow',
+                'title' => 'IndexNow',
+                'description' => 'Yeni ve değişen sayfalar Bing, Yandex gibi arama motorlarına anında bildirilir.',
+                'url' => route('indexnow.index'),
+                'stat' => ($last = \App\Services\IndexNow::last()) && !$last['error']
+                    ? __('Son: :date', ['date' => \Illuminate\Support\Carbon::createFromTimestamp($last['at'])->format('d.m H:i')])
+                    : (($last['error'] ?? null) ? __('Hata var') : __('Henüz gönderilmedi')),
+                'color' => 'sky',
+                'icon' => '<path d="M13 2 4 14h7l-1 8 9-12h-7Z" />',
+            ],
+            [
                 'key' => 'roles',
                 'title' => 'Roller',
                 'description' => 'Hangi rolün nelere erişebildiğini gör.',

@@ -221,6 +221,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('yonetim')->group(function () 
     Route::put('/analitik-ayarlari/istenmeyen-ip', [\App\Http\Controllers\AnalyticsSettingsController::class, 'saveBlocked'])->name('analytics-settings.blocked');
     Route::delete('/analitik-ayarlari/kayitlar', [\App\Http\Controllers\AnalyticsSettingsController::class, 'purge'])->name('analytics-settings.purge');
     Route::get('/roller', [ManagementController::class, 'roles'])->name('roles.index');
+    // IndexNow: yeni / değişen sayfalar Bing, Yandex… arama motorlarına bildirilir (App\Services\IndexNow)
+    Route::get('/indexnow', [\App\Http\Controllers\IndexNowController::class, 'index'])->name('indexnow.index');
+    Route::post('/indexnow/simdi', [\App\Http\Controllers\IndexNowController::class, 'sync'])->middleware('throttle:6,1')->name('indexnow.sync');
+    Route::post('/indexnow/hepsi', [\App\Http\Controllers\IndexNowController::class, 'resend'])->middleware('throttle:3,10')->name('indexnow.resend');
     // Pinterest: bağlantı, pano, günlük sayı; yayındaki bloglar sırayla pin olarak gider (App\Services\Pinterest)
     Route::get('/pinterest', [\App\Http\Controllers\PinterestController::class, 'index'])->name('pinterest.index');
     Route::put('/pinterest/uygulama', [\App\Http\Controllers\PinterestController::class, 'saveApp'])->name('pinterest.app');

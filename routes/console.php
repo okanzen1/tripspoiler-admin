@@ -34,6 +34,9 @@ Schedule::command('wiki:refresh')->dailyAt('05:00')->withoutOverlapping();
 // Pinterest: yayındaki bloglar sırayla, günde en fazla Yönetim › Pinterest'teki sayı (09–21 arası saat başı, güne yayılır)
 Schedule::command('pinterest:send')->hourlyAt(7)->withoutOverlapping(10);
 
+// IndexNow: site haritasındaki yeni / değişen sayfalar saatte bir Bing, Yandex… arama motorlarına bildirilir
+Schedule::command('indexnow:sync')->hourlyAt(37)->withoutOverlapping(15);
+
 // Sıradaki işler (ör. Diller ve çeviri › toplu çeviri): her dakika işlenir, sırada iş yoksa hemen biter.
 // Paylaşımlı sunucuda sürekli çalışan kuyruk işçisi olmadığı için (cron: * * * * * php artisan schedule:run)
 // EN SONDA: uzun bir çeviri dakikalarca sürebilir; zamanlayıcı işleri sırayla çalıştırdığı için yukarıdakiler

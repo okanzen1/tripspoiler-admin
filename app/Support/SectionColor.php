@@ -25,6 +25,7 @@ class SectionColor
         'help-requests' => 'pink',
         'management' => 'orange',
         'pinterest' => 'rose',
+        'indexnow' => 'sky',
         'locations' => 'cyan',
         'countries' => 'cyan',
         'cities' => 'cyan',
