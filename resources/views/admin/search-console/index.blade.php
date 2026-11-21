@@ -57,6 +57,16 @@
                 <p class="mt-4 text-xs text-white/75">{{ $syncedAt ? __('Son güncelleme: :date', ['date' => \Illuminate\Support\Carbon::createFromTimestamp($syncedAt, config('app.timezone'))->format('d.m.Y H:i')]) : __('Henüz güncellenmedi.') }}</p>
             </div>
 
+            @if (\App\Services\SearchConsole::reminderDue())
+                <div class="mt-6 flex items-start gap-3 rounded-2xl bg-amber-50 px-5 py-4 text-sm text-amber-900 ring-1 ring-amber-200">
+                    <span class="grid size-8 shrink-0 place-items-center rounded-lg bg-amber-500 text-base text-white">⏰</span>
+                    <div>
+                        <p class="font-semibold">{{ __('Hatırlatma: Search Console aracını kurma zamanı geldi') }}</p>
+                        <p class="mt-1">{{ __('Google\'da 28 günde :count gösterime ulaştın; artık düzeltilecek fırsatlar oluşuyor. Claude\'a "Search Console aracını kur" de: verileri kendisi okuyup az tıklanan sayfaların başlık ve açıklamalarını düzeltsin.', ['count' => number_format(\App\Services\SearchConsole::totals()['impressions'] ?? 0, 0, ',', '.')]) }}</p>
+                    </div>
+                </div>
+            @endif
+
             @if ($error)
                 <div class="mt-6 rounded-2xl bg-red-50 px-5 py-4 text-sm text-red-800 ring-1 ring-red-200">
                     <p class="font-semibold">{{ __('Son güncellemede hata') }}</p>

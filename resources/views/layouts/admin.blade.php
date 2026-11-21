@@ -70,7 +70,8 @@
             </x-admin.nav-link>
             @can('admin')
                 {{-- Google Search Console: Google'daki görünürlük ve fırsatlar (App\Services\SearchConsole) --}}
-                <x-admin.nav-link route="search-console.index" :match="['search-console.*']" :label="__('Search Console')">
+                <x-admin.nav-link route="search-console.index" :match="['search-console.*']" :label="__('Search Console')"
+                    :badge="\App\Services\SearchConsole::reminderDue() ? 1 : 0" :badge-title="__('hatırlatma: Claude\'a Search Console aracını kurdur')">
                     <circle cx="10.5" cy="10.5" r="6.5" /><path d="m20 20-4.8-4.8M8 12.5v-2M10.5 12.5V8.5M13 12.5v-3" />
                 </x-admin.nav-link>
             @endcan

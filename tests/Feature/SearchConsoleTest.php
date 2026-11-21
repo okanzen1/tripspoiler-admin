@@ -129,4 +129,23 @@ class SearchConsoleTest extends TestCase
 
         $this->actingAs(User::factory()->create())->get(route('search-console.index'))->assertRedirect();
     }
+
+    public function test_reminder_appears_after_enough_impressions(): void
+    {
+        SearchConsole::saveCredentials($this->keyJson());
+        Setting::put('gsc_site', 'sc-domain:tripspoiler.com');
+        Setting::put('gsc_totals', json_encode(['clicks' => 10, 'impressions' => 999, 'ctr' => 0.01, 'position' => 9, 'start' => '2026-10-23', 'end' => '2026-11-19']));
+        Http::fake(['*' => Http::response(['siteEntry' => []])]);
+        $admin = User::factory()->admin()->create();
+
+        $this->assertFalse(SearchConsole::reminderDue());
+        $this->actingAs($admin)->get(route('search-console.index'))->assertDontSee(__('Hatırlatma: Search Console aracını kurma zamanı geldi'));
+
+        Setting::put('gsc_totals', json_encode(['clicks' => 10, 'impressions' => 1200, 'ctr' => 0.01, 'position' => 9, 'start' => '2026-10-23', 'end' => '2026-11-19']));
+        $this->assertTrue(SearchConsole::reminderDue());
+        $this->get(route('search-console.index'))->assertSee(__('Hatırlatma: Search Console aracını kurma zamanı geldi'));
+
+        Setting::put('gsc_claude_tool', '1'); // araç kuruldu
+        $this->assertFalse(SearchConsole::reminderDue());
+    }
 }

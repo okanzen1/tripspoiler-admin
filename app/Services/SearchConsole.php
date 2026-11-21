@@ -145,6 +145,18 @@ class SearchConsole
         }
     }
 
+    /**
+     * Hatırlatıcı: 28 günde bu kadar gösterime ulaşınca panel "Claude'a Search Console aracını kurdur" der
+     * (Claude verileri okuyup fırsat sayfalarının başlık / açıklamasını düzeltsin). Araç kurulunca
+     * "gsc_claude_tool" ayarı "1" yapılır ve hatırlatıcı kalkar.
+     */
+    public const REMINDER_IMPRESSIONS = 1000;
+
+    public static function reminderDue(): bool
+    {
+        return Setting::get('gsc_claude_tool') !== '1' && (self::totals()['impressions'] ?? 0) >= self::REMINDER_IMPRESSIONS;
+    }
+
     /** @return array{clicks: int, impressions: int, ctr: float, position: float, start: string, end: string}|null */
     public static function totals(): ?array
     {
