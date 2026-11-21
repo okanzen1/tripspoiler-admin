@@ -1117,5 +1117,10 @@
     "Yeni ve değişen sayfalar Bing, Yandex gibi arama motorlarına anında bildirilir.": "New and changed pages are reported to search engines like Bing and Yandex right away.",
     "Son: :date": "Last: :date",
     "Hata var": "Error",
-    "Henüz gönderilmedi": "Not sent yet"
+    "Henüz gönderilmedi": "Not sent yet",
+    "Panel her gün siteyi tarar; yeni ya da değişen sayfaları (aktiviteler, şehirler, yerler, bloglar, her dilde) Bing, Yandex, Seznam ve Naver'e kendiliğinden bildirir. Değişmeyen sayfa tekrar gönderilmez. Google IndexNow kullanmaz.": "Every day the panel scans the site and automatically reports new or changed pages (activities, cities, places, posts, in every language) to Bing, Yandex, Seznam and Naver. Unchanged pages are not sent again. Google does not use IndexNow.",
+    "Her gün 06:20": "Daily at 06:20",
+    "Ertesi gün kendiliğinden yeniden denenir; istersen yukarıdan hemen gönder.": "Retried automatically the next day; you can also send now above.",
+    "Yeni ya da güncellenen sayfa ertesi sabahki kontrolde gönderilir ve burada görünür.": "New or updated pages are sent in the next morning's check and show up here.",
+    "Henüz gönderim yapılmadı; ilk çalışmada sitedeki bütün sayfalar bildirilir (her gün 06:20 ya da hemen, yandaki düğmeyle).": "Nothing sent yet; the first run reports every page on the site (daily at 06:20, or now with the button)."
 }

@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 /**
  * IndexNow (ücretsiz): Bing, Yandex, Seznam, Naver… yeni ya da değişen sayfaları anında öğrenir.
  * Sitenin kendi site haritası (sitemap.xml) okunur: her dil ayrı adres, son değişiklik tarihiyle. Haritada yeni
- * çıkan ya da tarihi değişen adresler IndexNow'a gönderilir (saatte bir: php artisan indexnow:sync).
+ * çıkan ya da tarihi değişen adresler IndexNow'a gönderilir (günde bir, 06:20: php artisan indexnow:sync).
  * Adres kurallarını tekrar yazmamak için haritayı kullanır; yayından kalkan sayfa haritadan da kalkar.
  */
 class IndexNow
