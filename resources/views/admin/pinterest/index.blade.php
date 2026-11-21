@@ -70,6 +70,13 @@
         </dl>
     </div>
 
+    @if ($trialBlocked)
+        <div class="mt-6 rounded-2xl bg-amber-50 p-5 ring-1 ring-amber-200">
+            <p class="text-sm font-semibold text-amber-900">{{ __('Pinterest onayı bekleniyor: uygulama "Trial" erişimde') }}</p>
+            <p class="mt-1 text-sm text-amber-800">{{ __('Pinterest bu seviyede gerçek pin açtırmıyor. developers.pinterest.com › Uygulamalarım › uygulaman › "Erişimi yükseltin" ile Standard erişim iste. Otomatik gönderim durduruldu; bloglar deneme hakkı harcamadan sırada bekliyor. Onay gelince aşağıda "Otomatik gönderim açık"ı işaretleyip kaydet.') }}</p>
+        </div>
+    @endif
+
     {{-- GÖNDERİLEMEYENLER --}}
     @if ($failing->isNotEmpty())
         <x-admin.card class="mt-6 overflow-hidden">

@@ -230,10 +230,29 @@ class Pinterest
             if ($e->getCode() === 404 && $pin->board_id && !self::boardId()) {
                 $this->forgetBoard($pin->board_id);
             }
+            // Uygulama henüz "Trial" erişimde: Pinterest gerçek pin açtırmaz. Otomatik gönderim durur, blog deneme hakkı
+            // harcamadan sırada kalır (kayıt tutulmaz); Standard erişim gelince panelden yeniden açılır.
+            if (self::isTrialError($e->getMessage())) {
+                Setting::put('pinterest_enabled', '0');
+                Setting::put('pinterest_trial_blocked', '1');
+
+                return $pin;
+            }
         }
         $pin->save();
 
         return $pin;
+    }
+
+    public static function isTrialError(string $message): bool
+    {
+        return str_contains($message, 'Trial access');
+    }
+
+    /** Son denemede Pinterest "Trial erişim gerçek pin açamaz" dedi mi (Standard erişim bekleniyor) */
+    public static function trialBlocked(): bool
+    {
+        return Setting::get('pinterest_trial_blocked') === '1';
     }
 
     /** Otomatik sıradaki bloglar: yayında, kapaklı, hiç başarıyla gönderilmemiş, eskiden yeniye */

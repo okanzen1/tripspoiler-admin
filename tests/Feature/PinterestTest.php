@@ -271,6 +271,30 @@ class PinterestTest extends TestCase
         $this->assertSame('55', Pinterest::boardId());
     }
 
+    public function test_trial_access_error_pauses_sending_without_using_up_tries(): void
+    {
+        $this->connect();
+        $this->travelTo(now()->setTime(21, 7));
+        $blog = $this->blog('one');
+        Http::fake(['api.pinterest.com/v5/pins' => Http::response(['code' => 29, 'message' => 'Apps with Trial access may not create Pins in production https://api.pinterest.com - use API Sandbox https://api-sandbox.pinterest.com instead.'], 403)]);
+
+        $this->artisan('pinterest:send');
+
+        $this->assertSame(0, PinterestPin::count());
+        $this->assertFalse(Pinterest::enabled());
+        $this->assertTrue(Pinterest::trialBlocked());
+        $this->assertTrue($blog->is(Pinterest::queue()->first()));
+
+        $admin = User::factory()->admin()->create();
+        $this->actingAs($admin)->get(route('pinterest.index'))->assertSee(__('Pinterest onayı bekleniyor: uygulama "Trial" erişimde'));
+        $this->post(route('pinterest.send', $blog))->assertSessionHas('error');
+        $this->assertSame(0, PinterestPin::count());
+
+        // onay geldi: otomatik gönderim yeniden açılınca uyarı kalkar
+        $this->put(route('pinterest.settings'), ['board_id' => '987', 'daily' => 10, 'enabled' => '1']);
+        $this->assertFalse(Pinterest::trialBlocked());
+    }
+
     public function test_disconnect_clears_tokens_and_stops_sending(): void
     {
         $this->connect();

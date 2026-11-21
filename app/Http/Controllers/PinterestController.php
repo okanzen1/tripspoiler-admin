@@ -58,6 +58,7 @@ class PinterestController extends Controller
             'sent' => PinterestPin::sent()->with('blog')->latest('id')->limit(12)->get(),
             'failing' => $failing,
             'maxTries' => Pinterest::MAX_TRIES,
+            'trialBlocked' => Pinterest::trialBlocked(),
             'retryHours' => Pinterest::RETRY_HOURS,
         ]);
     }
@@ -123,9 +124,17 @@ class PinterestController extends Controller
         ]);
         // boş: otomatik pano (TripSpoiler Travel Guides) ilk gönderimde açılır / bulunur
         Setting::put('pinterest_board_id', $data['board_id'] ?? null);
-        Setting::put('pinterest_board_name', $data['board_id'] ? (collect($this->pinterest->boards())->firstWhere('id', $data['board_id'])['name'] ?? null) : null);
+        try {
+            $boardName = $data['board_id'] ? (collect($this->pinterest->boards())->firstWhere('id', $data['board_id'])['name'] ?? null) : null;
+        } catch (\Throwable) {
+            $boardName = null; // ad sadece gösterim için; Pinterest'e ulaşılamasa da ayar kaydedilir
+        }
+        Setting::put('pinterest_board_name', $boardName);
         Setting::put('pinterest_daily', (string) $data['daily']);
         Setting::put('pinterest_enabled', $request->boolean('enabled') ? '1' : '0');
+        if ($request->boolean('enabled')) {
+            Setting::put('pinterest_trial_blocked', null); // yeniden açıldı: Standard erişim geldiği varsayılır
+        }
 
         return back()->with('success', $request->boolean('enabled')
             ? __('Kaydedildi. Yayındaki bloglar günde :count tane sırayla gönderilecek.', ['count' => $data['daily']])
@@ -154,6 +163,12 @@ class PinterestController extends Controller
             return back()->with('error', __('Pinterest\'e gitmesi için kapak resmi gerekli.'));
         }
         $pin = $this->pinterest->send($blog, manual: true);
+        if (!$pin->exists && Pinterest::isTrialError((string) $pin->error)) {
+            return back()->with('error', __('Pinterest uygulaman hâlâ "Trial" erişimde; gerçek pin açılamıyor. Pinterest\'te "Erişimi yükseltin" ile Standard erişim iste. Otomatik gönderim onay gelene kadar durduruldu.'));
+        }
+        if ($pin->pin_id) {
+            Setting::put('pinterest_trial_blocked', null);
+        }
 
         return back()->with($pin->pin_id ? 'success' : 'error', $pin->pin_id
             ? __('Blog Pinterest\'e gönderildi.')
