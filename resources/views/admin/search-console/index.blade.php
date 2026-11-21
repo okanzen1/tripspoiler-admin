@@ -38,7 +38,7 @@
                 <div class="pointer-events-none absolute -right-16 -top-20 -z-10 size-72 rounded-full bg-white/10 blur-2xl" aria-hidden="true"></div>
                 <p class="text-xs font-bold uppercase tracking-[0.18em] text-white/70">
                     {{ $totals ? __('Google · :start – :end', ['start' => \Illuminate\Support\Carbon::parse($totals['start'])->format('d.m'), 'end' => \Illuminate\Support\Carbon::parse($totals['end'])->format('d.m.Y')]) : __('Google') }}
-                    · {{ $site }}
+                    · <span class="normal-case tracking-normal">{{ $site }}</span>
                 </p>
                 <dl class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                     @foreach ([
@@ -111,6 +111,9 @@
                                         @endif
                                         @if ($row->page)
                                             <a href="{{ $row->page }}" target="_blank" rel="noopener" @class(['block truncate hover:underline', 'text-xs text-slate-500' => $row->query, 'text-slate-800' => !$row->query])>{{ $short($row->page) }}</a>
+                                            @isset($moved[$row->page])
+                                                <span class="mt-0.5 inline-block rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600" title="{{ __('Bu adres değişti; ziyaretçi yeni adrese yönlendiriliyor. Google birkaç hafta içinde yeni adresi öğrenir.') }}">{{ __('eski adres → yönlendiriliyor') }}</span>
+                                            @endisset
                                         @elseif ($tab === 'aramalar')
                                             <p class="text-xs text-slate-500">{{ __(':count sayfada', ['count' => $row->pages]) }}</p>
                                         @endif

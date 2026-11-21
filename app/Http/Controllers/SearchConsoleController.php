@@ -26,6 +26,9 @@ class SearchConsoleController extends Controller
 
     public const LOW_CTR = 0.02;
 
+    /** @var array<string, true> adresi değişmiş (yönlendirilen) sayfalar */
+    private array $moved = [];
+
     public function __construct(private SearchConsole $gsc) {}
 
     public function index(Request $request)
@@ -72,6 +75,7 @@ class SearchConsoleController extends Controller
             'search' => $search,
             'rows' => $rows,
             'edit' => $this->editLinks($rows->getCollection()->pluck('page')->filter()->unique()->all()),
+            'moved' => $this->moved,
             'connected' => SearchConsole::connected(),
             'serviceEmail' => SearchConsole::serviceEmail(),
             'site' => SearchConsole::site(),
@@ -136,13 +140,19 @@ class SearchConsoleController extends Controller
     private function editLinks(array $pages): array
     {
         $links = [];
+        $this->moved = [];
         foreach ($pages as $page) {
-            $path = trim((string) parse_url($page, PHP_URL_PATH), '/');
+            $path = '/' . trim(rawurldecode((string) parse_url($page, PHP_URL_PATH)), '/');
+            // adresi değişmiş sayfa: Google eski adresi biliyor, yönlendirme kaydından yeni adrese gidilir
+            if ($to = \App\Models\Redirect::where('from_path', $path)->value('to_path')) {
+                $this->moved[$page] = true;
+                $path = $to;
+            }
+            $path = trim($path, '/');
             if (!preg_match('#^([a-z]{2})/(blog|activities|attractions|cities)/([^/]+)$#', $path, $m)) {
                 continue;
             }
             [, $locale, $section, $slug] = $m;
-            $slug = rawurldecode($slug);
             $find = fn ($model) => $model::query()->where(fn ($q) => $q->where('slug', $slug)
                 ->when(in_array($locale, Blog::SLUG_LOCALES, true), fn ($q) => $q->orWhere("slugs->{$locale}", $slug)))->first();
             $links[$page] = match ($section) {

@@ -1185,5 +1185,7 @@
     "Şimdilik fırsat yok: ilk 10'da görünen sayfaların tıklanma oranı iyi ya da henüz yeterli gösterim yok.": "No opportunities for now: pages in the top 10 have good click rates, or there are not enough impressions yet.",
     "Fırsatlar": "Opportunities",
     "İlk sayfaya yakın": "Close to page one",
-    "Aramalar": "Queries"
+    "Aramalar": "Queries",
+    "eski adres → yönlendiriliyor": "old address → redirected",
+    "Bu adres değişti; ziyaretçi yeni adrese yönlendiriliyor. Google birkaç hafta içinde yeni adresi öğrenir.": "This address changed; visitors are redirected to the new one. Google learns the new address within a few weeks."
 }

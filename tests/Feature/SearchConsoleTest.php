@@ -92,6 +92,12 @@ class SearchConsoleTest extends TestCase
         // aramalar: aynı arama birden fazla sayfada → tek satır
         $this->get(route('search-console.index', ['tab' => 'aramalar', 'search' => 'colosseum']))->assertSee('colosseum tickets')->assertSee(__(':count sayfada', ['count' => 2]));
         $this->get(route('search-console.index', ['tab' => 'sayfalar']))->assertSee(route('city-guides.show', $rome), false);
+
+        // adresi değişmiş sayfa: yönlendirmeden yeni kayda bağlanır, "eski adres" etiketi çıkar
+        \App\Models\Redirect::create(['from_path' => '/fr/activities/old-colosseum', 'to_path' => '/fr/activities/colosseum-ticket']);
+        DB::table('search_console_rows')->insert(['query' => null, 'page' => "$site/fr/activities/old-colosseum", 'page_hash' => sha1('o'), 'clicks' => 0, 'impressions' => 5, 'ctr' => 0, 'position' => 9]);
+        $this->get(route('search-console.index', ['tab' => 'yakin', 'search' => 'old-colosseum']))
+            ->assertSee(route('activities.edit', $activity), false)->assertSee(__('eski adres → yönlendiriliyor'));
     }
 
     public function test_daily_sync_and_permission_error_is_shown(): void
