@@ -9,7 +9,7 @@
 
 @section('header')
     <x-admin.page-header :title="__('IndexNow')" :breadcrumb="['Yönetim' => route('management.index')]"
-        :description="__('Panel her gün siteyi tarar; yeni ya da değişen sayfaları (aktiviteler, şehirler, yerler, bloglar, her dilde) Bing, Yandex, Seznam ve Naver\'e kendiliğinden bildirir. Değişmeyen sayfa tekrar gönderilmez. Google IndexNow kullanmaz.')">
+        :description="__('Yeni ya da değişen sayfalar (aktiviteler, şehirler, yerler, bloglar, her dilde) saatte bir Bing, Yandex, Seznam ve Naver\'e bildirilir. Böylece bu arama motorlarında günler yerine saatler içinde görünürler. Google IndexNow kullanmaz.')">
         <x-slot:icon><path d="M13 2 4 14h7l-1 8 9-12h-7Z" /></x-slot:icon>
     </x-admin.page-header>
 @endsection
@@ -26,7 +26,7 @@
                         @if ($lastAt)
                             {{ __('Son gönderim: :date · :count adres', ['date' => $lastAt->format('d.m.Y H:i'), 'count' => $fmt($last['sent'])]) }}
                         @else
-                            {{ __('Henüz gönderim yapılmadı; ilk çalışmada sitedeki bütün sayfalar bildirilir (her gün 06:20 ya da hemen, yandaki düğmeyle).') }}
+                            {{ __('Henüz gönderim yapılmadı; ilk çalışmada sitedeki bütün sayfalar bildirilir.') }}
                         @endif
                     </p>
                 </div>
@@ -44,7 +44,7 @@
             <dl class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 @foreach ([
                     [__('Bugün bildirilen'), $fmt($today)],
-                    [__('Otomatik kontrol'), __('Her gün 06:20')],
+                    [__('Otomatik kontrol'), __('Saatte bir')],
                     [__('Son kontrol'), $lastRun ? \Illuminate\Support\Carbon::createFromTimestamp($lastRun)->diffForHumans() : '—'],
                     [__('Anahtar dosyası'), $keyOk ? __('Doğru ✓') : __('Bulunamadı')],
                 ] as [$label, $value])
@@ -60,7 +60,7 @@
             <div class="mt-6 rounded-2xl bg-red-50 px-5 py-4 text-sm text-red-800 ring-1 ring-red-200">
                 <p class="font-semibold">{{ __('Son çalışmada hata: :date', ['date' => $lastAt->format('d.m.Y H:i')]) }}</p>
                 <p class="mt-1">{{ $last['error'] }}</p>
-                <p class="mt-1 text-xs text-red-700">{{ __('Ertesi gün kendiliğinden yeniden denenir; istersen yukarıdan hemen gönder.') }}</p>
+                <p class="mt-1 text-xs text-red-700">{{ __('Bir sonraki saatte kendiliğinden yeniden denenir.') }}</p>
             </div>
         @endif
 
@@ -75,7 +75,7 @@
         <x-admin.card class="mt-6 overflow-hidden">
             <div class="border-b border-slate-100 px-6 py-4">
                 <h2 class="text-sm font-semibold text-slate-900">{{ __('Son bildirilen sayfalar') }}</h2>
-                <p class="text-xs text-slate-500">{{ __('Yeni ya da güncellenen sayfa ertesi sabahki kontrolde gönderilir ve burada görünür.') }}</p>
+                <p class="text-xs text-slate-500">{{ __('Bir sayfa yayına alınınca ya da güncellenince en geç bir saat içinde burada görünür.') }}</p>
             </div>
             <ul class="divide-y divide-slate-100">
                 @forelse ($recent as $row)
