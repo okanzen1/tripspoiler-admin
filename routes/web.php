@@ -224,8 +224,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('yonetim')->group(function () 
     // Pinterest: bağlantı, pano, günlük sayı; yayındaki bloglar sırayla pin olarak gider (App\Services\Pinterest)
     Route::get('/pinterest', [\App\Http\Controllers\PinterestController::class, 'index'])->name('pinterest.index');
     Route::put('/pinterest/uygulama', [\App\Http\Controllers\PinterestController::class, 'saveApp'])->name('pinterest.app');
-    Route::get('/pinterest/baglan', [\App\Http\Controllers\PinterestController::class, 'connect'])->name('pinterest.connect');
-    Route::get('/pinterest/donus', [\App\Http\Controllers\PinterestController::class, 'callback'])->name('pinterest.callback');
+    Route::get('/pinterest/connect', [\App\Http\Controllers\PinterestController::class, 'connect'])->name('pinterest.connect');
+    Route::get('/pinterest/callback', [\App\Http\Controllers\PinterestController::class, 'callback'])->name('pinterest.callback');
     Route::delete('/pinterest/baglanti', [\App\Http\Controllers\PinterestController::class, 'disconnect'])->name('pinterest.disconnect');
     Route::put('/pinterest/ayarlar', [\App\Http\Controllers\PinterestController::class, 'saveSettings'])->name('pinterest.settings');
     Route::post('/pinterest/tekrar-dene', [\App\Http\Controllers\PinterestController::class, 'retryFailed'])->name('pinterest.retry');
