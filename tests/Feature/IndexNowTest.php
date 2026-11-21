@@ -94,4 +94,25 @@ class IndexNowTest extends TestCase
         $this->artisan('indexnow:sync')->assertSuccessful();
         $this->assertSame(1, DB::table('indexnow_urls')->count());
     }
+
+    public function test_panel_lists_reported_pages_with_search_filters_and_pages(): void
+    {
+        $site = config('site.url');
+        $rows = [];
+        foreach (range(1, 60) as $i) {
+            $rows[] = ['url_hash' => sha1("a$i"), 'url' => "$site/en/activities/tour-$i", 'lastmod' => '', 'submitted_at' => now()->subMinutes($i)];
+        }
+        $rows[] = ['url_hash' => sha1('rome'), 'url' => "$site/tr/blog/rome-guide", 'lastmod' => '', 'submitted_at' => now()];
+        $rows[] = ['url_hash' => sha1('home'), 'url' => "$site/tr", 'lastmod' => '', 'submitted_at' => now()];
+        DB::table('indexnow_urls')->insert($rows);
+        $admin = User::factory()->admin()->create();
+        Http::fake();
+
+        $this->actingAs($admin)->get(route('indexnow.index'))->assertOk()->assertSee('rome-guide')->assertSee('?page=2', false);
+        $this->get(route('indexnow.index', ['search' => 'rome']))->assertSee('rome-guide')->assertDontSee('tour-1"', false)->assertDontSee('tour-12');
+        $this->get(route('indexnow.index', ['lang' => 'tr']))->assertSee('rome-guide')->assertSee(\Illuminate\Support\Str::after("$site/tr<", '://'), false)->assertDontSee('tour-12');
+        $this->get(route('indexnow.index', ['type' => 'blog']))->assertSee('rome-guide')->assertDontSee('tour-12');
+        $this->get(route('indexnow.index', ['type' => 'other']))->assertDontSee('rome-guide')->assertDontSee('tour-12');
+        $this->get(route('indexnow.index', ['page' => 2]))->assertSee('tour-59');
+    }
 }

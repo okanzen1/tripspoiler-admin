@@ -1117,5 +1117,13 @@
     "Yeni ve değişen sayfalar Bing, Yandex gibi arama motorlarına anında bildirilir.": "New and changed pages are reported to search engines like Bing and Yandex right away.",
     "Son: :date": "Last: :date",
     "Hata var": "Error",
-    "Henüz gönderilmedi": "Not sent yet"
+    "Henüz gönderilmedi": "Not sent yet",
+    "Bildirilen sayfalar": "Reported pages",
+    "Adreste ara (ör. rome)…": "Search addresses (e.g. rome)…",
+    "Tüm diller": "All languages",
+    "Tüm sayfalar": "All pages",
+    "Blog": "Blog",
+    "Temizle": "Clear",
+    "Aramana uyan adres yok.": "No addresses match your search.",
+    "adres": "addresses"
 }

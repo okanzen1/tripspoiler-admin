@@ -73,20 +73,46 @@
         @endunless
 
         <x-admin.card class="mt-6 overflow-hidden">
-            <div class="border-b border-slate-100 px-6 py-4">
-                <h2 class="text-sm font-semibold text-slate-900">{{ __('Son bildirilen sayfalar') }}</h2>
-                <p class="text-xs text-slate-500">{{ __('Bir sayfa yayına alınınca ya da güncellenince en geç bir saat içinde burada görünür.') }}</p>
+            <div class="flex flex-wrap items-end justify-between gap-4 border-b border-slate-100 px-6 py-4">
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-900">{{ __('Bildirilen sayfalar') }}</h2>
+                    <p class="text-xs text-slate-500">{{ __('Bir sayfa yayına alınınca ya da güncellenince en geç bir saat içinde burada görünür.') }}</p>
+                </div>
+                <form method="GET" action="{{ route('indexnow.index') }}" class="flex flex-wrap items-center gap-2">
+                    <input type="search" name="search" value="{{ $search }}" placeholder="{{ __('Adreste ara (ör. rome)…') }}"
+                        class="w-56 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm outline-none focus:border-brand-900 focus:ring-4 focus:ring-brand-900/10" />
+                    <select name="lang" onchange="this.form.submit()" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand-900">
+                        <option value="">{{ __('Tüm diller') }}</option>
+                        @foreach ($languages as $language)
+                            <option value="{{ $language->code }}" @selected($lang === $language->code)>{{ strtoupper($language->code) }} · {{ $language->native_name }}</option>
+                        @endforeach
+                    </select>
+                    <select name="type" onchange="this.form.submit()" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand-900">
+                        <option value="">{{ __('Tüm sayfalar') }}</option>
+                        @foreach ($types as $key => $label)
+                            <option value="{{ $key }}" @selected($type === $key)>{{ __($label) }}</option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="rounded-xl bg-brand-900 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-800">{{ __('Ara') }}</button>
+                    @if ($search || $lang || $type)
+                        <a href="{{ route('indexnow.index') }}" class="text-sm font-semibold text-red-600 hover:underline">{{ __('Temizle') }}</a>
+                    @endif
+                </form>
             </div>
             <ul class="divide-y divide-slate-100">
-                @forelse ($recent as $row)
+                @forelse ($urls as $row)
                     <li class="flex items-center justify-between gap-3 px-6 py-2.5 text-sm">
                         <a href="{{ $row->url }}" target="_blank" rel="noopener" class="min-w-0 truncate text-slate-700 hover:text-brand-900 hover:underline">{{ \Illuminate\Support\Str::after($row->url, '://') }}</a>
                         <span class="shrink-0 text-xs text-slate-400">{{ $row->submitted_at ? \Illuminate\Support\Carbon::parse($row->submitted_at)->format('d.m H:i') : '' }}</span>
                     </li>
                 @empty
-                    <li class="px-6 py-8 text-center text-sm text-slate-500">{{ __('Henüz bildirim yok.') }}</li>
+                    <li class="px-6 py-8 text-center text-sm text-slate-500">{{ ($search || $lang || $type) ? __('Aramana uyan adres yok.') : __('Henüz bildirim yok.') }}</li>
                 @endforelse
             </ul>
+            <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-6 py-3.5 text-sm text-slate-500">
+                <span>{{ __('Toplam') }} <strong class="font-semibold text-slate-700">{{ $fmt($urls->total()) }}</strong> {{ __('adres') }}</span>
+                @if ($urls->hasPages()) {{ $urls->links() }} @endif
+            </div>
         </x-admin.card>
     </div>
 @endsection
