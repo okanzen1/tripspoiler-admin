@@ -68,6 +68,12 @@
             <x-admin.nav-link route="analytics.index" :label="__('Analitik')">
                 <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
             </x-admin.nav-link>
+            @can('admin')
+                {{-- Google Search Console: Google'daki görünürlük ve fırsatlar (App\Services\SearchConsole) --}}
+                <x-admin.nav-link route="search-console.index" :match="['search-console.*']" :label="__('Search Console')">
+                    <circle cx="10.5" cy="10.5" r="6.5" /><path d="m20 20-4.8-4.8M8 12.5v-2M10.5 12.5V8.5M13 12.5v-3" />
+                </x-admin.nav-link>
+            @endcan
 
             <x-admin.nav-link route="activities.index" :todo="\App\Support\TranslationTodo::area('activities')" :seo="\App\Support\ContentTodo::area('activities')" :match="['activities.*']" :label="__('Aktiviteler')">
                 <path d="M4 7h16v4a2 2 0 0 0 0 4v4H4v-4a2 2 0 0 0 0-4Z" /><path d="M14 7v2M14 12v1M14 16v1" />

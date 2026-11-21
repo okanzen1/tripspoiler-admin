@@ -37,6 +37,9 @@ Schedule::command('pinterest:send')->hourlyAt(7)->withoutOverlapping(10);
 // IndexNow: site haritasındaki yeni / değişen sayfalar saatte bir Bing, Yandex… arama motorlarına bildirilir
 Schedule::command('indexnow:sync')->hourlyAt(37)->withoutOverlapping(15);
 
+// Search Console: son 28 günün Google verisi her sabah panele çekilir (Google verisi 2–3 gün geriden gelir)
+Schedule::command('gsc:sync')->dailyAt('07:10')->withoutOverlapping(30);
+
 // Sıradaki işler (ör. Diller ve çeviri › toplu çeviri): her dakika işlenir, sırada iş yoksa hemen biter.
 // Paylaşımlı sunucuda sürekli çalışan kuyruk işçisi olmadığı için (cron: * * * * * php artisan schedule:run)
 // EN SONDA: uzun bir çeviri dakikalarca sürebilir; zamanlayıcı işleri sırayla çalıştırdığı için yukarıdakiler

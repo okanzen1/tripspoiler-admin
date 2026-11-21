@@ -221,6 +221,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('yonetim')->group(function () 
     Route::put('/analitik-ayarlari/istenmeyen-ip', [\App\Http\Controllers\AnalyticsSettingsController::class, 'saveBlocked'])->name('analytics-settings.blocked');
     Route::delete('/analitik-ayarlari/kayitlar', [\App\Http\Controllers\AnalyticsSettingsController::class, 'purge'])->name('analytics-settings.purge');
     Route::get('/roller', [ManagementController::class, 'roles'])->name('roles.index');
+    // Search Console: Google'daki görünürlük, fırsatlar (App\Services\SearchConsole)
+    Route::get('/search-console', [\App\Http\Controllers\SearchConsoleController::class, 'index'])->name('search-console.index');
+    Route::put('/search-console/anahtar', [\App\Http\Controllers\SearchConsoleController::class, 'saveCredentials'])->name('search-console.credentials');
+    Route::put('/search-console/mulk', [\App\Http\Controllers\SearchConsoleController::class, 'saveSite'])->name('search-console.site');
+    Route::post('/search-console/guncelle', [\App\Http\Controllers\SearchConsoleController::class, 'sync'])->middleware('throttle:6,1')->name('search-console.sync');
+    Route::delete('/search-console/baglanti', [\App\Http\Controllers\SearchConsoleController::class, 'disconnect'])->name('search-console.disconnect');
     // IndexNow: yeni / değişen sayfalar Bing, Yandex… arama motorlarına bildirilir (App\Services\IndexNow)
     Route::get('/indexnow', [\App\Http\Controllers\IndexNowController::class, 'index'])->name('indexnow.index');
     Route::post('/indexnow/simdi', [\App\Http\Controllers\IndexNowController::class, 'sync'])->middleware('throttle:6,1')->name('indexnow.sync');

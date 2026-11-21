@@ -26,6 +26,7 @@ class SectionColor
         'management' => 'orange',
         'pinterest' => 'rose',
         'indexnow' => 'sky',
+        'search-console' => 'emerald',
         'locations' => 'cyan',
         'countries' => 'cyan',
         'cities' => 'cyan',
