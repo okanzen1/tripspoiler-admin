@@ -56,6 +56,43 @@ class ReviewTest extends TestCase
         $this->assertTrue($pending->fresh()->approved);
     }
 
+    public function test_bulk_paste_adds_every_review_to_the_chosen_place(): void
+    {
+        $this->actingAs($this->editor)->get(route('reviews.create', ['bulk' => 1]))->assertOk()->assertSee('data-review-bulk-source', false);
+
+        $this->actingAs($this->editor)->post(route('reviews.store'), [
+            'bulk' => "1. Lucía Martínez | 4★ | Bien organizada y fácil de leer — Me gustó que la información estuviera separada por temas. | es | 2026-07-29\n\n"
+                . "2. Emily Carter | 5 | Great tips | very useful.\n"
+                . "Tom Baker | 3/5 | Good. | en",
+            'activity_id' => $this->activity->id, 'approved' => '1',
+        ])->assertRedirect(route('reviews.index'))->assertSessionHas('success', __(':count yorum eklendi.', ['count' => 3]));
+
+        $reviews = Review::orderBy('id')->get();
+        $this->assertCount(3, $reviews);
+        $this->assertSame('Lucía Martínez', $reviews[0]->name);
+        $this->assertSame(4, $reviews[0]->rating);
+        $this->assertSame('Bien organizada y fácil de leer — Me gustó que la información estuviera separada por temas.', $reviews[0]->comment);
+        $this->assertSame('2026-07-29', $reviews[0]->created_at->toDateString());
+        $this->assertSame('Great tips | very useful.', $reviews[1]->comment); // yorumun içindeki | korunur
+        $this->assertSame(3, $reviews[2]->rating);
+        $this->assertSame(now()->toDateString(), $reviews[2]->created_at->toDateString()); // tarih yoksa bugün
+        $this->assertTrue($reviews->every(fn (Review $r) => $r->approved && $r->activity_id === $this->activity->id));
+    }
+
+    public function test_bulk_paste_rejects_unreadable_lines_and_adds_nothing(): void
+    {
+        $this->actingAs($this->editor)->post(route('reviews.store'), [
+            'bulk' => "Lucía Martínez | 4★ | Good | es | 2026-07-29\nno rating here | great",
+            'approved' => '1',
+        ])->assertSessionHasErrors('bulk');
+
+        $this->actingAs($this->editor)->post(route('reviews.store'), [
+            'bulk' => 'Lucía Martínez | 4★ | Good | es | 2999-01-01', 'approved' => '1',
+        ])->assertSessionHasErrors('bulk');
+
+        $this->assertSame(0, Review::count());
+    }
+
     public function test_validation(): void
     {
         $this->actingAs($this->editor)->post(route('reviews.store'), ['name' => '', 'rating' => 7, 'comment' => ''])

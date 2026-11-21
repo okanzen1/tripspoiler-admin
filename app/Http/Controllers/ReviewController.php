@@ -52,15 +52,19 @@ class ReviewController extends Controller
 
     public function create(Request $request)
     {
-        return view('admin.reviews.form', $this->formData(new Review([
+        return view('admin.reviews.form', [...$this->formData(new Review([
             'rating' => 5,
             'approved' => true,
             'activity_id' => $request->integer('activity') ?: null,
-        ])));
+        ])), 'bulk' => $request->boolean('bulk')]);
     }
 
     public function store(ReviewRequest $request)
     {
+        if (filled($request->validated('bulk'))) {
+            return $this->storeMany($request);
+        }
+
         $data = $request->validated();
         $date = \Illuminate\Support\Arr::pull($data, 'review_date');
         $review = new Review($data);
@@ -68,6 +72,26 @@ class ReviewController extends Controller
         $review->save();
 
         return redirect()->route('reviews.index')->with('success', __('Yorum eklendi.'));
+    }
+
+    /**
+     * "Toplu ekle": yapıştırılan yorumlar seçilen yere (genel ya da bir aktivite), satır sırasıyla eklenir.
+     * Tarihi olmayanlar bugünün tarihini alır. Dil bilgisi okunur ama saklanmaz (yorum yazıldığı dilde görünür).
+     */
+    private function storeMany(ReviewRequest $request)
+    {
+        $rows = \App\Support\ReviewParser::parse($request->validated('bulk'))['reviews'];
+        $place = ['activity_id' => $request->validated('activity_id'), 'approved' => $request->validated('approved')];
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, $place) {
+            foreach ($rows as $row) {
+                $review = new Review([...$place, 'name' => $row['name'], 'rating' => $row['rating'], 'comment' => $row['comment']]);
+                $this->setDate($review, $row['date']);
+                $review->save();
+            }
+        });
+
+        return redirect()->route('reviews.index')->with('success', __(':count yorum eklendi.', ['count' => count($rows)]));
     }
 
     public function edit(Review $review)

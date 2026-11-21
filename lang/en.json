@@ -962,5 +962,20 @@
     "Google'da eksik görünür. Tıkla, boş alanları doldur.": "These look incomplete on Google. Click and fill in the empty fields.",
     "Bu alanlar boş kalırsa sayfa Google'da eksik görünür. Doldurup kaydet.": "If these stay empty, the page looks incomplete on Google. Fill them in and save.",
     ":count kaydın SEO'su ya da içeriği eksik": ":count records with missing SEO or content",
-    "Şehir rehberi: :city": "City guide: :city"
+    "Şehir rehberi: :city": "City guide: :city",
+    "Toplu yorum ekle": "Add reviews in bulk",
+    "Birçok yorumu tek seferde yapıştır; hepsi seçtiğin yere eklenir.": "Paste many reviews at once; they are all added to the place you choose.",
+    "Her yorum bir satır; parçaları | ile ayır: ad | puan | yorum | dil | tarih. Dil ve tarih isteğe bağlı; tarih yoksa bugün olur.": "One review per line; separate the parts with |: name | rating | review | language | date. Language and date are optional; without a date, today is used.",
+    "Yorumları buraya yapıştır…": "Paste the reviews here…",
+    "Yorumları ekle": "Add reviews",
+    "Bilgileri kontrol et, doğruysa yorumları ekle.": "Check the details and add the reviews if they are correct.",
+    ":count yorum eklendi.": ":count reviews added.",
+    ":count yorum bulundu": ":count reviews found",
+    ":count yorum": ":count reviews",
+    "Yorum bulunamadı.": "No reviews found.",
+    "Şu satırlar okunamadı: :lines. Her satır \"Ad | 4★ | Yorum | dil | 2026-07-29\" biçiminde olmalı.": "These lines could not be read: :lines. Each line must look like \"Name | 4★ | Review | language | 2026-07-29\".",
+    "Tek seferde en fazla 200 yorum eklenebilir.": "You can add at most 200 reviews at once.",
+    "Bir ad 120, bir yorum 2000 karakterden uzun olamaz.": "A name cannot be longer than 120 characters, or a review longer than 2000.",
+    "Yorum tarihi bugünden ileri olamaz.": "A review date cannot be in the future.",
+    "yorumlar": "reviews"
 }
