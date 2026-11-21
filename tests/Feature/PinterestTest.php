@@ -105,19 +105,28 @@ class PinterestTest extends TestCase
         $this->assertTrue($blog->is(Pinterest::queue()->first()));
     }
 
-    public function test_manual_send_from_blog_page_can_resend_an_already_sent_blog(): void
+    public function test_manual_send_never_resends_and_needs_a_cover(): void
     {
         $this->connect();
-        $blog = $this->blog('one');
-        PinterestPin::create(['blog_id' => $blog->id, 'pin_id' => 'old', 'board_id' => '987']);
+        $fresh = $this->blog('fresh');
+        $sent = $this->blog('sent');
+        $noCover = $this->blog('no-cover', ['cover_path' => null]);
+        PinterestPin::create(['blog_id' => $sent->id, 'pin_id' => 'old', 'board_id' => '987']);
         Http::fake(['api.pinterest.com/v5/pins' => Http::response(['id' => 'new'])]);
         $admin = User::factory()->admin()->create();
 
-        $this->actingAs($admin)->get(route('blogs.edit', $blog))->assertOk()->assertSee(__('Tekrar gönder'));
-        $this->actingAs($admin)->post(route('pinterest.send', $blog))->assertSessionHas('success');
+        $this->actingAs($admin)->get(route('blogs.edit', $fresh))->assertOk()->assertSee(route('pinterest.send', $fresh));
+        $this->get(route('blogs.edit', $sent))->assertOk()->assertDontSee(route('pinterest.send', $sent))->assertSee(__('Pini aç'));
+        $this->get(route('blogs.edit', $noCover))->assertOk()->assertDontSee(route('pinterest.send', $noCover));
 
-        $this->assertSame(['new', 'old'], $blog->pinterestPins()->pluck('pin_id')->all());
-        $this->assertTrue($blog->pinterestPins()->first()->manual);
+        $this->post(route('pinterest.send', $fresh))->assertSessionHas('success');
+        $this->post(route('pinterest.send', $sent))->assertSessionHas('error');
+        $this->post(route('pinterest.send', $noCover))->assertSessionHas('error');
+        $this->post(route('pinterest.send', $fresh))->assertSessionHas('error'); // ikinci kez de gitmez
+
+        Http::assertSentCount(1);
+        $this->assertTrue($fresh->pinterestPins()->first()->manual);
+        $this->assertSame(['old'], $sent->pinterestPins()->pluck('pin_id')->all());
     }
 
     public function test_expired_token_is_refreshed_before_sending(): void

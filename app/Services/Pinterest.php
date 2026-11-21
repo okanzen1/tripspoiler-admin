@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
  *
  * Otomatik sıra (php artisan pinterest:send, saat başı): yayında + kapak resmi olan, daha önce başarıyla
  * gönderilmemiş bloglar, yayın tarihine göre eskiden yeniye; günde en fazla "pinterest_daily" (varsayılan 10)
- * gönderim, gün içine yayılır. Elle "Tekrar gönder" her zaman yeni bir pin açar.
+ * gönderim, gün içine yayılır. Bir blog yalnızca bir kez gider; elle gönderim de kapak resmi ister.
  */
 class Pinterest
 {
@@ -121,6 +121,10 @@ class Pinterest
         try {
             if (!$board) {
                 throw new \RuntimeException(__('Pinterest panosu seçilmemiş.'));
+            }
+            // bir blog yalnızca bir kez gider (otomatik de elle de)
+            if ($blog->pinterestPins()->whereNotNull('pin_id')->exists()) {
+                throw new \RuntimeException(__('Bu blog zaten Pinterest\'e gönderildi; aynı blog tekrar gönderilmez.'));
             }
             if (!$blog->cover_path) {
                 throw new \RuntimeException(__('Blogun kapak resmi yok; Pinterest resimsiz pin kabul etmez.'));

@@ -10,7 +10,7 @@
 
 @section('header')
     <x-admin.page-header :title="__('Pinterest')" :breadcrumb="['Yönetim' => route('management.index')]"
-        :description="__('Yayındaki blog yazıları sırayla Pinterest\'e pin olarak gider (İngilizce başlık, kapak resmi ve sitedeki bağlantı). Bir kez giden blog otomatik olarak tekrar gitmez; blog sayfasından elle tekrar gönderebilirsin.')">
+        :description="__('Yayındaki blog yazıları sırayla Pinterest\'e pin olarak gider (İngilizce başlık, kapak resmi ve sitedeki bağlantı). Bir blog yalnızca bir kez gider; blog sayfasından sırayı beklemeden elle de gönderebilirsin.')">
         <x-slot:icon><circle cx="12" cy="12" r="9" /><path d="M10.5 8.5c3-1.5 6 0 5.5 3s-3 4-4.5 3M11.5 10l-2.5 11" /></x-slot:icon>
     </x-admin.page-header>
 @endsection

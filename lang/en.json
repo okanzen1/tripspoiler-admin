@@ -1043,5 +1043,7 @@
     "Önce 1. adımdaki uygulama bilgilerini kaydet.": "Save the app details in step 1 first.",
     "Önce Yönetim › Pinterest'ten bağlan ve panoyu seç.": "First connect and choose a board in Management › Pinterest.",
     "Şifreli saklanır, bir daha gösterilmez.": "Stored encrypted and never shown again.",
-    "Yayındaki blogları sırayla Pinterest'e pin olarak gönder.": "Send published blog posts to Pinterest as pins, in order."
+    "Yayındaki blogları sırayla Pinterest'e pin olarak gönder.": "Send published blog posts to Pinterest as pins, in order.",
+    "Bu blog zaten Pinterest'e gönderildi; aynı blog tekrar gönderilmez.": "This post was already sent to Pinterest; the same post is never sent twice.",
+    "Yayındaki blog yazıları sırayla Pinterest'e pin olarak gider (İngilizce başlık, kapak resmi ve sitedeki bağlantı). Bir blog yalnızca bir kez gider; blog sayfasından sırayı beklemeden elle de gönderebilirsin.": "Published blog posts go to Pinterest as pins in order (English title, cover image and link to the site). Each post is sent only once; you can also send it by hand from the post page without waiting for the queue."
 }

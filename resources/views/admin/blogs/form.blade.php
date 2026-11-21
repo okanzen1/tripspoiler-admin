@@ -58,12 +58,11 @@
                         <span class="text-slate-500">{{ __('Henüz Pinterest\'e gönderilmedi.') }}</span>
                     @endif
                 </p>
-                @if ($blog->cover_path)
-                    <form method="POST" action="{{ route('pinterest.send', $blog) }}" data-no-ajax
-                        @if ($lastPin) data-confirm="{{ __('Bu blog daha önce gönderildi. Pinterest\'te yeni bir pin daha açılsın mı?') }}" @endif>
+                @if ($blog->cover_path && !$lastPin)
+                    <form method="POST" action="{{ route('pinterest.send', $blog) }}">
                         @csrf
                         <button type="submit" class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold text-[#e60023] ring-1 ring-[#e60023]/30 transition hover:bg-red-50">
-                            {{ $lastPin ? __('Tekrar gönder') : __('Pinterest\'e gönder') }}
+                            {{ __('Pinterest\'e gönder') }}
                         </button>
                     </form>
                 @endif

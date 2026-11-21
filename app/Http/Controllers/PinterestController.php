@@ -129,11 +129,17 @@ class PinterestController extends Controller
         return back()->with('success', __(':count blog tekrar sıraya alındı.', ['count' => $count]));
     }
 
-    /** Blog düzenleme sayfasından elle gönder (daha önce gönderildiyse yeni bir pin açar) */
+    /** Blog düzenleme sayfasından elle gönder: sadece hiç gönderilmemiş ve kapak resmi olan blog */
     public function send(Blog $blog)
     {
         if (!Pinterest::connected() || !Pinterest::boardId()) {
             return back()->with('error', __('Önce Yönetim › Pinterest\'ten bağlan ve panoyu seç.'));
+        }
+        if ($blog->pinterestPins()->whereNotNull('pin_id')->exists()) {
+            return back()->with('error', __('Bu blog zaten Pinterest\'e gönderildi; aynı blog tekrar gönderilmez.'));
+        }
+        if (!$blog->cover_path) {
+            return back()->with('error', __('Pinterest\'e gitmesi için kapak resmi gerekli.'));
         }
         $pin = $this->pinterest->send($blog, manual: true);
 
