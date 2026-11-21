@@ -24,6 +24,30 @@
 @endsection
 
 @section('content')
+    @if ($bulk)
+        {{-- Gerçek yorumları (e-posta, partner, form…) bu biçime çevirtmek için Claude'a / ChatGPT'ye verilecek talimat --}}
+        <div class="mb-6">
+            @include('admin.partials.import-prompt', [
+                'description' => __('Elindeki gerçek yorumları (e-posta, partner sayfası, anket…) bu talimatın altına ekleyip Claude\'a ya da ChatGPT\'ye ver; gelen satırları aşağıya yapıştır.'),
+                'prompt' => "Aşağıdaki müşteri yorumlarını tam olarak şu biçime çevir. Her yorum TEK satır olsun, parçalar | ile ayrılsın:\n\n"
+                    . "Ad Soyad | puan★ | yorum metni | dil kodu | YYYY-AA-GG\n\n"
+                    . "Örnek:\n"
+                    . "1. Lucía Martínez | 4★ | Bien organizada y fácil de leer — Me gustó que la información estuviera separada por temas. | es | 2026-07-29\n"
+                    . "2. Emily Carter | 5★ | Great tips for our first trip. | en | 2026-08-02\n\n"
+                    . "Kurallar:\n"
+                    . "- Baştaki numara (1. 2. …) olabilir.\n"
+                    . "- Puan 1 ile 5 arası tam sayı: 4★, 4 ya da 4/5 yazılabilir.\n"
+                    . "- Yorum metnini değiştirme, çevirme, kısaltma; yazıldığı dilde aynen bırak. Yorumun başlığı varsa başa yaz ve — ile ayır.\n"
+                    . "- Yorumun içinde satır sonu olmasın; birden fazla paragrafı tek satırda birleştir.\n"
+                    . "- Dil kodu iki harf (en, tr, es, de, fr…); bilinmiyorsa bu parçayı hiç yazma.\n"
+                    . "- Tarih YYYY-AA-GG; bilinmiyorsa bu parçayı hiç yazma (o zaman bugünün tarihi verilir). Tarih bugünden ileri olamaz.\n"
+                    . "- Ad, puan, yorum, dil ve tarihi sadece verdiğim yorumlardan al; olmayan yorum, ad, puan ya da tarih uydurma.\n"
+                    . "- Cevapta satırlardan başka hiçbir şey yazma (açıklama, başlık, kod bloğu yok).\n\n"
+                    . "Yorumlar:\n",
+            ])
+        </div>
+    @endif
+
     <x-admin.wizard :action="$editing ? route('reviews.update', $review) : route('reviews.store')" :method="$editing ? 'PUT' : null"
         :steps="$steps" :start="$start === false ? 0 : $start" :free="$editing"
         :submit-label="$editing ? 'Kaydet' : ($bulk ? 'Yorumları ekle' : 'Yorumu ekle')" :cancel-url="route('reviews.index')">
