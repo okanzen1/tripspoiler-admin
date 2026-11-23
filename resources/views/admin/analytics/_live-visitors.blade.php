@@ -8,13 +8,14 @@
 @endphp
 
     <div class="overflow-x-auto">
-        <table class="w-full min-w-[900px] text-left text-sm">
+        <table class="w-full min-w-[1000px] text-left text-sm">
             <thead class="border-y border-sky-100 bg-gradient-to-r from-sky-50 via-indigo-50 to-violet-50 text-xs font-semibold text-indigo-900/70">
                 <tr>
                     <th class="px-6 py-2.5 font-medium">{{ __('Son görülme') }}</th>
                     <th class="px-3 py-2.5 font-medium">{{ __('Konum') }}</th>
                     <th class="px-3 py-2.5 font-medium">{{ __('IP') }}</th>
                     <th class="px-3 py-2.5 font-medium">{{ __('Gezinti') }}</th>
+                    <th class="px-3 py-2.5 font-medium">{{ __('Süre') }}</th>
                     <th class="px-3 py-2.5 font-medium">{{ __('İlk geliş') }}</th>
                     <th class="px-3 py-2.5 font-medium">{{ __('Cihaz') }}</th>
                     <th class="px-6 py-2.5 text-right font-medium">{{ __('Partner') }}</th>
@@ -53,14 +54,27 @@
                             <span class="flex min-w-0 items-center gap-1.5">
                                 <span class="min-w-0 truncate text-slate-800" title="{{ __('Son sayfa') }}: {{ $last->path }}">{{ $last->path }}</span>
                                 <x-admin.site-link :path="$last->path" />
+                                <a href="{{ route('analytics.heatmap', ['page' => $last->path, 'device' => $last->device === 'mobile' ? 'mobile' : 'desktop']) }}" title="{{ __('Bu sayfanın sıcaklık haritası') }}" aria-label="{{ __('Sıcaklık haritası') }}"
+                                    class="inline-grid size-6 shrink-0 place-items-center rounded-md text-orange-500 ring-1 ring-orange-200 transition hover:bg-orange-50 hover:text-rose-600">
+                                    <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c1 3 4 5 4 9a4 4 0 0 1-8 0c0-1.5.5-2.5 1.5-3.5C9 10 10 11 11 11c0-3-1-6 1-9Z" /><path d="M6 15a6 6 0 0 0 12 0" /></svg>
+                                </a>
                             </span>
                             <span class="mt-1 flex gap-1 text-[10px] font-semibold">
                                 <span class="rounded-full bg-violet-50 px-1.5 py-0.5 text-violet-700">{{ trans_choice(':count sayfa|:count sayfa', $visitor->views, ['count' => $visitor->views]) }}</span>
                                 <span class="rounded-full bg-sky-50 px-1.5 py-0.5 text-sky-700">{{ trans_choice(':count oturum|:count oturum', $visitor->sessions, ['count' => $visitor->sessions]) }}</span>
-                                @if ($visitor->duration)
-                                    <span class="inline-flex items-center gap-0.5 rounded-full bg-fuchsia-50 px-1.5 py-0.5 text-fuchsia-700" title="{{ __('Sitede geçirdiği toplam süre (sekme öndeyken)') }}"><svg class="size-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 2.5" /></svg>{{ \App\Services\Engagement::duration($visitor->duration) }}</span>
-                                @endif
                             </span>
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-2.5">
+                            @if ($visitor->duration !== null && !$visitor->estimated)
+                                <span class="inline-flex items-center gap-1 rounded-full bg-fuchsia-50 px-2 py-0.5 text-xs font-bold tabular-nums text-fuchsia-700 ring-1 ring-fuchsia-100" title="{{ __('Sitede geçirdiği süre (sekme öndeyken ölçüldü)') }}">
+                                    <svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 2.5" /></svg>{{ \App\Services\Engagement::duration($visitor->duration) }}
+                                </span>
+                            @elseif ($visitor->duration !== null)
+                                <span class="text-xs font-semibold tabular-nums text-slate-600" title="{{ __('Tahmini: süre ölçümünden önceki ziyaret, ilk ve son sayfa arasındaki zaman (son sayfada kalınan süre dahil değil)') }}">~{{ \App\Services\Engagement::duration($visitor->duration) }}</span>
+                                <span class="block text-[10px] text-slate-400">{{ __('yaklaşık') }}</span>
+                            @else
+                                <span class="text-xs text-slate-400" title="{{ __('Bu ziyaret süre ölçümü başlamadan önceydi ve tek sayfa gezildi: süre bilinmiyor') }}">{{ __('bilinmiyor') }}</span>
+                            @endif
                         </td>
                         <td class="max-w-[12rem] px-3 py-2.5">
                             <x-admin.referrer :visit="$first" />
@@ -78,7 +92,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="px-6 py-14 text-center text-sm text-slate-400">{{ __('Bu filtreye uyan ziyaretçi yok.') }}</td></tr>
+                    <tr><td colspan="8" class="px-6 py-14 text-center text-sm text-slate-400">{{ __('Bu filtreye uyan ziyaretçi yok.') }}</td></tr>
                 @endforelse
             </tbody>
         </table>

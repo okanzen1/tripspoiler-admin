@@ -59,4 +59,21 @@ class HeatmapTest extends TestCase
         $this->assertSame('1 dk 15 sn', Engagement::duration(75));
         $this->actingAs(User::factory()->create())->get(route('analytics.visitor', 'same-visitor'))->assertOk()->assertSee('3 sn')->assertSee('↓ %20');
     }
+
+    public function test_visitor_list_shows_measured_estimated_or_unknown_duration(): void
+    {
+        $this->visit('/en/a', 125, 50, 'desktop', 'measured-visitor');
+        // ölçümden önceki ziyaret: iki sayfa, arada 3 dakika
+        Visit::create(['visitor_id' => 'old-visitor', 'session_id' => 's1', 'path' => '/en/x', 'device' => 'desktop', 'created_at' => now()->subMinutes(3)]);
+        Visit::create(['visitor_id' => 'old-visitor', 'session_id' => 's1', 'path' => '/en/y', 'device' => 'desktop', 'created_at' => now()]);
+        Visit::create(['visitor_id' => 'single-visitor', 'session_id' => 's2', 'path' => '/en/z', 'device' => 'mobile', 'created_at' => now()]);
+
+        $rows = \App\Services\Analytics::visitors()->keyBy('who');
+        $this->assertSame([125, false], [$rows['measured-visitor']->duration, $rows['measured-visitor']->estimated]);
+        $this->assertSame([180, true], [$rows['old-visitor']->duration, $rows['old-visitor']->estimated]);
+        $this->assertNull($rows['single-visitor']->duration);
+
+        $this->actingAs(User::factory()->create())->get(route('analytics.live'))->assertOk()
+            ->assertSee('2 dk 5 sn')->assertSee('~3 dk')->assertSee('bilinmiyor')->assertSee('device=mobile', false);
+    }
 }

@@ -236,11 +236,18 @@ class Analytics
                 ->where('ip_hash', \App\Support\Privacy::hash($term))->orWhere('path', 'like', "%{$term}%")->orWhere('city', 'like', "%{$term}%")
                 ->orWhere('referrer_host', 'like', "%{$term}%")->orWhere('utm_source', 'like', "%{$term}%")));
 
-        $groups = $query->selectRaw('COALESCE(ip_hash, visitor_id) as who, MAX(id) as last_id, MIN(id) as first_id, COUNT(*) as views, COUNT(DISTINCT session_id) as sessions, SUM(duration) as duration')
+        $base = clone $query;
+        $groups = $query->selectRaw('COALESCE(ip_hash, visitor_id) as who, MAX(id) as last_id, MIN(id) as first_id, COUNT(*) as views, COUNT(DISTINCT session_id) as sessions, SUM(duration) as duration, COUNT(duration) as measured')
             ->groupBy('who')->orderByDesc('last_id')->limit($limit)->get();
         if ($groups->isEmpty()) {
             return collect();
         }
+
+        // Süre ölçümünden önceki ziyaretler: oturum başına ilk ve son sayfa arası (tahmini; son sayfada geçen süre bilinmez)
+        $spans = (clone $base)->whereIn(DB::raw('COALESCE(ip_hash, visitor_id)'), $groups->pluck('who'))
+            ->selectRaw('COALESCE(ip_hash, visitor_id) as who, session_id, MIN(created_at) as started, MAX(created_at) as ended')
+            ->groupBy('who', 'session_id')->get()
+            ->groupBy('who')->map(fn ($sessions) => $sessions->sum(fn ($s) => max(0, strtotime((string) $s->ended) - strtotime((string) $s->started))));
 
         $rows = Visit::query()->whereIn('id', $groups->pluck('last_id')->merge($groups->pluck('first_id')))->get()->keyBy('id');
         $clicks = AffiliateClick::query()->whereIn(DB::raw('COALESCE(ip_hash, visitor_id)'), $groups->pluck('who'))
@@ -252,7 +259,9 @@ class Analytics
             'first' => $rows[$group->first_id],
             'views' => (int) $group->views,
             'sessions' => (int) $group->sessions,
-            'duration' => $group->duration !== null ? (int) $group->duration : null,
+            // ölçülen süre (sekme öndeyken); yoksa sayfalar arası zamandan tahmin; o da yoksa bilinmiyor (null)
+            'duration' => (int) $group->measured > 0 ? (int) $group->duration : (($spans[$group->who] ?? 0) > 0 ? (int) $spans[$group->who] : null),
+            'estimated' => (int) $group->measured === 0 && ($spans[$group->who] ?? 0) > 0,
             'clicks' => (int) ($clicks[$group->who] ?? 0),
         ]);
     }
