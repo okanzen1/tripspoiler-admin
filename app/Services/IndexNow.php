@@ -104,7 +104,28 @@ class IndexNow
      */
     private function sitemap(): array
     {
-        $response = Http::timeout(60)->accept('application/xml')->get(self::sitemapUrl());
+        $xml = $this->loadXml(self::sitemapUrl());
+        $host = parse_url(config('site.url'), PHP_URL_HOST);
+
+        // Site haritası dizini (sitemapindex): alt haritalar tek tek okunur
+        if ($xml->getName() === 'sitemapindex') {
+            $entries = [];
+            foreach ($xml->sitemap as $child) {
+                $loc = trim((string) $child->loc);
+                if ($loc !== '' && parse_url($loc, PHP_URL_HOST) === $host) {
+                    $entries += $this->urls($this->loadXml($loc), $host);
+                }
+            }
+
+            return $entries;
+        }
+
+        return $this->urls($xml, $host);
+    }
+
+    private function loadXml(string $url): \SimpleXMLElement
+    {
+        $response = Http::timeout(60)->accept('application/xml')->get($url);
         if ($response->failed()) {
             throw new \RuntimeException(__('Site haritası okunamadı (:code).', ['code' => $response->status()]));
         }
@@ -113,7 +134,12 @@ class IndexNow
             throw new \RuntimeException(__('Site haritası okunamadı (geçersiz XML).'));
         }
 
-        $host = parse_url(config('site.url'), PHP_URL_HOST);
+        return $xml;
+    }
+
+    /** @return array<string, string> adres → son değişiklik */
+    private function urls(\SimpleXMLElement $xml, ?string $host): array
+    {
         $entries = [];
         foreach ($xml->url as $node) {
             $url = trim((string) $node->loc);

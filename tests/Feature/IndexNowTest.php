@@ -115,4 +115,21 @@ class IndexNowTest extends TestCase
         $this->get(route('indexnow.index', ['type' => 'other']))->assertDontSee('rome-guide')->assertDontSee('tour-12');
         $this->get(route('indexnow.index', ['page' => 2]))->assertSee('tour-59');
     }
+
+    public function test_reads_a_sitemap_index_with_child_sitemaps(): void
+    {
+        $site = config('site.url');
+        Http::fake([
+            $site . '/sitemap.xml' => Http::response('<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+                . "<sitemap><loc>$site/sitemaps/en-blog.xml</loc></sitemap><sitemap><loc>$site/sitemaps/tr-blog.xml</loc></sitemap></sitemapindex>"),
+            $site . '/sitemaps/en-blog.xml' => Http::response($this->sitemap([$site . '/en/blog/a' => '2026-11-20T10:00:00+00:00'])),
+            $site . '/sitemaps/tr-blog.xml' => Http::response($this->sitemap([$site . '/tr/blog/a' => null, $site . '/tr/blog/b' => null])),
+            'api.indexnow.org/*' => Http::response('', 200),
+        ]);
+
+        $result = app(IndexNow::class)->sync();
+
+        $this->assertSame(3, $result['found']);
+        $this->assertSame(3, $result['sent']);
+    }
 }
