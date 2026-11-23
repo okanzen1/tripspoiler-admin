@@ -47,6 +47,27 @@ class AnalyticsController extends Controller
     }
 
     /**
+     * Sıcaklık haritası ve sayfa karnesi: sayfa sayfa kalma süresi, kaydırma, tıklanan yerler ve öneriler.
+     * Filtre: sayfa, cihaz (bilgisayar / telefon), dönem (7 / 30 / 90 gün).
+     */
+    public function heatmap(Request $request)
+    {
+        $days = in_array((int) $request->query('range'), [7, 30, 90], true) ? (int) $request->query('range') : 30;
+        $device = array_key_exists((string) $request->query('device'), \App\Services\Engagement::DEVICES) ? $request->query('device') : 'desktop';
+        $end = \Carbon\CarbonImmutable::now()->endOfDay();
+        $engagement = new \App\Services\Engagement($end->subDays($days - 1)->startOfDay(), $end, $device);
+
+        $key = 'engagement:' . Cache::get('analytics:version', 0) . ":{$days}:{$device}:" . app()->getLocale();
+        [$options, $pages] = Cache::remember($key, 120, fn () => [$engagement->pageOptions(), $engagement->pages(30)]);
+
+        $path = (string) $request->query('page', '');
+        $path = $path !== '' && str_starts_with($path, '/') ? mb_substr($path, 0, 500) : ($options->first()->path ?? null);
+        $page = $path ? Cache::remember($key . ':' . sha1($path), 120, fn () => $engagement->page($path)) : null;
+
+        return view('admin.analytics.heatmap', compact('days', 'device', 'options', 'pages', 'path', 'page'));
+    }
+
+    /**
      * Sayfanın üstündeki tek filtre çubuğu: dönem (bugün / son 7-30-90 gün ya da takvimden from–to), cihaz, ülke, arama.
      * Kartlar, grafik, tablolar ve ziyaretçi listesi aynı filtreyi kullanır.
      *

@@ -24,6 +24,11 @@ class InboxUnreadCount
         }
     }
 
+    public static function set(int $count): void
+    {
+        Cache::forever(self::CACHE_KEY, max(0, $count));
+    }
+
     public static function get(): int
     {
         return (int) Cache::get(self::CACHE_KEY, 0);

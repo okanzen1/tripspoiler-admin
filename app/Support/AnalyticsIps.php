@@ -87,6 +87,9 @@ class AnalyticsIps
             return 0;
         }
 
+        // o ziyaretlerin sayfa içi tıklamaları da (sıcaklık haritası)
+        \App\Models\PageClick::whereIn('visit_id', Visit::whereIn('ip_hash', $hashes)->select('id'))->delete();
+
         return Visit::whereIn('ip_hash', $hashes)->delete() + AffiliateClick::whereIn('ip_hash', $hashes)->delete();
     }
 

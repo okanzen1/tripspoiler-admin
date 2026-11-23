@@ -63,12 +63,13 @@
             $start = \Carbon\Carbon::parse($items->first()->created_at);
             $end = \Carbon\Carbon::parse($items->last()->created_at);
             $entry = $items->first(fn ($i) => empty($i->is_click));
+            $measured = $items->sum(fn ($i) => (int) ($i->duration ?? 0));
             $minutes = max(1, (int) round($start->diffInMinutes($end)));
         @endphp
         <h2 class="mb-2 mt-7 flex flex-wrap items-baseline gap-x-2 px-1 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
             {{ $start->isToday() ? __('Bugün') : ($start->isYesterday() ? __('Dün') : $start->translatedFormat('j F Y')) }}
             <span class="font-medium normal-case tracking-normal text-slate-500">
-                {{ $start->format('H:i') }}–{{ $end->format('H:i') }} · {{ __(':count dk', ['count' => $minutes]) }}
+                {{ $start->format('H:i') }}–{{ $end->format('H:i') }} · {{ $measured ? \App\Services\Engagement::duration($measured) : __(':count dk', ['count' => $minutes]) }}
                 @if ($entry)
                     · {{ __('Kaynak') }}: <x-admin.referrer :visit="$entry" class="normal-case" />
                 @endif
@@ -92,9 +93,34 @@
                                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" /><path d="M14 3v5h5" /></svg>
                             </span>
                             <span class="min-w-0 flex-1">
-                                <span class="block truncate font-medium text-slate-800">{{ $item->path }}</span>
+                                <span class="flex min-w-0 items-center gap-2">
+                                    <span class="truncate font-medium text-slate-800">{{ $item->path }}</span>
+                                    @if ($item->duration !== null)
+                                        <span class="shrink-0 rounded-full bg-fuchsia-50 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-fuchsia-700" title="{{ __('Sayfada kaldığı süre') }}">{{ \App\Services\Engagement::duration($item->duration) }}</span>
+                                    @endif
+                                    @if ($item->scroll !== null)
+                                        <span class="shrink-0 rounded-full bg-cyan-50 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-cyan-700" title="{{ __('Sayfanın ne kadarını gördü') }}">↓ %{{ $item->scroll }}</span>
+                                    @endif
+                                    <a href="{{ route('analytics.heatmap', ['page' => $item->path, 'device' => $item->device === 'mobile' ? 'mobile' : 'desktop']) }}" class="shrink-0 text-[11px] font-semibold text-rose-600 hover:underline">{{ __('harita') }}</a>
+                                </span>
                                 @if ($item->utm_source || $item->referrer_host)
                                     <span class="flex min-w-0 items-center gap-1 text-xs text-slate-400">{{ __('Geldiği yer') }}: <x-admin.referrer :visit="$item" /></span>
+                                @endif
+                                @if ($item->relationLoaded('pageClicks') && $item->pageClicks->isNotEmpty())
+                                    {{-- sayfada nereye tıkladı (sırayla) --}}
+                                    <span class="mt-1.5 flex flex-wrap gap-1">
+                                        @foreach ($item->pageClicks as $click)
+                                            <span @class(['inline-flex max-w-[16rem] items-center gap-1 truncate rounded-md px-1.5 py-0.5 text-[11px] ring-1',
+                                                'bg-red-50 text-red-700 ring-red-200' => $click->rage,
+                                                'bg-amber-50 text-amber-800 ring-amber-200' => !$click->rage && $click->dead,
+                                                'bg-emerald-50 text-emerald-700 ring-emerald-200' => !$click->rage && !$click->dead && \App\Services\Engagement::isExternal($click->href),
+                                                'bg-slate-50 text-slate-600 ring-slate-200' => !$click->rage && !$click->dead && !\App\Services\Engagement::isExternal($click->href)])
+                                                title="{{ $click->rage ? __('Sinirli tıklama') . ' · ' : ($click->dead ? __('Boşa tıklama') . ' · ' : '') }}{{ $click->href }}{{ $click->at !== null ? ' · ' . __(':s. saniyede', ['s' => $click->at]) : '' }}">
+                                                <svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 9 5 12 1.8-5.2L21 14Z" /></svg>
+                                                <span class="truncate">{{ $click->label ?: __('(isimsiz)') }}</span>
+                                            </span>
+                                        @endforeach
+                                    </span>
                                 @endif
                             </span>
                             <span class="hidden shrink-0 text-xs uppercase text-slate-400 sm:block">{{ $item->locale }}</span>

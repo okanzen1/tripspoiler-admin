@@ -228,7 +228,7 @@ class MailboxController extends Controller
     /**
      * Okundu / okunmadı (tek veya seçili e-postalar).
      */
-    public function seen(Request $request): RedirectResponse
+    public function seen(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         [$folder, $uids] = $this->targets($request);
         $seen = $request->boolean('seen');
@@ -237,13 +237,15 @@ class MailboxController extends Controller
     }
 
     /** Klasördeki bütün e-postaları okundu yap */
-    public function seenAll(Request $request): RedirectResponse
+    public function seenAll(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $folder = (string) $request->validate(['folder' => ['required', 'string', 'max:200']])['folder'];
 
         return $this->act(function () use ($folder) {
             $this->mailbox->markAllSeen($folder);
-            InboxUnreadCount::remember($this->mailbox->folders());
+            if (strtoupper($folder) === 'INBOX') {
+                InboxUnreadCount::set(0);
+            }
         }, __('Hepsi okundu olarak işaretlendi.'));
     }
 
@@ -336,14 +338,23 @@ class MailboxController extends Controller
         return [$data['folder'], array_values(array_unique(array_map('intval', $data['uids'])))];
     }
 
-    private function act(callable $action, string $message, ?string $redirectFolder = null): RedirectResponse
+    private function act(callable $action, string $message, ?string $redirectFolder = null): RedirectResponse|\Illuminate\Http\JsonResponse
     {
+        // sayfa içinden (yenilemeden) yapılan işlem: sonuç + e-posta menüsündeki okunmamış sayısı
+        $json = request()->expectsJson();
         try {
             $action();
         } catch (Throwable $exception) {
             Log::warning('E-posta işlemi yapılamadı.', ['error' => $exception->getMessage()]);
+            if ($json) {
+                return response()->json(['error' => __('İşlem yapılamadı. E-posta sunucusuna ulaşılamadı; tekrar dene.')], 502);
+            }
 
             return back()->with('error', __('İşlem yapılamadı. E-posta sunucusuna ulaşılamadı; tekrar dene.'));
+        }
+
+        if ($json) {
+            return response()->json(['success' => $message, 'unread' => InboxUnreadCount::get()]);
         }
 
         return $redirectFolder !== null

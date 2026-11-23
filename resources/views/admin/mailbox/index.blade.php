@@ -48,14 +48,14 @@
                         @php $folderUnseen = (int) (collect($folders)->firstWhere('path', $folder)['unseen'] ?? 0); @endphp
                         @if ($folderUnseen > 0)
                             {{-- seçim yapmadan klasördeki hepsini okundu yap --}}
-                            <button class="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-brand-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-800 sm:order-last" formaction="{{ route('mailbox.seen-all') }}" data-method-value="PATCH">
+                            <button class="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-brand-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-800 sm:order-last" formaction="{{ route('mailbox.seen-all') }}" data-method-value="PATCH" data-inline-seen="all">
                                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12.5 6.5 17 15 8M9 15l2 2 9-9" /></svg>
                                 {{ __('Tümünü okundu yap (:count)', ['count' => number_format($folderUnseen, 0, ',', '.')]) }}
                             </button>
                         @endif
                         <div class="hidden flex-wrap gap-1.5" data-selection-bar>
-                            <button class="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50" name="seen" value="1" formaction="{{ route('mailbox.seen') }}" data-method-value="PATCH">{{ __('Okundu') }}</button>
-                            <button class="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50" name="seen" value="0" formaction="{{ route('mailbox.seen') }}" data-method-value="PATCH">{{ __('Okunmadı') }}</button>
+                            <button class="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50" name="seen" value="1" formaction="{{ route('mailbox.seen') }}" data-method-value="PATCH" data-inline-seen="1">{{ __('Okundu') }}</button>
+                            <button class="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50" name="seen" value="0" formaction="{{ route('mailbox.seen') }}" data-method-value="PATCH" data-inline-seen="0">{{ __('Okunmadı') }}</button>
                             @if ($isTrash)
                                 <button class="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50" name="target" value="{{ $inboxPath }}" formaction="{{ route('mailbox.move') }}" data-method-value="POST">{{ __('Gelen kutusuna taşı') }}</button>
                                 <button class="rounded-lg px-3 py-1.5 text-sm font-medium text-red-600 ring-1 ring-red-200 hover:bg-red-50" formaction="{{ route('mailbox.destroy') }}" data-method-value="DELETE" data-confirm-click="{{ __('Seçili e-postalar kalıcı olarak silinsin mi? Bu işlem geri alınamaz.') }}">{{ __('Kalıcı sil') }}</button>
@@ -78,23 +78,23 @@
                                         ? __('Kime') . ': ' . collect($mail['to'])->map(fn ($a) => $a['name'] ?: $a['email'])->implode(', ')
                                         : (($mail['from']['name'] ?? null) ?: ($mail['from']['email'] ?? __('Bilinmeyen gönderen')));
                                 @endphp
-                                <li @class(['flex items-center gap-3 px-4 py-3 transition hover:bg-slate-50', 'bg-brand-50/50' => !$mail['seen']])>
+                                <li data-mail-row data-seen="{{ $mail['seen'] ? 1 : 0 }}" @class(['flex items-center gap-3 px-4 py-3 transition hover:bg-slate-50', 'bg-brand-50/50' => !$mail['seen']])>
                                     <input type="checkbox" name="uids[]" value="{{ $mail['uid'] }}" class="size-4 shrink-0 accent-brand-900" aria-label="{{ __('Seç') }}" />
                                     <span @class(['shrink-0', 'text-amber-500' => $mail['flagged'], 'text-slate-300' => !$mail['flagged']]) title="{{ $mail['flagged'] ? __('Yıldızlı') : '' }}">
                                         <x-admin.icon name="star" @class(['fill-current' => $mail['flagged']]) />
                                     </span>
                                     {{-- Okunmamış noktası; okunmuşlarda boş yer tutar ki hizalar kaymasın --}}
-                                    <span @class(['size-2 shrink-0 rounded-full', 'bg-brand-900' => !$mail['seen']]) @if (!$mail['seen']) title="{{ __('Okunmadı') }}" @endif></span>
+                                    <span data-mail-dot @class(['size-2 shrink-0 rounded-full', 'bg-brand-900' => !$mail['seen']]) @if (!$mail['seen']) title="{{ __('Okunmadı') }}" @endif></span>
                                     <a href="{{ route('mailbox.show', ['folder' => $folder, 'uid' => $mail['uid']]) }}" class="grid min-w-0 flex-1 gap-0.5 sm:grid-cols-[15rem_1fr_auto] sm:items-center sm:gap-4">
                                         <span class="flex min-w-0 items-center gap-1.5">
-                                            <span @class(['truncate text-sm', 'font-semibold text-slate-900' => !$mail['seen'], 'text-slate-700' => $mail['seen']])>{{ $who }}</span>
+                                            <span data-mail-strong="text-slate-700" @class(['truncate text-sm', 'font-semibold text-slate-900' => !$mail['seen'], 'text-slate-700' => $mail['seen']])>{{ $who }}</span>
                                             @if (!$isSentLike && in_array(mb_strtolower($mail['from']['email'] ?? ''), $subscriberEmails, true))
                                                 <span class="shrink-0 rounded-md bg-brand-50 px-1.5 text-[11px] font-medium text-brand-900" title="{{ __('Bu adres bir blog abonesine ait') }}">{{ __('Abone') }}</span>
                                             @endif
                                         </span>
                                         <span class="flex min-w-0 items-center gap-2">
                                             @if ($mail['answered'])<x-admin.icon name="reply" class="size-3.5 text-slate-400" />@endif
-                                            <span @class(['truncate text-sm', 'font-semibold text-slate-900' => !$mail['seen'], 'text-slate-600' => $mail['seen']])>{{ $mail['subject'] ?: __('(konu yok)') }}</span>
+                                            <span data-mail-strong="text-slate-600" @class(['truncate text-sm', 'font-semibold text-slate-900' => !$mail['seen'], 'text-slate-600' => $mail['seen']])>{{ $mail['subject'] ?: __('(konu yok)') }}</span>
                                             @if ($mail['has_attachments'])<x-admin.icon name="paperclip" class="size-3.5 text-slate-400" />@endif
                                         </span>
                                         <span class="whitespace-nowrap text-xs text-slate-500" title="{{ $mail['date']?->format('d.m.Y H:i') }}">

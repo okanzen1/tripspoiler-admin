@@ -236,7 +236,7 @@ class Analytics
                 ->where('ip_hash', \App\Support\Privacy::hash($term))->orWhere('path', 'like', "%{$term}%")->orWhere('city', 'like', "%{$term}%")
                 ->orWhere('referrer_host', 'like', "%{$term}%")->orWhere('utm_source', 'like', "%{$term}%")));
 
-        $groups = $query->selectRaw('COALESCE(ip_hash, visitor_id) as who, MAX(id) as last_id, MIN(id) as first_id, COUNT(*) as views, COUNT(DISTINCT session_id) as sessions')
+        $groups = $query->selectRaw('COALESCE(ip_hash, visitor_id) as who, MAX(id) as last_id, MIN(id) as first_id, COUNT(*) as views, COUNT(DISTINCT session_id) as sessions, SUM(duration) as duration')
             ->groupBy('who')->orderByDesc('last_id')->limit($limit)->get();
         if ($groups->isEmpty()) {
             return collect();
@@ -252,6 +252,7 @@ class Analytics
             'first' => $rows[$group->first_id],
             'views' => (int) $group->views,
             'sessions' => (int) $group->sessions,
+            'duration' => $group->duration !== null ? (int) $group->duration : null,
             'clicks' => (int) ($clicks[$group->who] ?? 0),
         ]);
     }
@@ -270,6 +271,10 @@ class Analytics
         $match = fn ($q) => $q->where(fn ($w) => $w->where('ip_hash', $who)->orWhere(fn ($v) => $v->whereNull('ip_hash')->where('visitor_id', $who)));
         $visits = $match(Visit::query())->latest('id')->limit(1000)->get();
         $clicks = $match(AffiliateClick::query())->latest('id')->limit(500)->get();
+        // her sayfada nereye tıkladı (sıcaklık haritası kayıtları)
+        $pageClicks = \App\Models\PageClick::query()->whereIn('visit_id', $visits->pluck('id'))->orderBy('id')
+            ->get(['visit_id', 'label', 'href', 'at', 'rage', 'dead'])->groupBy('visit_id');
+        $visits->each(fn ($visit) => $visit->setRelation('pageClicks', $pageClicks[$visit->id] ?? collect()));
 
         // Oturumlar: en yenisi üstte; içinde sayfalar ve tıklamalar zaman sırasıyla
         $sessions = $visits->concat($clicks->map(fn ($c) => tap(clone $c, fn ($x) => $x->is_click = true)))

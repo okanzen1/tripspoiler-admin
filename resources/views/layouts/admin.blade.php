@@ -132,7 +132,7 @@
     <div class="flex min-h-full min-w-0 flex-col transition-[padding] duration-200 lg:pl-64 lg:collapsed:pl-20">
 
         {{-- Üst bar --}}
-        <header class="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-slate-200 bg-surface/95 px-4 backdrop-blur sm:px-8 lg:px-10">
+        <header class="sticky top-0 z-[25] flex h-14 items-center gap-3 border-b border-slate-200 bg-surface/95 px-4 backdrop-blur sm:px-8 lg:px-10">
             <button type="button" id="sidebar-open" aria-label="{{ __('Menüyü aç') }}"
                 class="-ml-2 grid size-10 place-items-center rounded-xl text-slate-600 hover:bg-slate-100 lg:hidden">
                 <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">

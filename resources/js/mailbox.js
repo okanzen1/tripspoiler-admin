@@ -38,6 +38,71 @@ document.querySelectorAll('form[data-mail-list]').forEach((form) => {
             method.value = button.dataset.methodValue;
         });
     });
+
+    // Okundu / okunmadı / tümünü okundu yap: sayfa yenilenmeden, satırlar yerinde değişir
+    const SPIN = '<svg class="size-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-25"/><path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
+    const setRow = (row, seen) => {
+        row.dataset.seen = seen ? '1' : '0';
+        row.classList.toggle('bg-brand-50/50', !seen);
+        const dot = row.querySelector('[data-mail-dot]');
+        dot?.classList.toggle('bg-brand-900', !seen);
+        row.querySelectorAll('[data-mail-strong]').forEach((el) => {
+            el.classList.toggle('font-semibold', !seen);
+            el.classList.toggle('text-slate-900', !seen);
+            el.classList.toggle(el.dataset.mailStrong, seen);
+        });
+    };
+    const badge = document.querySelector('[data-nav-badge="mailbox.index"]');
+    const inbox = form.querySelector('input[name="folder"]')?.value.toUpperCase() === 'INBOX';
+
+    form.querySelectorAll('[data-inline-seen]').forEach((button) => {
+        button.addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (button.disabled) return;
+            const mode = button.dataset.inlineSeen;
+            const rows = mode === 'all'
+                ? [...form.querySelectorAll('[data-mail-row]')]
+                : boxes.filter((box) => box.checked).map((box) => box.closest('[data-mail-row]')).filter(Boolean);
+            const seen = mode !== '0';
+
+            const body = new FormData(form);
+            body.set('_method', 'PATCH');
+            if (mode !== 'all') body.set('seen', mode);
+            const original = button.innerHTML;
+            button.disabled = true;
+            button.classList.add('opacity-80');
+            button.innerHTML = `<span class="inline-flex items-center gap-1.5">${SPIN}${t('İşleniyor…')}</span>`;
+            try {
+                const res = await fetch(button.getAttribute('formaction'), { method: 'POST', body, headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || data.message || t('İşlem yapılamadı.'));
+
+                const changed = rows.filter((row) => (row.dataset.seen === '1') !== seen).length;
+                rows.forEach((row) => setRow(row, seen));
+                boxes.forEach((box) => (box.checked = false));
+                sync();
+                if (mode === 'all') {
+                    button.remove();
+                } else {
+                    button.innerHTML = original;
+                    button.disabled = false;
+                    button.classList.remove('opacity-80');
+                }
+                // menüdeki E-posta sayısı (gelen kutusu)
+                if (badge && inbox) {
+                    const current = Number(badge.textContent.replace(/\D/g, '')) || 0;
+                    const next = mode === 'all' ? 0 : Math.max(0, current + (seen ? -changed : changed));
+                    badge.textContent = next.toLocaleString('tr-TR');
+                    badge.classList.toggle('hidden', next === 0);
+                }
+            } catch (error) {
+                button.innerHTML = original;
+                button.disabled = false;
+                button.classList.remove('opacity-80');
+                window.alert(error.message);
+            }
+        });
+    });
 });
 
 // Gövde: iframe yüksekliğini içeriğe göre ayarla; "görselleri göster"

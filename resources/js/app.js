@@ -22,6 +22,10 @@ import './notifications';
 if (document.querySelector('[data-rich-editor]')) {
     import('./rich-editor');
 }
+// Sıcaklık haritası sadece kendi sayfasında
+if (document.querySelector('[data-heatmap]')) {
+    import('./heatmap');
+}
 // Grafik kütüphanesi sadece analitik sayfasında yüklensin
 if (document.getElementById('analytics-chart')) {
     import('./analytics-chart');

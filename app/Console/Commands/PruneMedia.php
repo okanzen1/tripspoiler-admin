@@ -25,7 +25,7 @@ class PruneMedia extends Command
     /** Dosya yolu referansı tutmayan / geçici tablolar */
     private const SKIP_TABLES = [
         'cache', 'cache_locks', 'sessions', 'jobs', 'job_batches', 'failed_jobs', 'migrations',
-        'password_reset_tokens', 'visits', 'affiliate_clicks',
+        'password_reset_tokens', 'visits', 'affiliate_clicks', 'page_clicks',
         'oauth_access_tokens', 'oauth_auth_codes', 'oauth_clients', 'oauth_device_codes', 'oauth_refresh_tokens',
     ];
 

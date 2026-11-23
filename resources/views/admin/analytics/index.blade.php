@@ -25,6 +25,11 @@
         <x-slot:icon><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></x-slot:icon>
 
         <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('analytics.heatmap') }}"
+                class="inline-flex h-10 items-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 px-3.5 text-xs font-semibold text-white shadow-sm transition hover:from-orange-600 hover:to-rose-600">
+                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c1 3 4 5 4 9a4 4 0 0 1-8 0c0-1.5.5-2.5 1.5-3.5C9 10 10 11 11 11c0-3-1-6 1-9Z" /><path d="M6 15a6 6 0 0 0 12 0" /></svg>
+                {{ __('Sıcaklık haritası') }}
+            </a>
             <a href="{{ route('analytics-settings.index') }}" title="{{ __('Analitik ayarları') }}"
                 class="inline-flex h-10 items-center gap-1.5 rounded-xl bg-white px-3 text-xs font-semibold text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-900">
                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" /></svg>
@@ -234,7 +239,7 @@
                                         @if ($page->type)
                                             <span class="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold {{ $typeTones[$page->type] ?? 'bg-slate-100 text-slate-600' }}">{{ __($typeNames[$page->type] ?? $page->type) }}</span>
                                         @endif
-                                        <span class="truncate font-medium text-slate-800" title="{{ $page->path }}">{{ $page->path }}</span>
+                                        <a href="{{ route('analytics.heatmap', ['page' => $page->path]) }}" class="truncate font-medium text-slate-800 hover:text-rose-700 hover:underline" title="{{ __('Sıcaklık haritasını aç') }}: {{ $page->path }}">{{ $page->path }}</a>
                                     </div>
                                 </td>
                                 <td class="px-6 py-3.5 text-right tabular-nums text-slate-600">{{ $fmt($page->views) }}</td>

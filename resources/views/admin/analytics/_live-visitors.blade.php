@@ -57,6 +57,9 @@
                             <span class="mt-1 flex gap-1 text-[10px] font-semibold">
                                 <span class="rounded-full bg-violet-50 px-1.5 py-0.5 text-violet-700">{{ trans_choice(':count sayfa|:count sayfa', $visitor->views, ['count' => $visitor->views]) }}</span>
                                 <span class="rounded-full bg-sky-50 px-1.5 py-0.5 text-sky-700">{{ trans_choice(':count oturum|:count oturum', $visitor->sessions, ['count' => $visitor->sessions]) }}</span>
+                                @if ($visitor->duration)
+                                    <span class="inline-flex items-center gap-0.5 rounded-full bg-fuchsia-50 px-1.5 py-0.5 text-fuchsia-700" title="{{ __('Sitede geçirdiği toplam süre (sekme öndeyken)') }}"><svg class="size-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 2.5" /></svg>{{ \App\Services\Engagement::duration($visitor->duration) }}</span>
+                                @endif
                             </span>
                         </td>
                         <td class="max-w-[12rem] px-3 py-2.5">

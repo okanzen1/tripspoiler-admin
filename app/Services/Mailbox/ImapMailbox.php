@@ -192,7 +192,9 @@ class ImapMailbox implements Mailbox
     public function markAllSeen(string $folder): void
     {
         $this->storeSeen($folder, '1:*', true);
-        self::forgetFolders();
+        // klasörleri sunucuya hemen yeniden sormak eski sayıyı getirebiliyor (sayfa yenilenene kadar "1 okunmamış" kalıyordu):
+        // okunmamış sayısı doğrudan sıfırlanır
+        self::adjustUnseen($folder, -PHP_INT_MAX);
     }
 
     private function storeSeen(string $folder, string $set, bool $seen): void

@@ -33,7 +33,7 @@
         ])>{{ number_format($seo, 0, ',', '.') }}</span>
     @endif
     @if ($badge > 0)
-        <span @if ($badgeTitle) title="{{ $badge }} {{ $badgeTitle }}" @endif @class([
+        <span data-nav-badge="{{ $route }}" @if ($badgeTitle) title="{{ $badge }} {{ $badgeTitle }}" @endif @class([
             'rounded-full px-1.5 py-0.5 text-[11px] font-semibold leading-none tabular-nums',
             'lg:collapsed:absolute lg:collapsed:-right-1 lg:collapsed:-top-1',
             // alert: dikkat isteyen (kırmızı); count: sadece adet (sade)

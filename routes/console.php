@@ -8,7 +8,7 @@ Schedule::command('media:prune')->dailyAt('04:00')->withoutOverlapping();
 Schedule::command('media:clear-missing')->dailyAt('04:15')->withoutOverlapping();
 
 // Eski kayıtları sil: işlem kayıtları 1 yıl, ziyaret ve partner tıklamaları 6 ay, yardım talepleri 12 ay (modellerin prunable())
-Schedule::command('model:prune', ['--model' => [\App\Models\ActivityLog::class, \App\Models\Visit::class, \App\Models\AffiliateClick::class, \App\Models\HelpRequest::class]])->dailyAt('04:30');
+Schedule::command('model:prune', ['--model' => [\App\Models\ActivityLog::class, \App\Models\Visit::class, \App\Models\AffiliateClick::class, \App\Models\PageClick::class, \App\Models\HelpRequest::class]])->dailyAt('04:30');
 // Şifre sıfırlama kayıtları (e-posta içerir) bir saatten fazla tutulmaz
 Schedule::command('auth:clear-resets')->hourly();
 
