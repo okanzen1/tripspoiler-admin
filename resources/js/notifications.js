@@ -66,7 +66,8 @@ if (bell) {
 
         const lines = data.running.map((job) => `${escape(job.title)} · ${job.done} / ${job.total}`);
         if (data.bulk) lines.push(escape(t('Toplu çeviri: :count kayıt sırada', { count: data.bulk })));
-        status.innerHTML = lines.map((line) => `<p class="truncate">⟳ ${line}</p>`).join('');
+        const spin = '<svg class="size-3.5 shrink-0 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-20"/><path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
+        status.innerHTML = lines.map((line) => `<p class="flex items-center gap-2">${spin}<span class="truncate">${line}</span></p>`).join('');
         status.classList.toggle('hidden', !lines.length);
         spinner.classList.toggle('hidden', !lines.length);
         spinner.classList.toggle('grid', !!lines.length);
@@ -105,6 +106,8 @@ if (bell) {
         refresh();
     });
 
+    // Zil açılınca hemen güncel hali
+    bell.addEventListener('toggle', () => bell.open && refresh());
     // Sekmeye dönünce hemen; çeviri başlatılınca birkaç saniye sonra
     document.addEventListener('visibilitychange', () => !document.hidden && refresh());
     document.addEventListener('notifications:refresh', () => schedule(3000));

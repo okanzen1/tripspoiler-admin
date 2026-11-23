@@ -6,6 +6,12 @@
     $user = auth()->user();
     $unread = $user->unreadNotifications()->count();
     $items = $user->notifications()->limit(8)->get()->map(fn ($n) => \App\Support\Notify::present($n));
+    // Süren çeviriler: sayfa açılır açılmaz görünsün (sonra notifications.js günceller)
+    $lines = collect(\App\Support\TranslationJobs::active())->map(fn ($job) => $job['title'] . ' · ' . $job['done'] . ' / ' . $job['total']);
+    if ($bulk = \App\Support\Queues::bulkCount()) {
+        $lines->push(__('Toplu çeviri: :count kayıt sırada', ['count' => $bulk]));
+    }
+    $spin = '<svg class="size-3.5 shrink-0 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-20"/><path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
 @endphp
 
 <details data-dropdown data-notifications data-summary-url="{{ route('notifications.summary') }}" data-read-all-url="{{ route('notifications.read-all') }}"
@@ -14,7 +20,7 @@
         aria-label="{{ __('Bildirimler') }}" title="{{ __('Bildirimler') }}">
         <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
         <span data-notifications-badge @class(['absolute -right-1.5 -top-1.5 min-w-5 rounded-full bg-red-600 px-1.5 text-center text-[11px] font-bold leading-5 text-white ring-2 ring-white tabular-nums', 'hidden' => !$unread])>{{ $unread > 99 ? '99+' : $unread }}</span>
-        <span data-notifications-running class="absolute -bottom-1 -right-1 hidden size-3.5 place-items-center rounded-full bg-white ring-1 ring-purple-200" title="{{ __('Çeviri sürüyor') }}">
+        <span data-notifications-running @class(['absolute -bottom-1 -right-1 size-3.5 place-items-center rounded-full bg-white ring-1 ring-purple-200', 'grid' => $lines->isNotEmpty(), 'hidden' => $lines->isEmpty()]) title="{{ __('Çeviri sürüyor') }}">
             <svg class="size-3 animate-spin text-purple-600" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-20"/><path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>
         </span>
     </summary>
@@ -24,7 +30,11 @@
             <p class="text-sm font-semibold text-slate-900">{{ __('Bildirimler') }}</p>
             <button type="button" data-notifications-read-all class="text-xs font-semibold text-brand-700 hover:underline">{{ __('Tümünü okundu yap') }}</button>
         </div>
-        <div data-notifications-status class="hidden border-b border-slate-100 bg-purple-50/60 px-4 py-2.5 text-xs font-medium text-purple-800"></div>
+        <div data-notifications-status @class(['space-y-1 border-b border-slate-100 bg-purple-50/60 px-4 py-2.5 text-xs font-medium text-purple-800', 'hidden' => $lines->isEmpty()])>
+            @foreach ($lines as $line)
+                <p class="flex items-center gap-2">{!! $spin !!}<span class="truncate">{{ $line }}</span></p>
+            @endforeach
+        </div>
         <ul data-notifications-list class="max-h-[60vh] divide-y divide-slate-100 overflow-y-auto">
             @forelse ($items as $item)
                 @include('admin.notifications._item', ['item' => $item, 'compact' => true])

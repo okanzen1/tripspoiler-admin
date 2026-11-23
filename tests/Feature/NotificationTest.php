@@ -89,4 +89,12 @@ class NotificationTest extends TestCase
         $this->assertSame('Toplu çeviri bitti', $notification->data['title']);
         $this->assertSame(0, $other->notifications()->count());
     }
+
+    public function test_bell_shows_queued_bulk_translation_as_soon_as_the_page_opens(): void
+    {
+        \Illuminate\Support\Facades\DB::table('jobs')->insert(['queue' => 'bulk', 'payload' => '{}', 'attempts' => 0, 'available_at' => time(), 'created_at' => time()]);
+
+        $this->actingAs(User::factory()->create())->get(route('notifications.index'))
+            ->assertSee(__('Toplu çeviri: :count kayıt sırada', ['count' => 1]));
+    }
 }
