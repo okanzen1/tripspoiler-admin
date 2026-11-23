@@ -70,6 +70,12 @@ class Attraction extends Model
         return $this->exists ? $this->activities()->pluck('activities.id')->all() : [];
     }
 
+    /** Sitede görünenler: kendisi, şehri ve ülkesi aktif (ön yüzdeki tanımın aynısı) */
+    public function scopeVisible(Builder $query): void
+    {
+        $query->where('active', true)->whereHas('city', fn ($q) => $q->visible());
+    }
+
     public function city(): BelongsTo
     {
         return $this->belongsTo(City::class);
