@@ -41,6 +41,9 @@ class AppServiceProvider extends ServiceProvider
             $class::deleted(fn () => \App\Support\TranslationTodo::forget());
         }
 
+        // Sitenin hazır sayfaları: sitede görünen içerik değişince tazelenir (App\Support\SiteCache)
+        \App\Support\SiteCache::register();
+
         // "SEO'su / içeriği eksik olanlar" (App\Support\ContentTodo): içerik değişince yeniden hesaplanır
         foreach (\App\Support\ContentTodo::MODELS as $class) {
             $class::saved(fn () => \App\Support\ContentTodo::forget());
