@@ -52,10 +52,10 @@
                         </td>
                         <td class="max-w-[18rem] px-3 py-2.5">
                             <span class="flex min-w-0 items-center gap-1.5">
-                                <span class="min-w-0 truncate text-slate-800" title="{{ __('Son sayfa') }}: {{ $last->path }}">{{ $last->path }}</span>
+                                <span class="min-w-0 flex-1 truncate text-slate-800" title="{{ __('Son sayfa') }}: {{ $last->path }}">{{ $last->path }}</span>
                                 <x-admin.site-link :path="$last->path" />
                                 <a href="{{ route('analytics.heatmap', ['page' => $last->path, 'device' => $last->device === 'mobile' ? 'mobile' : 'desktop']) }}" title="{{ __('Bu sayfanın sıcaklık haritası') }}" aria-label="{{ __('Sıcaklık haritası') }}"
-                                    class="inline-grid size-7 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 text-white shadow-[0_6px_14px_-6px_rgba(244,63,94,0.85)] ring-1 ring-white/40 transition hover:-translate-y-0.5 hover:from-amber-500 hover:to-rose-600 hover:shadow-[0_8px_18px_-6px_rgba(244,63,94,0.95)]">
+                                    class="inline-grid size-7 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-red-500 to-red-700 text-white shadow-[0_6px_14px_-6px_rgba(220,38,38,0.85)] ring-1 ring-white/40 transition hover:-translate-y-0.5 hover:from-red-600 hover:to-red-800 hover:shadow-[0_8px_18px_-6px_rgba(220,38,38,0.95)]">
                                     <svg class="size-4" viewBox="0 0 24 24" fill="currentColor" fill-opacity=".25" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c1 3 4 5 4 9a4 4 0 0 1-8 0c0-1.5.5-2.5 1.5-3.5C9 10 10 11 11 11c0-3-1-6 1-9Z" /><path d="M6 15a6 6 0 0 0 12 0" /></svg>
                                 </a>
                             </span>
