@@ -41,6 +41,7 @@
             :filters="[
                 ['name' => 'city', 'label' => 'Şehir', 'value' => $cityId, 'options' => $filterCities->mapWithKeys(fn ($c) => [$c->id => $c->country->flag . ' ' . $c->name])->all() + ($generalCount ? ['none' => __('Genel (şehirsiz)')] : []), 'icon' => 'pin'],
                 ['name' => 'cover', 'label' => 'Kapak', 'value' => $cover, 'options' => ['yes' => __('Kapağı olanlar'), 'no' => __('Kapağı olmayanlar')], 'icon' => 'image'],
+                ['name' => 'kind', 'label' => 'Tür', 'value' => $kind, 'options' => collect(\App\Models\Blog::KINDS)->map(fn ($label, $key) => __($label) . ' (' . ($kindCounts[$key] ?? 0) . ')')->all(), 'icon' => 'pen'],
             ]" />
 
         {{-- hızlı seçim: şehirler etiket gibi (sayılarıyla); seçince liste o şehre göre süzülür --}}
@@ -112,6 +113,9 @@
                                         <div class="min-w-0 max-w-lg">
                                             <a href="{{ route('blogs.edit', $blog) }}" class="line-clamp-1 font-semibold text-slate-900 hover:text-brand-900 hover:underline">{{ $blog->title }}</a>
                                             <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+                                                @if ($blog->kind === 'news')
+                                                    <span class="rounded-md bg-sky-50 px-1.5 py-0.5 font-semibold text-sky-700 ring-1 ring-sky-200" title="{{ __('Sitede Travel News\'te görünür') }}">{{ __('Haber') }}</span>
+                                                @endif
                                                 <x-admin.todo-pill type="blog" :id="$blog->id" />
                                                 @unless ($blog->cover_path)
                                                     <a href="{{ route('blogs.edit', $blog) }}" class="rounded-md bg-rose-50 px-1.5 py-0.5 font-semibold text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100">{{ __('Resim eksik') }}</a>

@@ -22,6 +22,7 @@ class BlogRequest extends FormRequest
             'city_scope' => $this->input('city_scope') === 'cities' ? 'cities' : 'general',
             'city_ids' => $this->input('city_scope') === 'cities' ? array_values(array_unique(array_map('intval', (array) $this->input('city_ids', [])))) : [],
             'published_at' => $this->input('published_at') ?: null,
+            'kind' => $this->input('kind') ?: 'guide',
         ]);
     }
 
@@ -30,6 +31,7 @@ class BlogRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', Rule::unique('blogs')->ignore($this->route('blog'))],
+            'kind' => ['required', Rule::in(array_keys(\App\Models\Blog::KINDS))],
             'city_scope' => ['required', 'in:general,cities'],
             'city_ids' => ['array', 'required_if:city_scope,cities'],
             'city_ids.*' => ['integer', 'exists:cities,id'],

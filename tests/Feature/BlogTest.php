@@ -122,4 +122,22 @@ class BlogTest extends TestCase
         $this->actingAs($this->editor)->get(route('blogs.create'))->assertOk()->assertSee('data-free="0"', false)->assertSee('Hagia Sophia Tour');
         $this->actingAs($this->editor)->get(route('blogs.edit', $blog))->assertOk()->assertSee('data-free="1"', false)->assertSee(__('Çeviriler'));
     }
+
+    public function test_blog_kind_guide_or_news_from_form_list_and_paste(): void
+    {
+        $this->actingAs($this->editor)->post(route('blogs.store'), [
+            'title' => 'Greece visa rules change in 2027', 'kind' => 'news', 'city_scope' => 'general', 'content' => '<p>x</p>',
+        ]);
+        $this->actingAs($this->editor)->post(route('blogs.store'), [
+            'title' => 'Hagia Sophia Guide', 'city_scope' => 'cities', 'city_ids' => [$this->city->id], 'content' => '<p>x</p>',
+        ]);
+        $this->assertSame('news', Blog::where('slug', 'greece-visa-rules-change-in-2027')->value('kind'));
+        $this->assertSame('guide', Blog::where('slug', 'hagia-sophia-guide')->value('kind')); // seçilmezse rehber
+
+        $this->actingAs($this->editor)->get(route('blogs.index', ['kind' => 'news']))->assertOk()
+            ->assertViewHas('blogs', fn ($page) => collect($page->items())->pluck('slug')->all() === ['greece-visa-rules-change-in-2027']);
+
+        $parsed = \App\Support\ContentImport::blogs('<post><title>Strike in Athens</title><meta name="kind" content="news"><article><p>Metro closed.</p></article></post>');
+        $this->assertSame('news', $parsed[0]['kind']);
+    }
 }

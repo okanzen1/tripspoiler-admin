@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
  * Resimlere dokunmaz (gelen <img>'ler HtmlSanitizer'da düşer); resimleri kullanıcı panelden ekler.
  *
  * Blog biçimi (her yazı bir <post>; tek yazıda <post> şart değil):
- *   <post><title>…</title> <meta name="excerpt|seo-title|seo-description|tags|slug" content="…">
+ *   <post><title>…</title> <meta name="kind|excerpt|seo-title|seo-description|tags|slug" content="…">  (kind: guide | news)
  *   <article>…yazı…</article> <section class="faq"><h3>Soru</h3><p>Cevap</p>…</section></post>
  *
  * Şehir rehberi biçimi (her şehir bir <guide>; şehir sayfasından tek şehirde <guide> şart değil):
@@ -27,7 +27,7 @@ use Illuminate\Support\Str;
 class ContentImport
 {
     /**
-     * @return list<array{title: ?string, slug: ?string, excerpt: ?string, meta_title: ?string, meta_description: ?string, tags: list<string>, content: ?string, faqs: list<array{question: string, answer: string}>}>
+     * @return list<array{title: ?string, slug: ?string, kind: ?string, excerpt: ?string, meta_title: ?string, meta_description: ?string, tags: list<string>, content: ?string, faqs: list<array{question: string, answer: string}>}>
      */
     public static function blogs(string $html): array
     {
@@ -73,6 +73,7 @@ class ContentImport
 TripSpoiler (tripspoiler.com) için İngilizce blog yazıları yaz. TripSpoiler gezginlere şehirlerdeki en iyi turları, biletleri ve şehir kartlarını bulan bir gezi sitesi.
 
 KAÇ YAZI: [ör. 15]
+TÜR: [Rehber ya da Haber]
 ŞEHİR: [Genel ya da şehir adı, ör. Istanbul]
 KONULAR: [istersen konuları yaz; boş bırakırsan sen seç]
 
@@ -99,6 +100,7 @@ UZUNLUK
 
 <post>
 <title>SEO dostu başlık (en fazla 70 karakter)</title>
+<meta name="kind" content="guide">  (guide = şehir / müze / aktivite / gezi rehberi; news = güncel seyahat haberi: vize, ulaşım, etkinlik, turizm)
 <meta name="excerpt" content="Liste sayfasında görünen 1-2 cümlelik özet (en fazla 300 karakter)">
 <meta name="seo-title" content="Google başlığı (en fazla 60 karakter)">
 <meta name="seo-description" content="Google açıklaması (140-160 karakter)">
@@ -193,6 +195,7 @@ TXT;
             'meta_title' => self::limit(self::meta($xp, $scope, 'seo-title') ?? self::meta($xp, $scope, 'meta-title'), 255),
             'meta_description' => self::limit(self::meta($xp, $scope, 'seo-description') ?? self::meta($xp, $scope, 'meta-description'), 500),
             'tags' => $tags,
+            'kind' => in_array($kind = strtolower(trim((string) self::meta($xp, $scope, 'kind'))), ['guide', 'news'], true) ? $kind : null,
             'content' => HtmlSanitizer::clean(self::inner($root, skip: ['title', 'meta', 'head', 'header', 'post'])),
             'faqs' => $faqs,
         ];

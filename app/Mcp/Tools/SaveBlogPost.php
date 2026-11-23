@@ -24,7 +24,8 @@ class SaveBlogPost extends PanelTool
             'title' => $schema->string()->description('Required when creating'),
             'excerpt' => $schema->string()->description('1–2 sentence summary shown in the blog list'),
             'content_html' => $schema->string(),
-            'cities' => $schema->array()->items($schema->string())->description('Cities (names or ids) the post is published in. Empty array = general post, shown in every city.'),
+            'kind' => $schema->string()->enum(['guide', 'news'])->description('guide = city / museum / activity / travel guide (default when creating); news = current travel news (visas, transport, events, tourism) shown under Travel News, not in city lists'),
+            'cities' => $schema->array()->items($schema->string())->description('Cities (names or ids) the post is published in. Empty array = not tied to a city.'),
             'tags' => $schema->array()->items($schema->string()),
             'cover_image_url' => $schema->string(),
             'related_activities' => $schema->array()->items($schema->string())->description('Activity ids, slugs or names'),
@@ -42,6 +43,7 @@ class SaveBlogPost extends PanelTool
             'title' => [$creating ? 'required' : 'sometimes', 'string', 'max:255'],
             'excerpt' => ['nullable', 'string', 'max:500'],
             'content_html' => ['nullable', 'string', 'max:200000'],
+            'kind' => ['sometimes', 'in:guide,news'],
             'cities' => ['nullable', 'array', 'max:50'],
             'tags' => ['nullable', 'array', 'max:20'],
             'tags.*' => ['string', 'max:50'],
@@ -54,6 +56,9 @@ class SaveBlogPost extends PanelTool
 
         if (isset($data['title'])) {
             $blog->setTranslation('title', 'en', trim($data['title']));
+        }
+        if (isset($data['kind'])) {
+            $blog->kind = $data['kind'];
         }
         foreach (['excerpt' => 'excerpt', 'content_html' => 'content', 'meta_title' => 'meta_title', 'meta_description' => 'meta_description', 'tags' => 'tags'] as $input => $field) {
             if (array_key_exists($input, $data)) {

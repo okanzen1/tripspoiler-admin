@@ -23,6 +23,7 @@ class BlogController extends Controller
         $status = in_array($request->get('status'), ['active', 'passive'], true) ? $request->get('status') : null;
         $cityId = $request->get('city');
         $cover = in_array($request->get('cover'), ['yes', 'no'], true) ? $request->get('cover') : null;
+        $kind = array_key_exists((string) $request->get('kind'), Blog::KINDS) ? $request->get('kind') : null;
 
         $blogs = Blog::with(['city.country', 'cities.country'])->withCount('activities')
             ->withExists(['pinterestPins as on_pinterest' => fn ($q) => $q->whereNotNull('pin_id')])
@@ -31,6 +32,7 @@ class BlogController extends Controller
             ->when($cityId === 'none', fn ($q) => $q->doesntHave('cities'))
             ->when(is_numeric($cityId), fn ($q) => $q->whereHas('cities', fn ($c) => $c->whereKey((int) $cityId)))
             ->when($cover, fn ($q) => $cover === 'yes' ? $q->whereNotNull('cover_path') : $q->whereNull('cover_path'))
+            ->when($kind, fn ($q) => $q->where('kind', $kind))
             // sitedeki sırayla (şehir şehir; sıralanmamış yeni yazılar başta, sonra sürüklenen sıra, sonra en yeni)
             ->orderBy('city_id')
             ->orderByRaw('sort_order = 0 desc')->orderBy('sort_order')
@@ -60,6 +62,8 @@ class BlogController extends Controller
             'status' => $status,
             'cityId' => $cityId,
             'cover' => $cover,
+            'kind' => $kind,
+            'kindCounts' => Blog::selectRaw('kind, COUNT(*) as total')->groupBy('kind')->pluck('total', 'kind'),
             // yazı sayısına göre (çok yazısı olan şehir başta); "Genel" en sonda
             'filterCities' => City::with('country')->whereHas('blogs')->withCount('blogs')->orderByDesc('blogs_count')->orderBy('name')->get(),
             'generalCount' => Blog::doesntHave('cities')->count(),
@@ -132,7 +136,8 @@ class BlogController extends Controller
                 }
 
                 // Tarih boş kalmasın: ilk yazı bugün, sonrakiler 3'er gün geriye (hepsi aynı gün yazılmış görünmesin)
-                $blog = new Blog(['slug' => $slug, 'city_id' => $data['city_id'] ?? null, 'active' => false,
+                // tür: yazıdaki <meta name="kind"> (guide / news); yoksa rehber
+                $blog = new Blog(['slug' => $slug, 'city_id' => $data['city_id'] ?? null, 'kind' => $parsed['kind'] ?? 'guide', 'active' => false,
                     'published_at' => now()->startOfDay()->subDays(3 * count($added))]);
                 foreach (['title', 'excerpt', 'content', 'meta_title', 'meta_description'] as $field) {
                     filled($parsed[$field]) && $blog->setTranslation($field, 'en', $parsed[$field]);
@@ -259,6 +264,7 @@ class BlogController extends Controller
             'slug' => $data['slug'],
             // ana şehir: seçilen ilk şehir (genel yazıda boş)
             'city_id' => $data['city_ids'][0] ?? null,
+            'kind' => $data['kind'],
             'active' => $data['active'],
             // Yayına alınırken tarih boşsa şimdi yazılır
             'published_at' => $data['published_at'] ?? ($data['active'] ? ($blog->published_at ?? now()) : null),

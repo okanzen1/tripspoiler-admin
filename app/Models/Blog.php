@@ -22,8 +22,11 @@ class Blog extends Model
     /** Front'taki adres kalıbı (config/site.php) */
     public const SITE_PATH = 'blog';
 
+    /** Tür: rehber (Destination Guides, şehre göre) ya da güncel haber (Travel News) */
+    public const KINDS = ['guide' => 'Rehber', 'news' => 'Haber'];
+
     protected $fillable = [
-        'city_id', 'title', 'slug', 'excerpt', 'content', 'tags', 'cover_path', 'cover_focus',
+        'city_id', 'kind', 'title', 'slug', 'excerpt', 'content', 'tags', 'cover_path', 'cover_focus',
         'meta_title', 'meta_description', 'active', 'published_at',
     ];
 

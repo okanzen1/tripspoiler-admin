@@ -4,7 +4,7 @@
     $editing = $blog->exists;
     $steps = ['Temel bilgiler', 'İçerik', 'Kapak görseli', 'Etiketler ve aktiviteler', 'SSS', 'SEO', 'Yayın'];
     $stepFields = [
-        ['title', 'slug', 'city_scope', 'city_ids', 'city_ids.*', 'excerpt'],
+        ['title', 'slug', 'kind', 'city_scope', 'city_ids', 'city_ids.*', 'excerpt'],
         ['content'],
         ['cover', 'remove_cover'],
         ['tags', 'activity_ids', 'activity_ids.*'],
@@ -83,6 +83,29 @@
             <x-admin.input name="title" :label="__('Başlık')" :value="$blog->title" required maxlength="255" placeholder="{{ __('Hagia Sophia: History, Visiting Tips and How to Skip the Lines') }}" autocomplete="off" />
             <x-admin.input name="slug" :label="__('URL adı')" :value="$blog->slug" data-slug-from="title" prefix="/blog/" autocomplete="off"
                 :hint="$editing ? 'Değiştirirsen eski link çalışmaz; yayındaki yazıda dikkatli ol.' : 'Boş bırakırsan başlıktan otomatik üretilir.'" />
+            {{-- Tür: sitede iki ayrı akış — Destination Guides (şehre göre) ve Travel News (şehirden bağımsız) --}}
+            @php
+                $kind = old('kind', $blog->kind ?? 'guide');
+            @endphp
+            <fieldset>
+                <legend class="block text-sm font-medium text-slate-700">{{ __('Tür') }}</legend>
+                <div class="mt-1.5 grid gap-3 sm:grid-cols-2">
+                    @foreach ([
+                        'guide' => [__('Rehber'), __('Şehir, müze, aktivite ve gezi rehberi. Sitede "Destination Guides"ta, seçilen şehrin listesinde görünür.')],
+                        'news' => [__('Haber'), __('Güncel seyahat haberi (vize, ulaşım, etkinlik, turizm). Sitede "Travel News"te görünür, şehir listelerine karışmaz.')],
+                    ] as $value => [$label, $hint])
+                        <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 transition hover:border-slate-300 has-[:checked]:border-brand-900 has-[:checked]:bg-brand-50/60 has-[:checked]:ring-2 has-[:checked]:ring-brand-900/15">
+                            <input type="radio" name="kind" value="{{ $value }}" data-label="{{ $label }}" class="mt-0.5 size-4 accent-brand-900" @checked($kind === $value) />
+                            <span>
+                                <span class="block text-sm font-semibold text-slate-900">{{ $label }}</span>
+                                <span class="mt-0.5 block text-xs text-slate-500">{{ $hint }}</span>
+                            </span>
+                        </label>
+                    @endforeach
+                </div>
+                @error('kind') <p class="mt-1.5 text-xs font-medium text-red-600">{{ $message }}</p> @enderror
+            </fieldset>
+
             {{-- Şehirler: genel (her şehirde) ya da seçilen şehirler (birden fazla) — blog_city --}}
             @php
                 $cityScope = old('city_scope', $blog->exists && $blog->cities->isEmpty() ? 'general' : 'cities');
@@ -95,7 +118,7 @@
                         <input type="radio" id="city-scope-general" name="city_scope" value="general" data-label="{{ __('Genel (tüm şehirler)') }}" class="mt-0.5 size-4 accent-brand-900" @checked($cityScope === 'general') />
                         <span>
                             <span class="block text-sm font-semibold text-slate-900">{{ __('Genel') }}</span>
-                            <span class="mt-0.5 block text-xs text-slate-500">{{ __('Bütün şehirlerin blog listesinde görünür.') }}</span>
+                            <span class="mt-0.5 block text-xs text-slate-500">{{ __('Hiçbir şehre bağlı değil (haberler ve her yer için geçerli rehberler).') }}</span>
                         </span>
                     </label>
                     <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 transition hover:border-slate-300 has-[:checked]:border-brand-900 has-[:checked]:bg-brand-50/60 has-[:checked]:ring-2 has-[:checked]:ring-brand-900/15">
@@ -301,7 +324,7 @@
             <section data-step hidden class="space-y-5">
                 <x-admin.step-heading :title="__('Onay')" :description="__('Bilgileri kontrol et, doğruysa yazıyı oluştur.')" />
                 <dl class="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
-                    @foreach (['Başlık' => 'title', 'URL adı' => 'slug', 'Şehir' => 'city_scope', 'Etiketler' => 'tags', 'Kapak' => 'cover', 'Durum' => 'active', 'Yayın tarihi' => 'published_at'] as $label => $name)
+                    @foreach (['Başlık' => 'title', 'URL adı' => 'slug', 'Tür' => 'kind', 'Şehir' => 'city_scope', 'Etiketler' => 'tags', 'Kapak' => 'cover', 'Durum' => 'active', 'Yayın tarihi' => 'published_at'] as $label => $name)
                         <div class="grid grid-cols-3 gap-4 px-5 py-3.5 text-sm">
                             <dt class="text-slate-500">{{ __($label) }}</dt>
                             <dd class="col-span-2 break-all font-medium text-slate-900" data-summary-for="{{ $name }}">—</dd>
