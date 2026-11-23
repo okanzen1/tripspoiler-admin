@@ -50,7 +50,10 @@
                             <a href="{{ $url }}" class="rounded-lg bg-indigo-50 px-2 py-1 font-mono text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100 transition hover:bg-indigo-100">{{ $last->ip ?? \Illuminate\Support\Str::limit($visitor->who, 12) }}</a>
                         </td>
                         <td class="max-w-[18rem] px-3 py-2.5">
-                            <span class="block truncate text-slate-800" title="{{ __('Son sayfa') }}: {{ $last->path }}">{{ $last->path }}</span>
+                            <span class="flex min-w-0 items-center gap-1.5">
+                                <span class="min-w-0 truncate text-slate-800" title="{{ __('Son sayfa') }}: {{ $last->path }}">{{ $last->path }}</span>
+                                <x-admin.site-link :path="$last->path" />
+                            </span>
                             <span class="mt-1 flex gap-1 text-[10px] font-semibold">
                                 <span class="rounded-full bg-violet-50 px-1.5 py-0.5 text-violet-700">{{ trans_choice(':count sayfa|:count sayfa', $visitor->views, ['count' => $visitor->views]) }}</span>
                                 <span class="rounded-full bg-sky-50 px-1.5 py-0.5 text-sky-700">{{ trans_choice(':count oturum|:count oturum', $visitor->sessions, ['count' => $visitor->sessions]) }}</span>

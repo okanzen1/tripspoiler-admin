@@ -148,7 +148,8 @@ class AnalyticsTest extends TestCase
 
         $admin = User::factory()->admin()->create();
         $this->actingAs($admin)->get(route('analytics.index', ['from' => '2026-10-20', 'to' => '2026-10-25']))->assertOk()->assertSee('6 gün');
-        $this->actingAs($admin)->get(route('analytics.live', ['from' => '2026-10-25', 'to' => '2026-10-25']))->assertOk();
+        $this->actingAs($admin)->get(route('analytics.live', ['from' => '2026-10-25', 'to' => '2026-10-25']))->assertOk()
+            ->assertSee('href="' . config('site.url') . '/y"', false); // gezintideki sayfa sitede açılır
     }
 
     public function test_one_filter_bar_applies_device_and_country_to_every_number(): void

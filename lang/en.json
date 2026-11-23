@@ -1190,5 +1190,6 @@
     "Bu adres değişti; ziyaretçi yeni adrese yönlendiriliyor. Google birkaç hafta içinde yeni adresi öğrenir.": "This address changed; visitors are redirected to the new one. Google learns the new address within a few weeks.",
     "hatırlatma: Claude'a Search Console aracını kurdur": "reminder: have Claude set up the Search Console tool",
     "Hatırlatma: Search Console aracını kurma zamanı geldi": "Reminder: time to set up the Search Console tool",
-    "Google'da 28 günde :count gösterime ulaştın; artık düzeltilecek fırsatlar oluşuyor. Claude'a \"Search Console aracını kur\" de: verileri kendisi okuyup az tıklanan sayfaların başlık ve açıklamalarını düzeltsin.": "You reached :count impressions on Google in 28 days, so there are opportunities to fix now. Tell Claude \"set up the Search Console tool\": it will read the data itself and fix the titles and descriptions of rarely clicked pages."
+    "Google'da 28 günde :count gösterime ulaştın; artık düzeltilecek fırsatlar oluşuyor. Claude'a \"Search Console aracını kur\" de: verileri kendisi okuyup az tıklanan sayfaların başlık ve açıklamalarını düzeltsin.": "You reached :count impressions on Google in 28 days, so there are opportunities to fix now. Tell Claude \"set up the Search Console tool\": it will read the data itself and fix the titles and descriptions of rarely clicked pages.",
+    "Sayfayı sitede aç": "Open the page on the site"
 }

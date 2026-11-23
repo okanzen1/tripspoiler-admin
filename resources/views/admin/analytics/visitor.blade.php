@@ -98,6 +98,7 @@
                                 @endif
                             </span>
                             <span class="hidden shrink-0 text-xs uppercase text-slate-400 sm:block">{{ $item->locale }}</span>
+                            <x-admin.site-link :path="$item->path" />
                         @endif
                     </li>
                 @endforeach
