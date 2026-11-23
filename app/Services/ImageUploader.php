@@ -127,8 +127,20 @@ class ImageUploader
         $disk = Storage::disk('media');
         $disk->put(self::variant($saved['path'], 'md'), (string) (clone $image)->scaleDown(1920, 1920)->toWebp(80));
         $disk->put(self::variant($saved['path'], 'sm'), (string) (clone $image)->scaleDown(1280, 1280)->toWebp(78));
+        self::heroXs($saved['path'], $image);
 
         return $saved['path'];
+    }
+
+    /**
+     * Telefon için en küçük hero kopyası ("-xs", 828px): telefonda sayfanın en büyük öğesi bu görsel; 1280'lik kopya
+     * (~100 KB) yerine ~40 KB iner. Hazır olduğu Setting hero_image_xs ile siteye bildirilir (site sadece o zaman kullanır).
+     */
+    public static function heroXs(string $path, ?\Intervention\Image\Interfaces\ImageInterface $image = null): void
+    {
+        $disk = Storage::disk('media');
+        $image ??= (new ImageManager(new Driver()))->read($disk->get($path));
+        $disk->put(self::variant($path, 'xs'), (string) (clone $image)->scaleDown(828, 828)->toWebp(74));
     }
 
     /**
@@ -151,7 +163,7 @@ class ImageUploader
     }
 
     /**
-     * @param  'sm'|'md'|null  $size  küçük kopya "sm", orta kopya "md" (sadece hero)
+     * @param  'sm'|'md'|'xs'|null  $size  küçük kopya "sm", orta kopya "md" ve telefon kopyası "xs" (sadece hero)
      */
     public static function url(?string $path, ?string $size = null): ?string
     {
@@ -173,7 +185,7 @@ class ImageUploader
      */
     public static function files(string $path): array
     {
-        return [$path, self::variant($path, 'sm'), self::variant($path, 'md')];
+        return [$path, self::variant($path, 'sm'), self::variant($path, 'md'), self::variant($path, 'xs')];
     }
 
     private static function variant(string $path, string $size): string

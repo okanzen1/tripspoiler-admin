@@ -97,7 +97,9 @@ class SiteSettingsController extends Controller
 
         if ($request->hasFile('hero_image')) {
             try {
-                Setting::put('hero_image', $this->uploader->hero($request->file('hero_image'), Setting::get('hero_image')));
+                $heroPath = $this->uploader->hero($request->file('hero_image'), Setting::get('hero_image'));
+                Setting::put('hero_image', $heroPath);
+                Setting::put('hero_image_xs', $heroPath); // telefon kopyası da hazır (site srcset'e ekler)
             } catch (\Throwable $e) {
                 report($e);
                 return back()->withInput()->with('error', __('Resim yüklenemedi: :msg', ['msg' => $e->getMessage()]));
