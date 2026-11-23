@@ -52,7 +52,7 @@ class SiteCache
 
     private static function flush(bool $force): void
     {
-        if (!self::$pending || (!$force && time() - self::$lastWrite < 15)) {
+        if (!self::$pending || (!$force && time() - self::$lastWrite < 15 && !app()->runningUnitTests())) {
             return;
         }
         self::$pending = false;
