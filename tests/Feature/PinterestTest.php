@@ -312,4 +312,68 @@ class PinterestTest extends TestCase
     {
         $this->actingAs(User::factory()->create())->get(route('pinterest.index'))->assertRedirect();
     }
+
+    private function activity(string $slug, \App\Models\City $city, array $extra = []): \App\Models\Activity
+    {
+        $activity = \App\Models\Activity::create(['city_id' => $city->id, 'slug' => $slug, 'type' => 'product', 'active' => true,
+            'name' => ['en' => ucfirst($slug)], 'meta_description' => ['en' => 'About ' . $slug], ...$extra]);
+        $activity->images()->create(['path' => 'activities/2026/11/' . $slug . '.webp', 'sort_order' => 0]);
+
+        return $activity;
+    }
+
+    public function test_activities_go_to_pinterest_alternating_with_blogs_on_their_city_board(): void
+    {
+        $this->connect();
+        Setting::put('pinterest_board_id', null);
+        Setting::put('pinterest_daily', '4');
+        $this->travelTo(now()->setTime(21, 7));
+        $country = \App\Models\Country::create(['code' => 'IT', 'name' => 'Italy', 'slug' => 'italy', 'active' => true]);
+        $rome = \App\Models\City::create(['country_id' => $country->id, 'name' => 'Rome', 'slug' => 'rome', 'active' => true]);
+        $this->blog('blog-a', ['published_at' => now()->subDays(9)]);
+        $this->blog('blog-b');
+        $this->activity('colosseum', $rome, ['is_popular' => true]);
+        $this->activity('vatican', $rome);
+        $this->activity('hidden', $rome, ['active' => false]);
+        $noImage = \App\Models\Activity::create(['city_id' => $rome->id, 'slug' => 'no-image', 'type' => 'product', 'active' => true, 'name' => ['en' => 'No image']]);
+
+        Http::fake([
+            'api.pinterest.com/v5/boards?*' => Http::response(['items' => [['id' => '500', 'name' => 'Rome Travel Guide']], 'bookmark' => null]),
+            'api.pinterest.com/v5/boards' => Http::response(['id' => '600', 'name' => 'TripSpoiler Travel Guides']),
+            'api.pinterest.com/v5/pins' => fn ($request) => Http::response(['id' => 'pin-' . $request['title']]),
+        ]);
+
+        $this->artisan('pinterest:send')->assertSuccessful();
+
+        // bir blog, bir aktivite; popüler aktivite önce
+        $this->assertSame(['blog:blog-a', 'activity:colosseum', 'blog:blog-b', 'activity:vatican'],
+            PinterestPin::orderBy('id')->with(['blog', 'activity'])->get()->map(fn ($p) => $p->blog ? 'blog:' . $p->blog->slug : 'activity:' . $p->activity->slug)->all());
+        Http::assertSent(fn ($r) => ($r['title'] ?? null) === 'Colosseum' && $r['board_id'] === '500' && $r['description'] === 'About colosseum'
+            && $r['link'] === config('site.url') . '/en/activities/colosseum' && str_ends_with($r['media_source']['url'], 'activities/2026/11/colosseum.webp'));
+        $this->assertSame(0, Pinterest::activityQueue()->count()); // gizli ve resimsiz sıraya girmez
+
+        // elle: gönderilmiş aktivite tekrar gitmez, resimsiz gitmez
+        $admin = User::factory()->admin()->create();
+        $this->actingAs($admin)->post(route('pinterest.send-activity', \App\Models\Activity::where('slug', 'colosseum')->first()))->assertSessionHas('error');
+        $this->actingAs($admin)->post(route('pinterest.send-activity', $noImage))->assertSessionHas('error');
+        $this->assertSame(4, PinterestPin::sent()->count());
+        $this->actingAs($admin)->get(route('pinterest.index'))->assertOk()->assertSee('Colosseum')->assertSee('Aktiviteleri de gönder');
+    }
+
+    public function test_activities_can_be_turned_off(): void
+    {
+        $this->connect();
+        $this->travelTo(now()->setTime(21, 7));
+        $country = \App\Models\Country::create(['code' => 'IT', 'name' => 'Italy', 'slug' => 'italy', 'active' => true]);
+        $rome = \App\Models\City::create(['country_id' => $country->id, 'name' => 'Rome', 'slug' => 'rome', 'active' => true]);
+        $this->activity('colosseum', $rome);
+        $this->blog('blog-a');
+        Http::fake(['api.pinterest.com/v5/pins' => Http::response(['id' => 'p1'])]);
+
+        $this->actingAs(User::factory()->admin()->create())->put(route('pinterest.settings'), ['daily' => 10, 'enabled' => 1, 'activities' => 0]);
+        $this->artisan('pinterest:send');
+
+        $this->assertSame(1, PinterestPin::count());
+        $this->assertNull(PinterestPin::first()->activity_id);
+    }
 }

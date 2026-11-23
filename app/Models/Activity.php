@@ -104,6 +104,17 @@ class Activity extends Model
         return $this->hasMany(ActivityImage::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    public function pinterestPins(): HasMany
+    {
+        return $this->hasMany(PinterestPin::class)->latest('id');
+    }
+
+    /** Sitedeki İngilizce adresi (Pinterest pininin bağlantısı) */
+    public function siteUrl(): string
+    {
+        return rtrim(config('site.url'), '/') . '/en/activities/' . $this->slug;
+    }
+
     public function cover(): HasOne
     {
         return $this->hasOne(ActivityImage::class)->orderBy('sort_order')->orderBy('id');

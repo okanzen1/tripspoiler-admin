@@ -19,7 +19,7 @@
 
 @section('header')
     <x-admin.page-header :title="__('Pinterest')" :breadcrumb="['Yönetim' => route('management.index')]"
-        :description="__('Yayındaki blog yazıları sırayla Pinterest\'e pin olarak gider (İngilizce başlık, kapak resmi ve sitedeki bağlantı). Bir blog yalnızca bir kez gider; blog sayfasından sırayı beklemeden elle de gönderebilirsin.')">
+        :description="__('Yayındaki blog yazıları ve aktiviteler sırayla Pinterest\'e pin olarak gider (İngilizce başlık, resim ve sitedeki bağlantı). Her biri yalnızca bir kez gider; sırayı beklemeden elle de gönderebilirsin.')">
         <x-slot:icon><circle cx="12" cy="12" r="9" /><path d="M10.5 8.5c3-1.5 6 0 5.5 3s-3 4-4.5 3M11.5 10l-2.5 11" /></x-slot:icon>
     </x-admin.page-header>
 @endsection
@@ -56,8 +56,8 @@
         </div>
         <dl class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             @foreach ([
-                [__('Sırada'), $queueCount, __('yayında, kapaklı')],
-                [__('Gönderilen'), $sentBlogs, __('blog')],
+                [__('Sırada'), $queueCount + ($activitiesEnabled ? $activityQueueCount : 0), $activitiesEnabled ? __(':blogs blog · :activities aktivite', ['blogs' => $queueCount, 'activities' => $activityQueueCount]) : __('yayında, kapaklı')],
+                [__('Gönderilen'), $sentBlogs + $sentActivities, __(':blogs blog · :activities aktivite', ['blogs' => $sentBlogs, 'activities' => $sentActivities])],
                 [__('Gönderilemeyen'), $failing->count(), __('aşağıda listede')],
                 [__('Kapak resmi yok'), $noCover, __('resim eklenince sıraya girer')],
             ] as [$label, $value, $hint])
@@ -149,24 +149,56 @@
             </ul>
         </x-admin.card>
 
+        {{-- SIRADAKİ AKTİVİTELER --}}
+        @if ($activitiesEnabled)
+            <x-admin.card class="overflow-hidden">
+                <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
+                    <div>
+                        <h2 class="text-sm font-semibold text-slate-900">{{ __('Sıradaki aktiviteler') }}</h2>
+                        <p class="text-xs text-slate-500">{{ __('Sitede görünen, resimli aktiviteler; popülerler önce. Bloglarla sırayla gider (bir blog, bir aktivite).') }}</p>
+                    </div>
+                    <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold tabular-nums text-slate-600">{{ $activityQueueCount }}</span>
+                </div>
+                <ul class="divide-y divide-slate-100">
+                    @forelse ($nextActivities as $activity)
+                        <li class="flex items-center gap-3 px-6 py-3">
+                            <img src="{{ $activity->cover?->url('sm') }}" alt="" loading="lazy" class="h-11 w-14 shrink-0 rounded-lg object-cover ring-1 ring-slate-200" />
+                            <div class="min-w-0 flex-1">
+                                <a href="{{ route('activities.edit', $activity) }}" class="line-clamp-1 text-sm font-medium text-slate-800 hover:text-brand-900 hover:underline">{{ $activity->getTranslation('name', 'en', false) }}</a>
+                                <p class="text-[11px] text-slate-400">{{ $activity->city?->name }}@if ($activity->is_popular) · {{ __('popüler') }}@endif</p>
+                            </div>
+                            @if ($connected)
+                                <form method="POST" action="{{ route('pinterest.send-activity', $activity) }}">
+                                    @csrf
+                                    <button type="submit" class="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#e60023] ring-1 ring-[#e60023]/25 transition hover:bg-red-50">{{ __('Şimdi gönder') }}</button>
+                                </form>
+                            @endif
+                        </li>
+                    @empty
+                        <li class="px-6 py-8 text-center text-sm text-slate-500">{{ __('Sırada aktivite yok.') }}</li>
+                    @endforelse
+                </ul>
+            </x-admin.card>
+        @endif
+
         {{-- GÖNDERİLENLER --}}
         <x-admin.card class="overflow-hidden">
             <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
                 <div>
                     <h2 class="text-sm font-semibold text-slate-900">{{ __('Gönderilenler') }}</h2>
-                    <p class="text-xs text-slate-500">{{ __('Bir kez giden blog tekrar gitmez.') }}</p>
+                    <p class="text-xs text-slate-500">{{ __('Bir kez giden blog ya da aktivite tekrar gitmez.') }}</p>
                 </div>
-                <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold tabular-nums text-emerald-700">{{ $sentBlogs }}</span>
+                <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold tabular-nums text-emerald-700">{{ $sentBlogs + $sentActivities }}</span>
             </div>
             <ul class="divide-y divide-slate-100">
                 @forelse ($sent as $pin)
                     <li class="flex items-center gap-3 px-6 py-3">
-                        @if ($url = $thumb($pin->blog))
+                        @if ($url = $pin->thumb())
                             <img src="{{ $url }}" alt="" loading="lazy" class="h-11 w-14 shrink-0 rounded-lg object-cover ring-1 ring-slate-200" />
                         @endif
                         <div class="min-w-0 flex-1">
-                            <p class="line-clamp-1 text-sm font-medium text-slate-800">{{ $pin->blog?->getTranslation('title', 'en', false) ?? '—' }}</p>
-                            <p class="text-[11px] text-slate-400">{{ $pin->created_at->format('d.m.Y H:i') }} · {{ $pin->manual ? __('elle') : __('otomatik') }}</p>
+                            <p class="line-clamp-1 text-sm font-medium text-slate-800">{{ $pin->title() ?? '—' }}</p>
+                            <p class="text-[11px] text-slate-400">{{ $pin->activity_id ? __('Aktivite') : __('Blog') }} · {{ $pin->created_at->format('d.m.Y H:i') }} · {{ $pin->manual ? __('elle') : __('otomatik') }}</p>
                         </div>
                         <a href="{{ $pin->url() }}" target="_blank" rel="noopener" class="shrink-0 text-xs font-semibold text-emerald-700 hover:underline">{{ __('Pini aç') }} ↗</a>
                     </li>
@@ -263,8 +295,13 @@
                         </select>
                     </label>
                     <p class="-mt-1 text-[11px] text-slate-500">{{ __('Otomatikte "Rome Travel Guide" gibi şehir panoları kullanılır; yoksa Pinterest\'te açılır. Şehri olmayan yazılar ":name" panosuna gider. Bir pano seçersen hepsi o panoya gider.', ['name' => $autoBoard]) }}</p>
-                    <x-admin.input name="daily" type="number" :label="__('Günde kaç blog')" :value="$daily" min="1" max="50" required
-                        :hint="__('09:00–21:00 arasına yayılarak gönderilir.')" />
+                    <x-admin.input name="daily" type="number" :label="__('Günde kaç gönderim')" :value="$daily" min="1" max="50" required
+                        :hint="__('Bloglar ve aktiviteler toplamı; 09:00–21:00 arasına yayılarak gönderilir.')" />
+                    <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+                        <input type="hidden" name="activities" value="0">
+                        <input type="checkbox" name="activities" value="1" @checked($activitiesEnabled) class="size-4 accent-[#e60023]">
+                        {{ __('Aktiviteleri de gönder (bir blog, bir aktivite)') }}
+                    </label>
                     <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
                         <input type="hidden" name="enabled" value="0">
                         <input type="checkbox" name="enabled" value="1" @checked($enabled) class="size-4 accent-[#e60023]">

@@ -54,8 +54,12 @@ class PinterestController extends Controller
             'queueCount' => Pinterest::queue()->count(),
             'next' => Pinterest::queue()->limit(6)->get(),
             'sentBlogs' => PinterestPin::sent()->distinct()->count('blog_id'),
+            'activitiesEnabled' => Pinterest::activitiesEnabled(),
+            'activityQueueCount' => Pinterest::activityQueue()->count(),
+            'nextActivities' => Pinterest::activityQueue()->with(['cover', 'city'])->limit(6)->get(),
+            'sentActivities' => PinterestPin::sent()->distinct()->count('activity_id'),
             'noCover' => (clone $published)->whereNull('cover_path')->whereDoesntHave('pinterestPins', fn ($q) => $q->whereNotNull('pin_id'))->count(),
-            'sent' => PinterestPin::sent()->with('blog')->latest('id')->limit(12)->get(),
+            'sent' => PinterestPin::sent()->with(['blog', 'activity.cover'])->latest('id')->limit(12)->get(),
             'failing' => $failing,
             'maxTries' => Pinterest::MAX_TRIES,
             'trialBlocked' => Pinterest::trialBlocked(),
@@ -121,7 +125,9 @@ class PinterestController extends Controller
             'board_id' => ['nullable', 'string', 'max:64', 'regex:/^\d+$/'],
             'daily' => ['required', 'integer', 'between:1,50'],
             'enabled' => ['boolean'],
+            'activities' => ['boolean'],
         ]);
+        Setting::put('pinterest_activities', $request->boolean('activities') ? '1' : '0');
         // boş: otomatik pano (TripSpoiler Travel Guides) ilk gönderimde açılır / bulunur
         Setting::put('pinterest_board_id', $data['board_id'] ?? null);
         try {
@@ -137,17 +143,19 @@ class PinterestController extends Controller
         }
 
         return back()->with('success', $request->boolean('enabled')
-            ? __('Kaydedildi. Yayındaki bloglar günde :count tane sırayla gönderilecek.', ['count' => $data['daily']])
+            ? ($request->boolean('activities')
+                ? __('Kaydedildi. Yayındaki bloglar ve aktiviteler günde toplam :count tane sırayla gönderilecek.', ['count' => $data['daily']])
+                : __('Kaydedildi. Yayındaki bloglar günde :count tane sırayla gönderilecek.', ['count' => $data['daily']]))
             : __('Kaydedildi. Otomatik gönderim kapalı.'));
     }
 
     /** Gönderilemeyen blogların hata kayıtlarını siler: hepsi hemen yeniden sıraya girer */
     public function retryFailed()
     {
-        $count = PinterestPin::failed()->distinct()->count('blog_id');
+        $count = PinterestPin::failed()->distinct()->count('blog_id') + PinterestPin::failed()->distinct()->count('activity_id');
         PinterestPin::failed()->delete();
 
-        return back()->with('success', __(':count blog tekrar sıraya alındı.', ['count' => $count]));
+        return back()->with('success', __(':count kayıt tekrar sıraya alındı.', ['count' => $count]));
     }
 
     /** Blog düzenleme sayfasından elle gönder: sadece hiç gönderilmemiş ve kapak resmi olan blog */
@@ -172,6 +180,25 @@ class PinterestController extends Controller
 
         return back()->with($pin->pin_id ? 'success' : 'error', $pin->pin_id
             ? __('Blog Pinterest\'e gönderildi.')
+            : __('Gönderilemedi: :error', ['error' => $pin->error]));
+    }
+
+    /** Aktiviteyi sırayı beklemeden gönder: sadece hiç gönderilmemiş ve resmi olan */
+    public function sendActivity(\App\Models\Activity $activity)
+    {
+        if (!Pinterest::connected()) {
+            return back()->with('error', __('Önce Yönetim › Pinterest\'ten bağlan.'));
+        }
+        $pin = $this->pinterest->sendActivity($activity, manual: true);
+        if (!$pin->exists && Pinterest::isTrialError((string) $pin->error)) {
+            return back()->with('error', __('Pinterest uygulaman hâlâ "Trial" erişimde; gerçek pin açılamıyor. Pinterest\'te "Erişimi yükseltin" ile Standard erişim iste. Otomatik gönderim onay gelene kadar durduruldu.'));
+        }
+        if ($pin->pin_id) {
+            Setting::put('pinterest_trial_blocked', null);
+        }
+
+        return back()->with($pin->pin_id ? 'success' : 'error', $pin->pin_id
+            ? __('Aktivite Pinterest\'e gönderildi.')
             : __('Gönderilemedi: :error', ['error' => $pin->error]));
     }
 }

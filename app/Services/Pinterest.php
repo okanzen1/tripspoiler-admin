@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Activity;
 use App\Models\Blog;
 use App\Models\PinterestPin;
 use App\Models\Setting;
@@ -15,8 +16,9 @@ use Illuminate\Support\Str;
  * şifreli saklanır ve süresi dolmadan kendiliğinden yenilenir.
  *
  * Otomatik sıra (php artisan pinterest:send, saat başı): yayında + kapak resmi olan, daha önce başarıyla
- * gönderilmemiş bloglar, yayın tarihine göre eskiden yeniye; günde en fazla "pinterest_daily" (varsayılan 10)
- * gönderim, gün içine yayılır. Bir blog yalnızca bir kez gider; elle gönderim de kapak resmi ister.
+ * gönderilmemiş bloglar (eskiden yeniye) ve sitede görünen, resimli aktiviteler (popülerler önce), yarı yarıya;
+ * günde en fazla "pinterest_daily" (varsayılan 10) gönderim, gün içine yayılır. Her kayıt yalnızca bir kez gider;
+ * elle gönderim de resim ister.
  */
 class Pinterest
 {
@@ -122,12 +124,13 @@ class Pinterest
      * ("Rome Travel Guide"); şehri olmayan genel yazılar "TripSpoiler Travel Guides". Pano Pinterest'te aynı adla
      * varsa o kullanılır, yoksa açılır; eşleşme "pinterest_boards" ayarında saklanır.
      */
-    public function boardFor(Blog $blog): string
+    public function boardFor(Blog|Activity $item): string
     {
         if ($id = self::boardId()) {
             return $id;
         }
-        $city = $blog->cities()->orderBy('name')->first() ?? $blog->city;
+        // aktivite: kendi şehrinin panosu (o şehrin blog yazılarıyla aynı pano)
+        $city = $item instanceof Activity ? $item->city : ($item->cities()->orderBy('name')->first() ?? $item->city);
         $key = $city ? 'city:' . $city->id : 'general';
         $map = self::boardMap();
         if (isset($map[$key]['id'])) {
@@ -197,13 +200,11 @@ class Pinterest
     }
 
     /**
-     * Blogu seçili panoya pin olarak gönderir; sonucu (başarılı ya da hatalı) kaydeder.
+     * Blogu şehrinin panosuna pin olarak gönderir; sonucu (başarılı ya da hatalı) kaydeder.
      */
     public function send(Blog $blog, bool $manual = false): PinterestPin
     {
-        $pin = new PinterestPin(['blog_id' => $blog->id, 'board_id' => self::boardId(), 'manual' => $manual]);
-
-        try {
+        return $this->pin(new PinterestPin(['blog_id' => $blog->id, 'board_id' => self::boardId(), 'manual' => $manual]), function () use ($blog) {
             // bir blog yalnızca bir kez gider (otomatik de elle de)
             if ($blog->pinterestPins()->whereNotNull('pin_id')->exists()) {
                 throw new \RuntimeException(__('Bu blog zaten Pinterest\'e gönderildi; aynı blog tekrar gönderilmez.'));
@@ -211,18 +212,51 @@ class Pinterest
             if (!$blog->cover_path) {
                 throw new \RuntimeException(__('Blogun kapak resmi yok; Pinterest resimsiz pin kabul etmez.'));
             }
-            $board = $this->boardFor($blog);
-            $pin->board_id = $board;
             // her zaman İngilizce (panel dili ne olursa olsun)
             $title = (string) $blog->getTranslation('title', 'en', false);
-            $description = (string) ($blog->getTranslation('excerpt', 'en', false) ?: $blog->getTranslation('meta_description', 'en', false));
+
+            return [$this->boardFor($blog), $title,
+                (string) ($blog->getTranslation('excerpt', 'en', false) ?: $blog->getTranslation('meta_description', 'en', false)),
+                $blog->siteUrl(), $blog->coverUrl()];
+        });
+    }
+
+    /**
+     * Aktiviteyi (tur, bilet, şehir kartı) şehrinin panosuna pin olarak gönderir: İngilizce adı, kısa açıklaması,
+     * ilk resmi ve sitedeki sayfası. Bir aktivite yalnızca bir kez gider.
+     */
+    public function sendActivity(Activity $activity, bool $manual = false): PinterestPin
+    {
+        return $this->pin(new PinterestPin(['activity_id' => $activity->id, 'board_id' => self::boardId(), 'manual' => $manual]), function () use ($activity) {
+            if ($activity->pinterestPins()->whereNotNull('pin_id')->exists()) {
+                throw new \RuntimeException(__('Bu aktivite zaten Pinterest\'e gönderildi; aynı aktivite tekrar gönderilmez.'));
+            }
+            $image = $activity->cover?->url();
+            if (!$image) {
+                throw new \RuntimeException(__('Aktivitenin resmi yok; Pinterest resimsiz pin kabul etmez.'));
+            }
+            $description = $activity->getTranslation('meta_description', 'en', false)
+                ?: Str::limit(trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags((string) $activity->getTranslation('description', 'en', false))))), 480);
+
+            return [$this->boardFor($activity), (string) $activity->getTranslation('name', 'en', false), (string) $description, $activity->siteUrl(), $image];
+        });
+    }
+
+    /**
+     * Ortak gönderim: $prepare [pano, başlık, açıklama, bağlantı, resim] verir (ya da gönderilemeyeceğini söyler).
+     */
+    private function pin(PinterestPin $pin, \Closure $prepare): PinterestPin
+    {
+        try {
+            [$board, $title, $description, $link, $image] = $prepare();
+            $pin->board_id = $board;
             $response = $this->request('post', '/pins', [
                 'board_id' => $board,
                 'title' => Str::limit($title, 97),
                 'description' => Str::limit(strip_tags($description), 490),
-                'link' => $blog->siteUrl(),
+                'link' => $link,
                 'alt_text' => Str::limit($title, 490),
-                'media_source' => ['source_type' => 'image_url', 'url' => $blog->coverUrl()],
+                'media_source' => ['source_type' => 'image_url', 'url' => $image],
             ]);
             $pin->pin_id = (string) $response['id'];
         } catch (\Throwable $e) {
@@ -230,7 +264,7 @@ class Pinterest
             if ($e->getCode() === 404 && $pin->board_id && !self::boardId()) {
                 $this->forgetBoard($pin->board_id);
             }
-            // Uygulama henüz "Trial" erişimde: Pinterest gerçek pin açtırmaz. Otomatik gönderim durur, blog deneme hakkı
+            // Uygulama henüz "Trial" erişimde: Pinterest gerçek pin açtırmaz. Otomatik gönderim durur, kayıt deneme hakkı
             // harcamadan sırada kalır (kayıt tutulmaz); Standard erişim gelince panelden yeniden açılır.
             if (self::isTrialError($e->getMessage())) {
                 Setting::put('pinterest_enabled', '0');
@@ -271,6 +305,22 @@ class Pinterest
             ->orderByRaw('published_at IS NULL')->orderBy('published_at')->orderBy('id');
     }
 
+    /** Aktiviteler de gönderilsin mi (Yönetim › Pinterest; varsayılan evet) */
+    public static function activitiesEnabled(): bool
+    {
+        return Setting::get('pinterest_activities') !== '0';
+    }
+
+    /** Otomatik sıradaki aktiviteler: sitede görünen, resimli, hiç başarıyla gönderilmemiş; popülerler önce */
+    public static function activityQueue()
+    {
+        return Activity::visible()->whereHas('images')
+            ->whereDoesntHave('pinterestPins', fn ($q) => $q->whereNotNull('pin_id'))
+            ->whereDoesntHave('pinterestPins', fn ($q) => $q->whereNull('pin_id')->where('created_at', '>', now()->subHours(self::RETRY_HOURS)))
+            ->has('pinterestPins', '<', self::MAX_TRIES)
+            ->orderByDesc('is_popular')->orderBy('city_id')->orderBy('sort_order')->orderBy('id');
+    }
+
     /** Bugün otomatik sırayla yapılan gönderimler (hatalılar da sayılır: hata tekrar tekrar denenip günü doldurmasın) */
     public static function sentToday(): int
     {
@@ -297,12 +347,22 @@ class Pinterest
         }
         $now = (int) ceil($left / (self::LAST_HOUR - $hour + 1));
 
+        // Bloglar ve aktiviteler sırayla: bir blog, bir aktivite… (biri bittiyse diğeri devam eder)
         $blogs = self::queue()->limit($now)->get();
-        foreach ($blogs as $blog) {
-            $this->send($blog);
+        $activities = self::activitiesEnabled() ? self::activityQueue()->with(['cover', 'city'])->limit($now)->get() : collect();
+        $sent = 0;
+        $base = self::sentToday();
+        for ($i = 0; $i < $now && self::enabled(); $i++) {
+            $activityTurn = ($base + $i) % 2 === 1;
+            $item = ($activityTurn ? $activities->shift() : $blogs->shift()) ?? ($activityTurn ? $blogs->shift() : $activities->shift());
+            if (!$item) {
+                break;
+            }
+            $item instanceof Activity ? $this->sendActivity($item) : $this->send($item);
+            $sent++;
         }
 
-        return $blogs->count();
+        return $sent;
     }
 
     private function get(string $path, array $query = []): array

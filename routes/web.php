@@ -250,6 +250,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('yonetim')->group(function () 
     Route::put('/pinterest/ayarlar', [\App\Http\Controllers\PinterestController::class, 'saveSettings'])->name('pinterest.settings');
     Route::post('/pinterest/tekrar-dene', [\App\Http\Controllers\PinterestController::class, 'retryFailed'])->name('pinterest.retry');
     Route::post('/pinterest/blog/{blog}', [\App\Http\Controllers\PinterestController::class, 'send'])->middleware('throttle:20,1')->name('pinterest.send');
+    Route::post('/pinterest/aktivite/{activity}', [\App\Http\Controllers\PinterestController::class, 'sendActivity'])->middleware('throttle:20,1')->name('pinterest.send-activity');
     Route::get('/islem-kaydi', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index');
     // Silinen resimler (çöp kutusu, 30 gün)
     Route::get('/silinen-resimler', [\App\Http\Controllers\MediaTrashController::class, 'index'])->name('media-trash.index');
