@@ -95,7 +95,7 @@
                 <circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01" />
             </x-admin.nav-link>
 
-            <x-admin.nav-link route="campaigns.index" :todo="\App\Support\TranslationTodo::area('campaigns')" :match="['campaigns.*']" :label="__('Kampanyalar')" :badge="\App\Models\Campaign::visible()->count()">
+            <x-admin.nav-link route="campaigns.index" :todo="\App\Support\TranslationTodo::area('campaigns')" :match="['campaigns.*']" :label="__('Kampanyalar')" :badge="\App\Models\Campaign::visible()->count()" badge-tone="count" :badge-title="__('yayında')">
                 <path d="M20 12v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8M2.5 7.5h19v4.5h-19zM12 21V7.5M12 7.5H8a2.5 2.5 0 1 1 0-5c2.5 0 4 5 4 5zM12 7.5h4a2.5 2.5 0 1 0 0-5c-2.5 0-4 5-4 5z" />
             </x-admin.nav-link>
 

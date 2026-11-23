@@ -54,7 +54,7 @@ if (bell) {
     let busy = false;
 
     const setBadge = (count) => {
-        badge.textContent = count > 99 ? '99+' : String(count);
+        badge.textContent = Number(count).toLocaleString('tr-TR');
         badge.classList.toggle('hidden', !count);
     };
 

@@ -10,7 +10,7 @@
         [$box, $dot, $btn] = $tones[$tone] ?? $tones['rose'];
     @endphp
     <div {{ $attributes->class(['mb-5 flex flex-wrap items-center gap-3 rounded-2xl px-5 py-3.5 text-sm ring-1', $box]) }}>
-        <span class="grid min-w-7 place-items-center rounded-full {{ $dot }} px-2 py-0.5 text-xs font-bold text-white">{{ $count > 99 ? '99+' : $count }}</span>
+        <span class="grid min-w-7 place-items-center rounded-full {{ $dot }} px-2 py-0.5 text-xs font-bold text-white">{{ number_format($count, 0, ',', '.') }}</span>
         <p class="min-w-0 flex-1 font-medium">{{ $text }}</p>
         @if ($href)
             <a href="{{ $href }}" class="inline-flex shrink-0 items-center gap-1 rounded-lg {{ $btn }} px-3 py-1.5 text-xs font-semibold text-white transition">{{ $link ?? __('Göster') }} →</a>
