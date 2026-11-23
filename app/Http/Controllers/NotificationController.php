@@ -29,6 +29,7 @@ class NotificationController extends Controller
             'unread' => $request->user()->unreadNotifications()->count(),
             'running' => TranslationJobs::active(),
             'bulk' => Queues::bulkCount(),
+            'doneHour' => \App\Support\RecentTranslations::lastHour(),
             'schedulerAlive' => Queues::schedulerAlive(),
         ]);
     }
@@ -43,6 +44,7 @@ class NotificationController extends Controller
             'items' => $user->notifications()->limit(8)->get()->map(fn ($n) => Notify::present($n))->all(),
             'running' => array_map(fn ($job) => ['key' => $job['key'], 'title' => $job['title'], 'done' => $job['done'], 'total' => $job['total'], 'message' => $job['message']], TranslationJobs::active()),
             'bulk' => Queues::bulkCount(),
+            'done_hour' => \App\Support\RecentTranslations::lastHour(),
         ]);
     }
 

@@ -14,6 +14,8 @@ class RecentTranslations
 {
     private const KEY = 'translations:recent';
 
+    private const BUCKET = 'translations:done:';
+
     public static function push(Model $model, array $locales): void
     {
         $type = Str::snake(class_basename($model));
@@ -24,6 +26,10 @@ class RecentTranslations
             'at' => now()->timestamp,
         ]);
         Cache::put(self::KEY, array_slice($items, 0, 40), now()->addDay());
+        // ilerleme sayacı: 10 dakikalık dilimler (zil "son 1 saatte X dil çevrildi" der)
+        $bucket = self::BUCKET . intdiv(now()->timestamp, 600);
+        Cache::add($bucket, 0, now()->addHours(2));
+        Cache::increment($bucket, count($locales));
     }
 
     /** @return list<array{subject: string, locales: string, at: int}> */
@@ -32,11 +38,11 @@ class RecentTranslations
         return Cache::get(self::KEY, []);
     }
 
-    /** Son 1 saatte biten çeviri sayısı */
+    /** Son 1 saatte çevrilen dil sayısı (kayıt × dil) */
     public static function lastHour(): int
     {
-        $since = now()->subHour()->timestamp;
+        $now = intdiv(now()->timestamp, 600);
 
-        return count(array_filter(self::all(), fn ($item) => $item['at'] >= $since));
+        return (int) collect(range($now - 5, $now))->sum(fn ($bucket) => (int) Cache::get(self::BUCKET . $bucket, 0));
     }
 }

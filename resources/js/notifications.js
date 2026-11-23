@@ -65,7 +65,7 @@ if (bell) {
             : `<li class="px-4 py-8 text-center text-sm text-slate-400">${escape(t('Henüz bildirim yok.'))}</li>`;
 
         const lines = data.running.map((job) => `${escape(job.title)} · ${job.done} / ${job.total}`);
-        if (data.bulk) lines.push(escape(t('Toplu çeviri: :count kayıt sırada', { count: data.bulk })));
+        if (data.bulk) lines.push(escape(t('Toplu çeviri: :count kayıt sırada', { count: data.bulk }) + ' · ' + t('son 1 saatte :count dil çevrildi', { count: data.done_hour ?? 0 })));
         const spin = '<svg class="size-3.5 shrink-0 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-20"/><path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
         status.innerHTML = lines.map((line) => `<p class="flex items-center gap-2">${spin}<span class="truncate">${line}</span></p>`).join('');
         status.classList.toggle('hidden', !lines.length);

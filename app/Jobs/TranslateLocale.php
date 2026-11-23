@@ -45,6 +45,7 @@ class TranslateLocale implements ShouldQueue
             $force = $this->force && $this->attempts() === 1;
             $translator->heartbeat(fn () => TranslationJobs::touch($this->key))
                 ->translate($model, [$this->locale], fn () => TranslationJobs::progress($this->key, $this->locale), $force);
+            \App\Support\RecentTranslations::push($model, [$this->locale]);
         } catch (Throwable $e) {
             if ($this->attempts() < $this->tries) {
                 $wait = $this->backoff[$this->attempts() - 1] ?? 300;
