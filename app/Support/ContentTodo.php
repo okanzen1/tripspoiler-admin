@@ -11,7 +11,6 @@ use App\Models\CityGuideTopic;
 use App\Models\Page;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Throwable;
 
 /**
@@ -43,21 +42,34 @@ class ContentTodo
      */
     public static function items(): Collection
     {
-        return self::$items ??= collect(Cache::remember(self::CACHE, now()->addHour(), function () {
-            try {
-                return self::build();
-            } catch (Throwable $e) {
-                report($e);
-
-                return [];
-            }
-        }));
+        // Hazır değer okunur, sayfa hesaplama beklemez (App\Support\StaleCache; zamanlayıcı dakikada bir yeniler)
+        return self::$items ??= collect(StaleCache::get(self::CACHE, fn () => self::safeBuild()));
     }
 
+    /** Kayıt değişti: liste arka planda yeniden hesaplanacak (panel:refresh-counters) */
     public static function forget(): void
     {
         self::$items = null;
-        Cache::forget(self::CACHE);
+        StaleCache::invalidate(self::CACHE);
+    }
+
+    /** Zamanlayıcıdan: eskimişse yeniden hesapla */
+    public static function refresh(bool $force = false): bool
+    {
+        self::$items = null;
+
+        return StaleCache::refresh(self::CACHE, fn () => self::safeBuild(), $force);
+    }
+
+    private static function safeBuild(): array
+    {
+        try {
+            return self::build();
+        } catch (Throwable $e) {
+            report($e);
+
+            return [];
+        }
     }
 
     public static function count(string ...$types): int

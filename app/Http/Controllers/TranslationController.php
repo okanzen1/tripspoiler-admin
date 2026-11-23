@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\TranslateModel;
+use App\Support\BulkTranslation;
+use App\Support\Queues;
 use App\Models\Language;
 use App\Models\TranslationState;
 use App\Services\Translation\ModelTranslator;
@@ -10,11 +11,7 @@ use App\Support\HtmlSanitizer;
 use App\Support\TranslationJobs;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
-use Throwable;
-
-use function Illuminate\Support\defer;
 
 /**
  * Yönetim → Diller ve çeviri: sitenin dilleri, dil dil ya da tüm dillere toplu çeviri (ücretsiz Google Çeviri).
@@ -28,28 +25,26 @@ class TranslationController extends Controller
     {
         $languages = Language::ordered()->get();
 
-        // Tür başına kayıt sayısı ve dil başına çevirisi eksik/eskimiş kayıt sayısı
+        // Sayılar panelin hazır listesinden (App\Support\TranslationTodo, arka planda yenilenir): sayfa bütün kayıtları
+        // taramaz. Tür başına kayıt sayısı ve dil başına çevirisi eksik / eskimiş kayıt sayısı.
+        $todo = \App\Support\TranslationTodo::items();
         $types = [];
-        $pendingByLocale = [];
         foreach (ModelTranslator::TYPES as $type => $class) {
-            $states = TranslationState::where('translatable_type', (new $class)->getMorphClass())->get()->groupBy('translatable_id');
-            $ok = 0;
-            $items = $class::all();
-            foreach ($items as $item) {
-                $status = $this->translator->status($item, $states->get($item->getKey(), collect())->pluck('source_hash', 'locale'));
-                $ok += collect($status)->every(fn ($s) => $s === 'ok') ? 1 : 0;
-                foreach ($status as $locale => $state) {
-                    $pendingByLocale[$locale] = ($pendingByLocale[$locale] ?? 0) + ($state === 'ok' ? 0 : 1);
-                }
+            $total = $class::count();
+            $types[$type] = ['total' => $total, 'ok' => max(0, $total - $todo->where('type', $type)->count())];
+        }
+        $pendingByLocale = [];
+        foreach ($todo as $item) {
+            foreach ($item['missing'] ?? [] as $locale) {
+                $pendingByLocale[$locale] = ($pendingByLocale[$locale] ?? 0) + 1;
             }
-            $types[$type] = ['total' => $items->count(), 'ok' => $ok];
         }
 
         return view('admin.translations.index', [
             'languages' => $languages,
             'types' => $types,
             'pendingByLocale' => $pendingByLocale,
-            'queued' => DB::table('jobs')->where('payload', 'like', '%TranslateModel%')->count(),
+            'queued' => Queues::bulkCount(),
         ]);
     }
 
@@ -66,50 +61,36 @@ class TranslationController extends Controller
     }
 
     /**
-     * Çevirisi eksik ya da eskimiş kayıtları sıraya alır: tüm diller ya da tek dil (locale).
+     * Çevirisi eksik ya da eskimiş kayıtları toplu çeviri sırasına alır: tüm diller ya da tek dil (locale).
      */
     public function translateAll(Request $request)
     {
         $locale = $request->validate(['locale' => ['nullable', Rule::in(Language::targets()->pluck('code'))]])['locale'] ?? null;
 
-        $count = 0;
-        foreach (ModelTranslator::TYPES as $class) {
-            foreach ($class::all() as $item) {
-                $pending = $this->translator->pending($item);
-                $locales = $locale ? array_values(array_intersect($pending, [$locale])) : $pending;
-                if ($locales) {
-                    TranslateModel::dispatch($item, $locales);
-                    $count++;
-                }
-            }
-        }
-
-        return back()->with('success', $count
-            ? __(':count kayıt çeviri sırasına alındı; arka planda tamamlanır.', ['count' => $count])
-            : __('Tüm çeviriler zaten güncel.'));
+        return $this->queued(BulkTranslation::queue(BulkTranslation::pendingKeys($locale), $locale, $request->user()?->id));
     }
 
     /**
-     * "Çevirisi eksik olanlar" kutusundaki "Tümünü sırayla çevir": listedeki kayıtlar (type:id) çeviri sırasına alınır;
-     * zamanlayıcı (cron) her dakika sıradakileri tek tek çevirir (App\Jobs\TranslateModel).
+     * "Çevirisi eksik olanlar" kutusundaki "Tümünü sırayla çevir": listedeki kayıtlar (type:id) toplu çeviri sırasına
+     * alınır; arka planda kayıt kayıt (her kaydın bütün dilleri bitince sıradaki) çevrilir.
      */
     public function translateList(Request $request)
     {
-        $keys = $request->validate(['items' => ['required', 'array', 'max:500'], 'items.*' => ['string', 'max:60']])['items'];
+        $keys = $request->validate(['items' => ['required', 'array', 'max:2000'], 'items.*' => ['string', 'max:60']])['items'];
 
-        $count = 0;
-        foreach (array_unique($keys) as $key) {
-            [$type, $id] = array_pad(explode(':', $key, 2), 2, null);
-            $model = isset(ModelTranslator::TYPES[$type]) ? ModelTranslator::TYPES[$type]::find((int) $id) : null;
-            if ($model && $this->translator->pending($model)) {
-                TranslateModel::dispatch($model); // eksik / eskimiş diller, çalıştığı anda hesaplanır
-                $count++;
-            }
+        return $this->queued(BulkTranslation::queue($keys, null, $request->user()?->id));
+    }
+
+    private function queued(int $count)
+    {
+        if (!$count) {
+            return back()->with('success', __('Tüm çeviriler zaten güncel.'));
         }
+        $message = __(':count kayıt çeviri sırasına alındı. Arka planda kayıt kayıt çevrilir; bitince bildirim gelir.', ['count' => $count]);
 
-        return back()->with('success', $count
-            ? __(':count kayıt çeviri sırasına alındı; arka planda sırayla çevrilir, bitenler listeden düşer.', ['count' => $count])
-            : __('Tüm çeviriler zaten güncel.'));
+        $response = back()->with('success', $message);
+
+        return Queues::schedulerAlive() ? $response : $response->with('error', __('Dikkat: zamanlayıcı (cron) şu an çalışmıyor, sıradaki işler başlamaz.'));
     }
 
     /**
@@ -128,31 +109,18 @@ class TranslationController extends Controller
             default => null,
         };
 
-        // Panel (fetch) arka planda çevirtir: hemen cevap döner, çeviri cevaptan sonra sürer; durum sağ üstte görünür
+        // Her zaman arka planda (sırada) çevrilir: panel isteği beklemez
+        $response = $this->translateInBackground($type, $model, $locales);
         if ($request->expectsJson()) {
-            return $this->translateInBackground($type, $model, $locales);
+            return $response;
         }
+        $data = $response->getData(true);
 
-        set_time_limit(600); // tüm diller birkaç dakika sürebilir
-        try {
-            $done = $this->translator->translate($model, $locales);
-        } catch (Throwable $e) {
-            report($e);
-
-            return back()->with('error', __('Çeviri yapılamadı: :error', ['error' => $e->getMessage()]));
-        }
-
-        $names = Language::whereIn('code', $done)->pluck('native_name')->implode(', ');
-        if ($done) {
-            \App\Support\ActivityLogger::write('translated', \Illuminate\Support\Str::snake(class_basename($model)), $model->getKey(), \App\Support\ActivityLogger::label($model), ['Diller' => [null, $names]]);
-        }
-
-        return back()->with('success', $done
-            ? __('Çevrildi: :languages', ['languages' => $names])
-            : __('Tüm çeviriler zaten güncel.'));
+        return back()->with('success', $data['message'] ?? __('Çeviri sıraya alındı; bitince bildirim gelir.'));
     }
+
     /**
-     * Çeviriyi başlatır ve hemen döner; diller cevap gönderildikten sonra (defer) çevrilir, ilerleme TranslationJobs'ta.
+     * Çeviriyi sıraya alır ve hemen döner; diller arka planda çevrilir, ilerleme TranslationJobs'ta, bitince bildirim gelir.
      *
      * @param  list<string>|null  $locales
      */
@@ -175,47 +143,15 @@ class TranslationController extends Controller
             : $owner['title'];
         $job = TranslationJobs::start($key, (string) $title, url()->previous() ?: $owner['url'], $locales);
 
-        // Zamanlayıcı (cron) çalışıyorsa: diller sırayla, birer iş olarak (sunucunun süre sınırına takılmaz,
-        // Google engellerse bekleyip devam eder). Çalışmıyorsa eskisi gibi bu istekte, cevaptan sonra.
-        if (\Illuminate\Support\Facades\Cache::get('scheduler:last_run', 0) > time() - 180) {
-            TranslationJobs::wait($key, 900, __('Sıraya alındı; birazdan başlayacak.'));
-            \Illuminate\Support\Facades\Bus::chain([
-                ...array_map(fn ($locale) => new \App\Jobs\TranslateLocale($type, (int) $model->getKey(), $locale, $key, $force), $locales),
-                new \App\Jobs\FinishTranslation($key, $locales, \Illuminate\Support\Str::snake(class_basename($model)), (int) $model->getKey(), (string) $title),
-            ])->dispatch();
+        // Diller sırayla, birer iş olarak, öncelikli sırada (toplu çevirinin arkasında beklemez). Çeviri hiçbir zaman
+        // bu istekte yapılmaz: eskiden zamanlayıcı geç kalınca panelin kendi süreçlerinde çevriliyordu ve panel kilitleniyordu.
+        TranslationJobs::wait($key, 900, __('Sıraya alındı; birazdan başlayacak.'));
+        \Illuminate\Support\Facades\Bus::chain([
+            ...array_map(fn ($locale) => new \App\Jobs\TranslateLocale($type, (int) $model->getKey(), $locale, $key, $force), $locales),
+            new \App\Jobs\FinishTranslation($key, $locales, \Illuminate\Support\Str::snake(class_basename($model)), (int) $model->getKey(), (string) $title),
+        ])->onQueue(Queues::HIGH)->dispatch();
 
-            return response()->json(['job' => TranslationJobs::get($key)]);
-        }
-
-        // Kullanıcı sayfadan ayrılsa da süreç devam etsin
-        ignore_user_abort(true);
-        defer(function () use ($key, $model, $locales, $type, $title, $force) {
-            ignore_user_abort(true);
-            set_time_limit(900);
-            // aynı anda tek çeviri: Google çok sık istekte engel koyar; sıradakiler bekler
-            $lock = \Illuminate\Support\Facades\Cache::lock('translation-run', 900);
-            TranslationJobs::wait($key, 900, __('Sıraya alındı; birazdan başlayacak.'));
-            if (!$lock->block(840)) {
-                TranslationJobs::fail($key, __('Çeviri yarıda kaldı, tekrar dene.'));
-
-                return;
-            }
-            try {
-                $this->translator->heartbeat(fn () => TranslationJobs::touch($key));
-                $done = $this->translator->translate($model, $locales, fn (string $locale) => TranslationJobs::progress($key, $locale), $force);
-                $names = Language::whereIn('code', $done)->pluck('native_name')->implode(', ');
-                TranslationJobs::finish($key, __('Çevrildi: :languages', ['languages' => $names]));
-                \App\Support\ActivityLogger::write('translated', \Illuminate\Support\Str::snake(class_basename($model)), $model->getKey(), (string) $title, ['Diller' => [null, $names]]);
-            } catch (Throwable $e) {
-                report($e);
-                TranslationJobs::fail($key, __('Çeviri yapılamadı: :error', ['error' => $e->getMessage()]));
-            } finally {
-                $this->translator->heartbeat(null);
-                $lock->release();
-            }
-        });
-
-        return response()->json(['job' => $job]);
+        return response()->json(['job' => TranslationJobs::get($key), 'warning' => Queues::schedulerAlive() ? null : __('Zamanlayıcı (cron) şu an çalışmıyor; çeviri o çalışınca başlar.')]);
     }
 
     /** Panelin sağ üstteki çeviri bildirimi için işlerin durumu */

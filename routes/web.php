@@ -55,6 +55,16 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
     Route::get('/ceviri/{type}/{id}/{locale}', [TranslationController::class, 'edit'])->whereNumber('id')->name('translations.edit');
     Route::put('/ceviri/{type}/{id}/{locale}', [TranslationController::class, 'update'])->whereNumber('id')->name('translations.update');
     Route::get('/ceviri-durum', [TranslationController::class, 'jobs'])->name('translations.jobs');
+
+    // Bildirimler (sağ üstteki zil): okundu bilgisi kişiye özel
+    Route::controller(\App\Http\Controllers\NotificationController::class)->prefix('bildirimler')->name('notifications.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/ozet', 'summary')->name('summary');
+        Route::post('/tumu-okundu', 'readAll')->name('read-all');
+        Route::delete('/okunanlar', 'clearRead')->name('clear-read');
+        Route::get('/{id}/ac', 'open')->name('open');
+        Route::post('/{id}/okundu', 'read')->name('read');
+    });
     Route::post('/ceviri/{type}/{id}', [TranslationController::class, 'translate'])->whereNumber('id')->middleware('throttle:20,1')->name('translations.translate');
     Route::post('/editor-gorseli', [EditorImageController::class, 'store'])->middleware('throttle:60,1')->name('editor-images.store');
 

@@ -25,7 +25,7 @@
     <div {{ $attributes->class('mb-6 rounded-2xl bg-purple-50 p-4 ring-1 ring-purple-200 sm:p-5') }}>
         @php
             // sırada bekleyen çeviriler (cron her dakika işler)
-            $queued = rescue(fn () => \Illuminate\Support\Facades\DB::table('jobs')->where('payload', 'like', '%TranslateModel%')->count(), 0, false);
+            $queued = \App\Support\Queues::bulkCount();
         @endphp
         <div class="flex flex-wrap items-start justify-between gap-3">
         <p class="flex flex-wrap items-center gap-2 text-sm font-semibold text-purple-900">

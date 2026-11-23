@@ -8,7 +8,6 @@ use App\Services\Translation\ModelTranslator;
 use App\Support\TranslationJobs;
 use Illuminate\Http\Request;
 
-use function Illuminate\Support\defer;
 
 /**
  * Sayfa içeriği (şimdilik Hakkımızda): sayfadaki bölümlerin yazıları. Her blok bir section_texts kaydı
@@ -179,11 +178,9 @@ class PageContentController extends Controller
         return back()->with('success', __(':name kaydedildi. Diğer dillere çevirmek için “Tüm dillere çevir”e bas.', ['name' => __($def[0])]));
     }
 
-    /** Bölümün bütün yazılarını eksik/eskimiş dillere çevirir */
     /**
-     * Bölümün (başlık + kartlar) eksik/eskimiş dillerini çevirir. Panel (fetch) arka planda çevirtir: hemen döner,
-     * çeviri cevaptan sonra sürer, ilerleme sağ üstteki bildirimde (TranslationJobs). Sıraya (kuyruk) atılmaz:
-     * canlıda kuyruk işçisi olmayınca çeviri hiç yapılmıyordu.
+     * Bölümün (başlık + kartlar) eksik/eskimiş dillerini çevirir: öncelikli sıraya alınır, hemen döner; bitince
+     * bildirim gelir (TranslationJobs, Notify).
      */
     public function translate(Request $request, Page $page, string $section)
     {
@@ -203,43 +200,26 @@ class PageContentController extends Controller
                 : back()->with('success', __('Tüm çeviriler zaten güncel.'));
         }
 
-        $run = function (?string $jobKey = null) use ($work, $page, $section, $def) {
-            $done = [];
-            foreach ($work as [$record, $locales]) {
-                $done = [...$done, ...$this->translator->translate($record, $locales, fn (string $locale) => $jobKey && TranslationJobs::progress($jobKey, $locale))];
-            }
-            $names = \App\Models\Language::whereIn('code', array_unique($done))->pluck('native_name')->implode(', ');
-            \App\Support\ActivityLogger::write('translated', 'section_text', null, $page->name . ' · ' . __($def[0]), ['Diller' => [null, $names]]);
-
-            return $names;
-        };
-
-        if (!$request->expectsJson()) {
-            set_time_limit(900);
-            $names = $run();
-
-            return back()->with('success', __('Çevrildi: :languages', ['languages' => $names]));
-        }
-
         $key = "content:{$page->id}:{$section}";
         if (TranslationJobs::running($key)) {
-            return response()->json(['job' => TranslationJobs::get($key)]);
+            return $request->expectsJson()
+                ? response()->json(['job' => TranslationJobs::get($key)])
+                : back()->with('success', __('Çeviri zaten sürüyor.'));
         }
-        // ilerleme: her (kayıt, dil) çifti bir adım
+        // ilerleme: her (kayıt, dil) çifti bir adım. Arka planda, öncelikli sırada; panel isteğinde çevrilmez.
         $steps = $work->flatMap(fn ($item) => $item[1])->values()->all();
-        $job = TranslationJobs::start($key, $page->name . ' · ' . __($def[0]), url()->previous(), $steps);
+        $title = $page->name . ' · ' . __($def[0]);
+        $job = TranslationJobs::start($key, $title, url()->previous(), $steps);
+        TranslationJobs::wait($key, 900, __('Sıraya alındı; birazdan başlayacak.'));
+        $force = $targets !== null;
+        \Illuminate\Support\Facades\Bus::chain([
+            ...$work->flatMap(fn ($item) => array_map(fn ($locale) => new \App\Jobs\TranslateLocale('section', (int) $item[0]->getKey(), $locale, $key, $force), $item[1]))->all(),
+            new \App\Jobs\FinishTranslation($key, array_values(array_unique($steps)), 'section_text', null, $title),
+        ])->onQueue(\App\Support\Queues::HIGH)->dispatch();
 
-        ignore_user_abort(true);
-        defer(function () use ($run, $key) {
-            ignore_user_abort(true);
-            set_time_limit(900);
-            try {
-                TranslationJobs::finish($key, __('Çevrildi: :languages', ['languages' => $run($key)]));
-            } catch (\Throwable $e) {
-                report($e);
-                TranslationJobs::fail($key, __('Çeviri yapılamadı: :error', ['error' => $e->getMessage()]));
-            }
-        });
+        if (!$request->expectsJson()) {
+            return back()->with('success', __('Çeviri sıraya alındı; bitince bildirim gelir.'));
+        }
 
         return response()->json(['job' => $job]);
     }

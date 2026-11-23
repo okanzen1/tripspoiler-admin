@@ -83,14 +83,16 @@ class TranslationTest extends TestCase
         $this->assertSame($translated, $faq->fresh()->getTranslation('question', 'tr'));
     }
 
-    public function test_bulk_job_with_many_languages_splits_into_one_short_job_per_language(): void
+    public function test_bulk_job_translates_one_record_language_by_language_before_the_next(): void
     {
         \Illuminate\Support\Facades\Queue::fake();
-        (new TranslateModel($this->activity, ['de', 'tr']))->handle(app(ModelTranslator::class));
+        $job = new TranslateModel($this->activity, ['de', 'tr']);
+        $this->assertSame(\App\Support\Queues::BULK, $job->queue);
+        $job->handle(app(ModelTranslator::class));
 
-        $this->assertSame([], $this->google->requests); // kendisi çevirmedi, dillere böldü
-        \Illuminate\Support\Facades\Queue::assertPushed(TranslateModel::class, 2);
-        \Illuminate\Support\Facades\Queue::assertPushed(TranslateModel::class, fn (TranslateModel $job) => $job->locales === ['de'] && !$job->onlyPending);
+        // iki dil de bu işte çevrildi, sıranın sonuna dil işi eklenmedi (kayıt bitmeden sıradakine geçilmez)
+        $this->assertSame(['de', 'tr'], array_values(array_unique(array_column($this->google->requests, 'locale'))));
+        \Illuminate\Support\Facades\Queue::assertNothingPushed();
     }
 
     public function test_finished_queue_translation_shows_on_background_jobs_page(): void
@@ -115,12 +117,13 @@ class TranslationTest extends TestCase
         $this->assertDatabaseMissing('jobs', ['id' => $id]);
     }
 
-    public function test_split_pending_only_job_does_not_force_retranslation(): void
+    public function test_pending_only_job_does_not_force_retranslation(): void
     {
-        \Illuminate\Support\Facades\Queue::fake();
-        // "eksikleri çevir" (dil verilmeden) bölününce güncel kayıt zorla yeniden çevrilmez
+        (new TranslateModel($this->activity, ['tr']))->handle(app(ModelTranslator::class));
+        $this->google->requests = [];
+        // "eksikleri çevir" (dil verilmeden): güncel olan tr tekrar çevrilmez, sadece eskimiş de
         (new TranslateModel($this->activity))->handle(app(ModelTranslator::class));
-        \Illuminate\Support\Facades\Queue::assertPushed(TranslateModel::class, fn (TranslateModel $job) => $job->locales === ['tr'] && $job->onlyPending);
+        $this->assertSame(['de'], array_values(array_unique(array_column($this->google->requests, 'locale'))));
     }
 
     public function test_panel_translation_runs_language_by_language_in_the_queue_when_cron_is_alive(): void
@@ -200,13 +203,19 @@ class TranslationTest extends TestCase
         $this->actingAs($editor)->post($url, ['locale' => 'ja'])->assertSessionHasErrors('locale'); // kapalı dil
     }
 
-    public function test_translation_errors_are_shown(): void
+    public function test_failed_translation_notifies_the_person_who_started_it(): void
     {
-        $this->google->fail = true;
+        $editor = User::factory()->create();
+        $other = User::factory()->create();
+        $this->actingAs($editor);
+        \App\Support\TranslationJobs::start('activity:' . $this->activity->id, 'Hagia', '/x', ['de']);
 
-        $this->actingAs(User::factory()->create())
-            ->post(route('translations.translate', ['activity', $this->activity->id]))
-            ->assertSessionHas('error');
+        (new \App\Jobs\TranslateLocale('activity', $this->activity->id, 'de', 'activity:' . $this->activity->id, false))->failed(new \RuntimeException('Google yok'));
+
+        $this->assertSame('failed', \App\Support\TranslationJobs::get('activity:' . $this->activity->id)['status']);
+        $this->assertSame(1, $editor->unreadNotifications()->count());
+        $this->assertSame('translation_failed', $editor->notifications()->first()->data['kind']);
+        $this->assertSame(0, $other->notifications()->count()); // sadece başlatana
         $this->assertSame(0, TranslationState::count());
     }
 
@@ -239,7 +248,8 @@ class TranslationTest extends TestCase
         Queue::assertPushed(TranslateModel::class, fn (TranslateModel $job) => $job->locales === ['tr']);
 
         $this->actingAs($admin)->post(route('translations.all'))->assertSessionHas('success');
-        Queue::assertPushed(TranslateModel::class, fn (TranslateModel $job) => $job->locales === ['de', 'tr']);
+        // diller iş çalışırken hesaplanır (istek ağır hesap yapmaz)
+        Queue::assertPushed(TranslateModel::class, fn (TranslateModel $job) => $job->locales === null && $job->queue === \App\Support\Queues::BULK);
 
         $de = Language::where('code', 'de')->first();
         $this->actingAs($admin)->patchJson(route('languages.toggle', $de))->assertJson(['active' => false]);

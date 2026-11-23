@@ -20,7 +20,7 @@ class FinishTranslation implements ShouldQueue
         public string $key,
         public array $locales,
         public string $logType,
-        public int $id,
+        public ?int $id,
         public string $title,
     ) {}
 
@@ -28,6 +28,6 @@ class FinishTranslation implements ShouldQueue
     {
         $names = Language::whereIn('code', $this->locales)->pluck('native_name')->implode(', ');
         TranslationJobs::finish($this->key, __('Çevrildi: :languages', ['languages' => $names]));
-        ActivityLogger::write('translated', $this->logType, $this->id, $this->title, ['Diller' => [null, $names]]);
+        ActivityLogger::write('translated', $this->logType, $this->id ?: null, $this->title, ['Diller' => [null, $names]]);
     }
 }

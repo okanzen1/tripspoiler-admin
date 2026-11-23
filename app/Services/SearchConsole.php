@@ -136,9 +136,18 @@ class SearchConsole
             ]));
             Setting::put('gsc_synced_at', (string) now()->timestamp);
             Setting::put('gsc_error', null);
+            // 1.000 gösterim eşiği: adminlere bir kez bildirim (Claude'a Search Console aracını kurdurma zamanı)
+            if (self::reminderDue() && Setting::get('gsc_reminder_notified') !== '1') {
+                Setting::put('gsc_reminder_notified', '1');
+                \App\Support\Notify::admins('seo', __('Search Console 1.000 gösterime ulaştı'), __("Claude'a Search Console aracını kurdurma zamanı."), route('search-console.index'));
+            }
 
             return ['rows' => count($pages) + count($queries), 'error' => null];
         } catch (\Throwable $e) {
+            // hata ilk kez çıkınca adminlere bildirim (her gün aynı hata için tekrar gönderilmez)
+            if (Setting::get('gsc_error') === null) {
+                \App\Support\Notify::admins('system', __('Search Console verisi çekilemedi'), Str::limit($e->getMessage(), 200), route('search-console.index'));
+            }
             Setting::put('gsc_error', Str::limit($e->getMessage(), 400));
 
             return ['rows' => 0, 'error' => Str::limit($e->getMessage(), 400)];

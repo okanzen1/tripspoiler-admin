@@ -52,7 +52,7 @@ class QueueController extends Controller
     /** Sıradaki işleri beklemeden işle (cevap gönderildikten sonra) */
     public function run()
     {
-        defer(fn () => Artisan::call('queue:work', ['--stop-when-empty' => true, '--max-time' => 120, '--tries' => 3]));
+        defer(fn () => Artisan::call('queue:work', ['--queue' => \App\Support\Queues::worker(), '--stop-when-empty' => true, '--max-time' => 50, '--tries' => 3]));
 
         return back()->with('success', __('Sıradaki işler işleniyor; bu sayfa birkaç saniyede bir kendini yeniler.'));
     }
@@ -60,7 +60,7 @@ class QueueController extends Controller
     public function retry(string $uuid)
     {
         Artisan::call('queue:retry', ['id' => [$uuid]]);
-        defer(fn () => Artisan::call('queue:work', ['--stop-when-empty' => true, '--max-time' => 120, '--tries' => 3]));
+        defer(fn () => Artisan::call('queue:work', ['--queue' => \App\Support\Queues::worker(), '--stop-when-empty' => true, '--max-time' => 50, '--tries' => 3]));
 
         return back()->with('success', __('İş tekrar sıraya alındı ve işleniyor.'));
     }
@@ -68,7 +68,7 @@ class QueueController extends Controller
     public function retryAll()
     {
         Artisan::call('queue:retry', ['id' => ['all']]);
-        defer(fn () => Artisan::call('queue:work', ['--stop-when-empty' => true, '--max-time' => 120, '--tries' => 3]));
+        defer(fn () => Artisan::call('queue:work', ['--queue' => \App\Support\Queues::worker(), '--stop-when-empty' => true, '--max-time' => 50, '--tries' => 3]));
 
         return back()->with('success', __('Başarısız işlerin hepsi tekrar sıraya alındı ve işleniyor.'));
     }
@@ -118,6 +118,8 @@ class QueueController extends Controller
         return [
             'name' => match (class_basename($class)) {
                 'TranslateModel' => __('Çeviri'),
+                'TranslateLocale' => __('Çeviri (tek kayıt)'),
+                'FinishTranslation' => __('Çeviri bitişi'),
                 'SendQueuedMailable', 'SendQueuedNotifications' => __('E-posta gönderimi'),
                 default => Str::headline(class_basename($class)),
             },

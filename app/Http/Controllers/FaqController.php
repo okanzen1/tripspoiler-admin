@@ -205,7 +205,7 @@ class FaqController extends Controller
         $queued = \Illuminate\Support\Facades\Cache::get('scheduler:last_run', 0) > time() - 180;
         if ($queued) {
             foreach ($faqs as $faq) {
-                \App\Jobs\TranslateModel::dispatch($faq);
+                \App\Jobs\TranslateModel::dispatch($faq)->onQueue(\App\Support\Queues::DEFAULT);
             }
         }
 

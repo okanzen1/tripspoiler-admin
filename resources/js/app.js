@@ -16,6 +16,7 @@ import './page-sections';
 import './confirm-dialog';
 import './live-refresh';
 import './translation-jobs';
+import './notifications';
 
 // Zengin metin editörü sadece gereken sayfalarda yüklensin
 if (document.querySelector('[data-rich-editor]')) {

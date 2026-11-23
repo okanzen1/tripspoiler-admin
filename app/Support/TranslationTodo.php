@@ -5,7 +5,6 @@ namespace App\Support;
 use App\Models\TranslationState;
 use App\Services\Translation\ModelTranslator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Throwable;
 
 /**
@@ -36,21 +35,34 @@ class TranslationTodo
      */
     public static function items(): Collection
     {
-        return self::$items ??= collect(Cache::remember(self::CACHE, now()->addHour(), function () {
-            try {
-                return self::build();
-            } catch (Throwable $e) {
-                report($e);
-
-                return [];
-            }
-        }));
+        // Hazır değer okunur, sayfa hesaplama beklemez (App\Support\StaleCache; zamanlayıcı dakikada bir yeniler)
+        return self::$items ??= collect(StaleCache::get(self::CACHE, fn () => self::safeBuild()));
     }
 
+    /** Kayıt değişti: liste arka planda yeniden hesaplanacak (panel:refresh-counters) */
     public static function forget(): void
     {
         self::$items = null;
-        Cache::forget(self::CACHE);
+        StaleCache::invalidate(self::CACHE);
+    }
+
+    /** Zamanlayıcıdan: eskimişse yeniden hesapla */
+    public static function refresh(bool $force = false): bool
+    {
+        self::$items = null;
+
+        return StaleCache::refresh(self::CACHE, fn () => self::safeBuild(), $force);
+    }
+
+    private static function safeBuild(): array
+    {
+        try {
+            return self::build();
+        } catch (Throwable $e) {
+            report($e);
+
+            return [];
+        }
     }
 
     public static function count(string ...$types): int
@@ -101,7 +113,8 @@ class TranslationTodo
             $states = TranslationState::where('translatable_type', (new $class)->getMorphClass())->get()->groupBy('translatable_id');
             foreach ($class::all() as $model) {
                 $status = $translator->status($model, $states->get($model->getKey(), collect())->pluck('source_hash', 'locale'));
-                $pending = count(array_filter($status, fn ($state) => $state !== 'ok'));
+                $missing = array_keys(array_filter($status, fn ($state) => $state !== 'ok'));
+                $pending = count($missing);
                 if (!$pending) {
                     continue;
                 }
@@ -112,7 +125,7 @@ class TranslationTodo
                 }
                 // SSS bir aktiviteye / blog yazısına aitse o kaydın listesinde de görünsün
                 $parent = $type === 'faq' ? ($model->activity_id ? 'activity:' . $model->activity_id : ($model->blog_id ? 'blog:' . $model->blog_id : null)) : null;
-                $items[] = ['type' => $type, 'id' => $model->getKey(), 'url' => $owner['url'], 'title' => (string) $owner['title'], 'locales' => $pending, 'parent' => $parent];
+                $items[] = ['type' => $type, 'id' => $model->getKey(), 'url' => $owner['url'], 'title' => (string) $owner['title'], 'locales' => $pending, 'missing' => $missing, 'parent' => $parent];
             }
         }
 

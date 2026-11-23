@@ -40,9 +40,17 @@ Schedule::command('indexnow:sync')->hourlyAt(37)->withoutOverlapping(15);
 // Search Console: son 28 günün Google verisi her sabah panele çekilir (Google verisi 2–3 gün geriden gelir)
 Schedule::command('gsc:sync')->dailyAt('07:10')->withoutOverlapping(30);
 
+// Panel bildirimleri: siteden gelen yardım talebi, yorum, abone ve başarısız işler (dakikada bir); 90 günden eski bildirimler silinir
+Schedule::command('notify:scan')->everyMinute()->withoutOverlapping(5)->runInBackground();
+Schedule::call(fn () => \Illuminate\Support\Facades\DB::table('notifications')->where('created_at', '<', now()->subDays(90))->delete())->dailyAt('04:45')->name('notifications-prune');
+
+// Menüdeki "çevirisi eksik" / "SEO'su eksik" sayıları: bir kayıt değiştiyse arka planda yeniden hesaplanır (panel beklemez)
+Schedule::command('panel:refresh-counters')->everyMinute()->withoutOverlapping(10)->runInBackground();
+
 // Sıradaki işler (ör. Diller ve çeviri › toplu çeviri): her dakika işlenir, sırada iş yoksa hemen biter.
 // Paylaşımlı sunucuda sürekli çalışan kuyruk işçisi olmadığı için (cron: * * * * * php artisan schedule:run)
 // EN SONDA: uzun bir çeviri dakikalarca sürebilir; zamanlayıcı işleri sırayla çalıştırdığı için yukarıdakiler
 // (nabız, gece işleri) onu beklemeden önce çalışır. Önceki işçi sürerken yenisi başlamaz (withoutOverlapping).
 // Kilit en fazla 20 dk: işçi sunucu tarafından yarıda öldürülürse kilit 24 saat kalıp sırayı dondurmasın
-Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')->everyMinute()->withoutOverlapping(20);
+// Sıralar öncelikle: tek kayıt çevirisi (high) → diğer işler → toplu çevirinin yarım kalan kaydı → toplu çeviri (App\Support\Queues)
+Schedule::command('queue:work --queue=' . \App\Support\Queues::worker() . ' --stop-when-empty --max-time=50 --tries=3')->everyMinute()->withoutOverlapping(20);

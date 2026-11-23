@@ -5,9 +5,9 @@ namespace App\Support;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Arka planda süren tek kayıt çevirileri. Zamanlayıcı (cron) çalışıyorsa sıraya alınır ve diller tek tek işlenir
- * (App\Jobs\TranslateLocale); çalışmıyorsa cevap gönderildikten sonra aynı istekte çevrilir.
- * Panel her sayfada sağ üstte durumunu gösterir: kaç dil bitti, bitti mi, hata mı.
+ * Arka planda süren tek kayıt çevirileri: öncelikli sıraya (Queues::HIGH) alınır, diller tek tek işlenir
+ * (App\Jobs\TranslateLocale). Panel isteğinde hiçbir zaman çeviri yapılmaz.
+ * Bitince (ya da olmazsa) işi başlatana panel bildirimi gider (App\Support\Notify); süren işler Bildirimler'de görünür.
  *
  * İş: key ("hero:1"), title, url, total, done, current, status (running|done|failed), message,
  *     started_at, updated_at, finished_at (unix saniye), quiet_until (bu ana kadar ses çıkmaması normal: sırada / Google beklemesi)
@@ -48,6 +48,7 @@ class TranslationJobs
         $job = [
             'key' => $key, 'title' => $title, 'url' => $url, 'total' => count($locales), 'done' => 0, 'current' => null,
             'status' => 'running', 'message' => null, 'started_at' => $now, 'updated_at' => $now, 'finished_at' => null,
+            'user_id' => auth()->id(),
         ];
         self::put($job);
 
@@ -101,6 +102,16 @@ class TranslationJobs
             ->values()->all();
     }
 
+    /** Şu an süren (ya da sırada bekleyen) tek kayıt çevirileri */
+    public static function active(): array
+    {
+        return collect(Cache::get(self::INDEX, []))
+            ->map(fn ($key) => self::get($key))
+            ->filter(fn ($job) => $job && $job['status'] === 'running')
+            ->sortByDesc('started_at')
+            ->values()->all();
+    }
+
     /** Son bir saatteki bütün çeviri işleri, en yenisi üstte (Yönetim › Arka plan işleri) */
     public static function history(): array
     {
@@ -116,6 +127,9 @@ class TranslationJobs
         if ($job = Cache::get(self::cacheKey($key))) {
             $now = time();
             self::put(['status' => $status, 'message' => $message, 'updated_at' => $now, 'finished_at' => $now] + $job);
+            // Bitti / olmadı: işi başlatana panel bildirimi (zil)
+            Notify::user($job['user_id'] ?? null, $status === 'done' ? 'translation' : 'translation_failed',
+                ($status === 'done' ? __('Çeviri tamamlandı') : __('Çeviri yapılamadı')) . ': ' . $job['title'], $message, $job['url'] ?? null);
         }
     }
 

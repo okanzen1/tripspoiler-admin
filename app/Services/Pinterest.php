@@ -234,6 +234,9 @@ class Pinterest
             // harcamadan sırada kalır (kayıt tutulmaz); Standard erişim gelince panelden yeniden açılır.
             if (self::isTrialError($e->getMessage())) {
                 Setting::put('pinterest_enabled', '0');
+                if (!self::trialBlocked()) {
+                    \App\Support\Notify::admins('system', __('Pinterest otomatik gönderimi durdu'), __('Uygulama henüz "Trial" erişimde; Standard erişim gelince panelden yeniden aç.'), route('pinterest.index'));
+                }
                 Setting::put('pinterest_trial_blocked', '1');
 
                 return $pin;

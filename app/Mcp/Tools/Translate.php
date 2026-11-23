@@ -5,12 +5,11 @@ namespace App\Mcp\Tools;
 use App\Mcp\Support\ContentTypes;
 use App\Models\Language;
 use App\Services\Translation\ModelTranslator;
-use App\Support\ActivityLogger;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Server\Attributes\Description;
 
-#[Description('Translate a record from English into the other site languages with Google Translate (free): activity, blog, faq, announcement, step, feature, section_text, hero_text, page (SEO), city_guide, city_guide_section, city_guide_topic. Default: only missing/outdated languages; all=true re-translates every language (overwrites manual fixes). Only when the user asks. Can take a minute.')]
+#[Description('Translate a record from English into the other site languages with Google Translate (free): activity, blog, faq, announcement, step, feature, section_text, hero_text, page (SEO), city_guide, city_guide_section, city_guide_topic. Default: only missing/outdated languages; all=true re-translates every language (overwrites manual fixes). Only when the user asks. Runs in the background (queued); usually done in 1–3 minutes.')]
 class Translate extends PanelTool
 {
     public function schema(JsonSchema $schema): array
@@ -39,14 +38,17 @@ class Translate extends PanelTool
         }
 
         $locales = ($data['languages'] ?? []) ?: (!empty($data['all']) ? $targets : null);
-        set_time_limit(900);
         $translator = app(ModelTranslator::class);
-        $done = $translator->translate($model, $locales);
-        if ($done) {
-            ActivityLogger::write('translated', \Illuminate\Support\Str::snake(class_basename($model)), $model->getKey(), ContentTypes::title($data['type'], $model),
-                ['Diller' => [null, Language::whereIn('code', $done)->pluck('native_name')->implode(', ')]]);
+        $pending = $locales ?? $translator->fullPending($model);
+        if (!$pending) {
+            return ['translated' => 'already up to date', 'status' => $translator->status($model)];
         }
 
-        return ['translated' => $done ?: 'already up to date', 'status' => $translator->status($model->fresh())];
+        // Panel isteğinde çevrilmez (dakikalar sürer, paneli kilitler): öncelikli sıraya alınır, arka planda çevrilir
+        $job = new \App\Jobs\TranslateModel($model, $locales);
+        $job->force = $locales !== null;
+        dispatch($job->onQueue(\App\Support\Queues::HIGH));
+
+        return ['queued' => $pending, 'note' => 'Translation queued in the background (usually 1–3 minutes). Check again with get-record; the panel shows it under Bildirimler.'];
     }
 }
